@@ -1,4 +1,5 @@
 /** Pure learning path rules of docs/product/learning-path.md (node states, OQ-40). */
+import type { ApiErrorKind } from '@/api/client';
 import type { Course } from '@/api/schemas/course';
 
 export type NodeState = 'completed' | 'recommended' | 'available';
@@ -73,6 +74,29 @@ export function getNodeAccessibleName(lessonNumber: number, title: string, state
   if (state === 'completed') return `${base}, completed`;
   if (state === 'recommended') return `${base}, recommended, start`;
   return base;
+}
+
+/**
+ * The course-wide 1-based number of the first lesson of every unit, in unit order: lesson numbers
+ * keep counting across units (unit 2 starts after the last lesson of unit 1).
+ */
+export function getFirstLessonNumbers(course: PathCourse): number[] {
+  let next = 1;
+  return course.units.map((unit) => {
+    const first = next;
+    next += unit.lessons.length;
+    return first;
+  });
+}
+
+export const LOAD_ERROR_TITLE = "We couldn't load your lessons";
+export const CONNECTIVITY_MESSAGE =
+  'You seem to be offline, or the connection is slow. Check it and try again.';
+export const OTHER_FAILURE_MESSAGE = 'Something went wrong on our side. Try again in a moment.';
+
+/** Message of the load error screen: connectivity (offline, network, timeout) or anything else. */
+export function getLoadErrorMessage(kind: ApiErrorKind): string {
+  return kind === 'network' ? CONNECTIVITY_MESSAGE : OTHER_FAILURE_MESSAGE;
 }
 
 /** The placement note; `startUnitIndex` is 0-based, the text counts units from 1. */

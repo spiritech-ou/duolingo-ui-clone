@@ -1,0 +1,29 @@
+@use '@/styles/mixins' as *;
+
+// The page wrapper is the sticky top bar's containing block: it spans the whole path, and no
+// ancestor clips overflow, so the bar stays at the top of the viewport while the path scrolls.
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  width: 100%;
+  max-width: 36rem;
+  margin-inline: auto;
+}
+
+.heading {
+  @include visually-hidden;
+}
+
+.units {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.state {
+  padding-block: var(--space-6);
+}

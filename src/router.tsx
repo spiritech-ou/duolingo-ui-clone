@@ -70,6 +70,13 @@ export const router = createBrowserRouter([
     errorElement: <RouteError />,
     children: [
       { index: true, element: <Home /> },
+      {
+        path: 'learn',
+        lazy: async () => {
+          const { LearnPage } = await import('@/features/learn');
+          return { Component: LearnPage };
+        },
+      },
       { path: '*', element: <NotFound /> },
     ],
   },
