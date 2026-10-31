@@ -80,4 +80,13 @@ export const router = createBrowserRouter([
       { path: '*', element: <NotFound /> },
     ],
   },
+  // Focused flow: a sibling of the header layout (no app header, OQ-34); FocusedLayout owns <main>.
+  {
+    path: '/onboarding/level',
+    errorElement: <RouteError />,
+    lazy: async () => {
+      const { OnboardingLevelPage } = await import('@/features/onboarding');
+      return { Component: OnboardingLevelPage };
+    },
+  },
 ]);
