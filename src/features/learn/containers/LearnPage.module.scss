@@ -27,3 +27,38 @@
 .state {
   padding-block: var(--space-6);
 }
+
+// Newly recommended node after a completed lesson: one scale-in and a short ring highlight, then
+// the usual pulse. The doubled selector outranks PathNode's own `animation`.
+.arrival.arrival {
+  animation:
+    arrival-scale 0.4s ease-out 1,
+    arrival-highlight 1.2s ease-out 1,
+    arrival-pulse 1.6s ease-in-out 0.4s infinite;
+}
+
+@keyframes arrival-scale {
+  from {
+    scale: 0.6;
+  }
+}
+
+@keyframes arrival-pulse {
+  50% {
+    scale: 1.06;
+  }
+}
+
+@keyframes arrival-highlight {
+  from {
+    box-shadow:
+      0 0 0 0.25rem var(--color-primary),
+      0 0 0 0.75rem var(--color-primary-soft);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .arrival.arrival {
+    animation: none;
+  }
+}
