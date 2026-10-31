@@ -1,5 +1,6 @@
 import { MAX_HEARTS } from '@/api/schemas/profile';
 import type { Exercise } from '@/api/schemas/lesson';
+import { calculateAccuracy, isPerfectLesson } from './sessionStats';
 import type { CreateSessionInput, SessionAction, SessionState } from './sessionTypes';
 
 /** XP for any completed lesson, replays included. */
@@ -118,13 +119,12 @@ export function getProgress(state: SessionState): { value: number; max: number }
 
 /** Accuracy for the lesson-over screen: `round(100 x (steps - distinct missed) / steps)`. */
 export function getAccuracy(state: SessionState): number {
-  if (state.steps === 0) return 100;
-  return Math.round((100 * (state.steps - state.missedIds.length)) / state.steps);
+  return calculateAccuracy(state.missedIds.length, state.steps);
 }
 
 /** True when every exercise was right the first time ("Perfect lesson!"). */
 export function isPerfect(state: SessionState): boolean {
-  return state.missedIds.length === 0;
+  return isPerfectLesson(state.missedIds.length);
 }
 
 /** Milliseconds from the first exercise shown to the last CONTINUE; null while running. */
