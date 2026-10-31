@@ -26,7 +26,7 @@ The flame is a vertical gradient from light blue at the top to deep blue at the 
 ## Rules for the theme
 
 - The primary brand colour is the flame blue. Derive the primary scale (default, hover, pressed, soft tint) from the gradient stops above; keep the hue family.
-- The default theme is dark (a near-black, slightly blue background), matching the dark reference screenshots; a light theme must exist too, both defined as semantic tokens.
+- The default theme is dark and its page background is exactly #000000, the artwork's own background, so the flame sits on the page with no visible edge. Raised surfaces (header, cards, inputs, panels) step up from black in small neutral increments; they may lean slightly towards the brand blue but never look navy or blue-grey. Borders and dividers are neutral greys. A light theme must exist too, both defined as semantic tokens.
 - Success, danger, warning and info colours are ours to choose. They must not be Duolingo's green or blue.
 - Every text token must pass the contrast tests the scaffold ships (4.5:1 for normal text, 3:1 for large text and UI components) in both themes. Darken or lighten the token, never relax the test.
 - The flame is used large (mascot, 96 to 160 px) beside speech bubbles and small (24 to 32 px) as the app mark and favicon.
