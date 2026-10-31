@@ -5,19 +5,19 @@
   inset: 0;
   z-index: var(--z-modal);
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
-  padding: var(--space-4);
 
-  @include bp(md) {
-    align-items: center;
-  }
+  // The gutters that make the panel the window width minus 16px on each side on mobile.
+  padding: var(--space-4);
 }
 
 .backdrop {
   position: absolute;
   inset: 0;
-  background-color: color-mix(in srgb, var(--color-bg) 75%, transparent);
+
+  // Darkened in both themes.
+  background-color: color-mix(in srgb, black 60%, transparent);
   animation: fade-in var(--duration-normal) var(--easing-standard);
 
   @media (prefers-reduced-motion: reduce) {
@@ -29,20 +29,29 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-5);
   box-sizing: border-box;
+
+  // 585px wide on wide windows, the window minus the layer's gutters on mobile.
   width: 100%;
-  max-width: 28rem;
+  max-width: 36.5625rem;
   max-height: 100%;
-  padding: var(--space-6);
+  padding: var(--space-5);
   overflow-y: auto;
   color: var(--color-text);
   background-color: var(--color-surface);
-  border: 0.125rem solid var(--color-border);
   border-radius: var(--radius-xl);
+
+  // The outline is an inset shadow so it takes no width: the inner width stays 505px.
+  box-shadow:
+    var(--shadow-lg),
+    inset 0 0 0 0.125rem var(--color-border);
   animation: rise-in var(--duration-normal) var(--easing-standard);
 
-  @include elevation('lg');
+  @include bp(md) {
+    gap: var(--space-7);
+    padding: 2.5rem;
+  }
 
   &:focus-visible {
     @include focus-ring;
@@ -60,6 +69,10 @@
   line-height: var(--line-height-tight);
   text-align: center;
   overflow-wrap: anywhere;
+
+  @include bp(md) {
+    font-size: var(--font-size-2xl);
+  }
 }
 
 .description {
@@ -69,6 +82,10 @@
   color: var(--color-text-muted);
   text-align: center;
   overflow-wrap: anywhere;
+
+  @include bp(md) {
+    font-size: var(--font-size-lg);
+  }
 }
 
 .content {
@@ -76,10 +93,15 @@
   justify-content: center;
 }
 
+// Stacked, each action filling the inner width (about 505px by 66px on wide windows).
 .actions {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+
+  > * {
+    min-height: 4.125rem;
+  }
 }
 
 @keyframes fade-in {

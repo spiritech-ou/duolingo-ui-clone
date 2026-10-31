@@ -17,7 +17,7 @@ export interface DialogProps
   title: string;
   /** Supporting sentence under the heading; wired to `aria-describedby`. */
   description?: string;
-  /** Optional illustration or extra content between the text and the actions. */
+  /** Optional illustration or extra content (the heart row), shown at the top above the heading. */
   children?: ReactNode;
   /** The buttons row, rendered last. */
   actions?: ReactNode;
@@ -189,6 +189,7 @@ function OpenDialog({
         aria-describedby={description ? descriptionId : undefined}
         tabIndex={-1}
       >
+        {children ? <div className={styles['content']}>{children}</div> : null}
         <h2 id={titleId} className={styles['title']}>
           {title}
         </h2>
@@ -197,7 +198,6 @@ function OpenDialog({
             {description}
           </p>
         ) : null}
-        {children ? <div className={styles['content']}>{children}</div> : null}
         {actions ? <div className={styles['actions']}>{actions}</div> : null}
       </div>
     </div>,

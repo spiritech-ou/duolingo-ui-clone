@@ -14,7 +14,15 @@ const exitActions = (
 const meta = {
   title: 'UI/Dialog',
   component: Dialog,
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    layout: 'fullscreen',
+    viewport: {
+      options: {
+        wide: { name: 'Wide 1280', styles: { width: '1280px', height: '800px' }, type: 'desktop' },
+        narrow: { name: 'Narrow 390', styles: { width: '390px', height: '844px' }, type: 'mobile' },
+      },
+    },
+  },
   args: {
     isOpen: true,
     onClose: fn(),
@@ -58,6 +66,96 @@ export const FirstMistakeModal: Story = {
       expect(within(dialog).getByRole('img', { name: '4 hearts left' })).toBeVisible(),
     );
     await expect(screen().getByRole('button', { name: 'KEEP GOING' })).toHaveFocus();
+  },
+};
+
+// Sizes at a wide and a narrow window (docs/product/exercise-session.md, Layout).
+const wide = { viewport: { value: 'wide', isRotated: false } };
+const narrow = { viewport: { value: 'narrow', isRotated: false } };
+
+function expectAbout(actual: number, expected: number, tolerance = 1.5) {
+  expect(Math.abs(actual - expected)).toBeLessThanOrEqual(tolerance);
+}
+
+// Measure after the entrance animation, which moves the panel.
+async function settled(dialog: HTMLElement) {
+  await Promise.all(dialog.getAnimations().map((animation) => animation.finished));
+}
+
+const firstMistakeArgs = {
+  title: 'Each mistake costs 1 heart!',
+  description: 'Stay sharp and focused to keep your hearts. You got this!',
+  children: <HeartsCounter value={4} />,
+  actions: <Button variant="primary">KEEP GOING</Button>,
+};
+
+export const FirstMistakeModalWide: Story = {
+  globals: wide,
+  args: firstMistakeArgs,
+  play: async () => {
+    const dialog = screen().getByRole('dialog', { name: 'Each mistake costs 1 heart!' });
+    const button = screen().getByRole('button', { name: 'KEEP GOING' });
+    await waitFor(() => expect(button).toBeVisible());
+    await settled(dialog);
+    const panel = dialog.getBoundingClientRect();
+    const action = button.getBoundingClientRect();
+    expect(window.innerWidth).toBe(1280);
+    expectAbout(panel.width, 585);
+    expectAbout(panel.height, 385, 12);
+    // Centred over the window.
+    expectAbout((panel.left + panel.right) / 2, 640);
+    expectAbout((panel.top + panel.bottom) / 2, window.innerHeight / 2);
+    // 40px inner padding; the button fills the inner width, about 505px by 66px.
+    expect(getComputedStyle(dialog).paddingLeft).toBe('40px');
+    expect(getComputedStyle(dialog).paddingTop).toBe('40px');
+    expectAbout(action.width, 505);
+    expectAbout(action.height, 66);
+  },
+};
+
+export const ExitDialogWide: Story = {
+  globals: wide,
+  play: async () => {
+    const dialog = screen().getByRole('dialog', { name: 'Quit lesson?' });
+    expectAbout(dialog.getBoundingClientRect().width, 585);
+    expectAbout(screen().getByRole('button', { name: 'KEEP LEARNING' }).getBoundingClientRect().width, 505);
+    expectAbout(screen().getByRole('button', { name: 'QUIT' }).getBoundingClientRect().height, 66);
+  },
+};
+
+export const FirstMistakeModalNarrow: Story = {
+  globals: narrow,
+  args: firstMistakeArgs,
+  play: async () => {
+    const dialog = screen().getByRole('dialog', { name: 'Each mistake costs 1 heart!' });
+    const button = screen().getByRole('button', { name: 'KEEP GOING' });
+    await waitFor(() => expect(button).toBeVisible());
+    await settled(dialog);
+    const panel = dialog.getBoundingClientRect();
+    const action = button.getBoundingClientRect();
+    expect(window.innerWidth).toBe(390);
+    // The window minus 16px gutters, centred.
+    expectAbout(panel.width, 390 - 32);
+    expectAbout(panel.left, 16);
+    expectAbout((panel.top + panel.bottom) / 2, window.innerHeight / 2);
+    // The button fills the inner width.
+    const padding = parseFloat(getComputedStyle(dialog).paddingLeft);
+    expectAbout(action.width, panel.width - 2 * padding);
+    expect(action.height).toBeGreaterThanOrEqual(44);
+  },
+};
+
+export const ExitDialogNarrow: Story = {
+  globals: narrow,
+  play: async () => {
+    const dialog = screen().getByRole('dialog', { name: 'Quit lesson?' });
+    const keep = screen().getByRole('button', { name: 'KEEP LEARNING' }).getBoundingClientRect();
+    const quit = screen().getByRole('button', { name: 'QUIT' }).getBoundingClientRect();
+    expectAbout(dialog.getBoundingClientRect().width, 390 - 32);
+    // Stacked, each filling the width, 12px apart.
+    expectAbout(keep.width, quit.width);
+    expectAbout(quit.top - keep.bottom, 12);
+    expect(keep.height).toBeGreaterThanOrEqual(44);
   },
 };
 

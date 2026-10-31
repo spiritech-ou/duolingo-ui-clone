@@ -7,7 +7,15 @@ import type { ExerciseFooterHandle } from './ExerciseFooter';
 const meta = {
   title: 'UI/ExerciseFooter',
   component: ExerciseFooter,
-  parameters: { layout: 'fullscreen' },
+  parameters: {
+    layout: 'fullscreen',
+    viewport: {
+      options: {
+        wide: { name: 'Wide 1280', styles: { width: '1280px', height: '800px' }, type: 'desktop' },
+        narrow: { name: 'Narrow 390', styles: { width: '390px', height: '844px' }, type: 'mobile' },
+      },
+    },
+  },
   args: { status: 'idle', onSkip: fn(), onCheck: fn(), onContinue: fn() },
 } satisfies Meta<typeof ExerciseFooter>;
 
@@ -82,6 +90,174 @@ export const LongWord: Story = {
     status: 'wrong',
     word: 'Rahvusvaheline kosmosejaam',
     announcement: 'Wrong. The correct answer is Rahvusvaheline kosmosejaam.',
+  },
+};
+
+// Sizes at a wide and a narrow window (docs/product/exercise-session.md, Layout). The footer
+// fills the column it is given; the fullscreen canvas stands in for the page here.
+const wide = { viewport: { value: 'wide', isRotated: false } };
+const narrow = { viewport: { value: 'narrow', isRotated: false } };
+
+const TOLERANCE = 1.5;
+
+function box(element: HTMLElement) {
+  const { left, right, top, bottom, width, height } = element.getBoundingClientRect();
+  return { left, right, top, bottom, width, height };
+}
+
+function expectAbout(actual: number, expected: number) {
+  expect(Math.abs(actual - expected)).toBeLessThanOrEqual(TOLERANCE);
+}
+
+function getRoot(canvasElement: HTMLElement): HTMLElement {
+  const root = canvasElement.firstElementChild;
+  if (!(root instanceof HTMLElement)) throw new Error('footer root not found');
+  return root;
+}
+
+const measureActionsWide: NonNullable<Story['play']> = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+  const root = box(getRoot(canvasElement));
+  const skip = box(canvas.getByRole('button', { name: 'Skip' }));
+  const check = box(canvas.getByRole('button', { name: 'Check' }));
+  expect(window.innerWidth).toBe(1280);
+  expectAbout(root.width, 1280);
+  expectAbout(root.height, 190);
+  expectAbout(skip.width, 197);
+  expectAbout(skip.height, 64);
+  expectAbout(check.width, 198);
+  expectAbout(check.height, 64);
+  // Outer edges form a column about 1213px wide, centred on the page.
+  expectAbout(check.right - skip.left, 1213);
+  expectAbout((skip.left + check.right) / 2, 640);
+  // Both vertically centred in the strip.
+  expectAbout((skip.top + skip.bottom) / 2, (root.top + root.bottom) / 2 + 1);
+  expectAbout((check.top + check.bottom) / 2, (root.top + root.bottom) / 2 + 1);
+};
+
+const measureActionsNarrow: NonNullable<Story['play']> = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+  const skip = box(canvas.getByRole('button', { name: 'Skip' }));
+  const check = box(canvas.getByRole('button', { name: 'Check' }));
+  expect(window.innerWidth).toBe(390);
+  // Side by side, each about half the width between the 16px gutters, 12px apart.
+  expectAbout(skip.left, 16);
+  expectAbout(check.right, 390 - 16);
+  expectAbout(check.left - skip.right, 12);
+  expectAbout(skip.width, check.width);
+  expect(skip.height).toBeGreaterThanOrEqual(44);
+};
+
+const measurePanelWide: NonNullable<Story['play']> = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+  const root = getRoot(canvasElement);
+  const panel = box(root.querySelector<HTMLElement>('[class*="panel"]') ?? root);
+  const circle = box(root.querySelector<HTMLElement>('[class*="iconCircle"]') ?? root);
+  const continueButton = box(canvas.getByRole('button', { name: 'Continue' }));
+  expect(window.innerWidth).toBe(1280);
+  expectAbout(panel.width, 1280);
+  expectAbout(panel.height, 185);
+  expectAbout(circle.width, 105);
+  expectAbout(circle.height, 105);
+  expectAbout(continueButton.width, 200);
+  expect(continueButton.height).toBeGreaterThanOrEqual(44);
+  // Content column about 1225px wide, Continue right-aligned in it.
+  expectAbout(continueButton.right - circle.left, 1225);
+  expectAbout((circle.left + continueButton.right) / 2, 640);
+};
+
+const measurePanelNarrow: NonNullable<Story['play']> = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+  const root = getRoot(canvasElement);
+  const panel = box(root.querySelector<HTMLElement>('[class*="panel"]') ?? root);
+  const circle = box(root.querySelector<HTMLElement>('[class*="iconCircle"]') ?? root);
+  const continueButton = box(canvas.getByRole('button', { name: 'Continue' }));
+  expect(window.innerWidth).toBe(390);
+  // Stacked: the text row, then Continue filling the width between the gutters.
+  expectAbout(continueButton.left, 16);
+  expectAbout(continueButton.right, 390 - 16);
+  expect(continueButton.top).toBeGreaterThanOrEqual(circle.bottom);
+  expect(continueButton.height).toBeGreaterThanOrEqual(44);
+  expect(panel.height).toBeGreaterThanOrEqual(198);
+  expect(panel.height).toBeLessThan(260);
+};
+
+export const IdleWide: Story = {
+  globals: wide,
+  play: async (context) => {
+    await measureActionsWide(context);
+  },
+};
+
+export const SelectedWide: Story = {
+  globals: wide,
+  args: { status: 'selected' },
+  play: async (context) => {
+    await measureActionsWide(context);
+    await expect(within(context.canvasElement).getByRole('button', { name: 'Check' })).toBeEnabled();
+  },
+};
+
+export const IdleNarrow: Story = {
+  globals: narrow,
+  play: async (context) => {
+    await measureActionsNarrow(context);
+  },
+};
+
+export const SelectedNarrow: Story = {
+  globals: narrow,
+  args: { status: 'selected' },
+  play: async (context) => {
+    await measureActionsNarrow(context);
+  },
+};
+
+export const CorrectWide: Story = {
+  globals: wide,
+  args: { status: 'correct', word: 'tee' },
+  play: async (context) => {
+    await measurePanelWide(context);
+  },
+};
+
+export const WrongWide: Story = {
+  globals: wide,
+  args: { status: 'wrong', word: 'tee' },
+  play: async (context) => {
+    await measurePanelWide(context);
+  },
+};
+
+export const SkippedWide: Story = {
+  globals: wide,
+  args: { status: 'skipped', word: 'tee' },
+  play: async (context) => {
+    await measurePanelWide(context);
+  },
+};
+
+export const CorrectNarrow: Story = {
+  globals: narrow,
+  args: { status: 'correct', word: 'tee' },
+  play: async (context) => {
+    await measurePanelNarrow(context);
+  },
+};
+
+export const WrongNarrow: Story = {
+  globals: narrow,
+  args: { status: 'wrong', word: 'tee' },
+  play: async (context) => {
+    await measurePanelNarrow(context);
+  },
+};
+
+export const SkippedNarrow: Story = {
+  globals: narrow,
+  args: { status: 'skipped', word: 'tee' },
+  play: async (context) => {
+    await measurePanelNarrow(context);
   },
 };
 

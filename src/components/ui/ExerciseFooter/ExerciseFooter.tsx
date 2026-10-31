@@ -68,27 +68,38 @@ export function ExerciseFooter({
           ref={panelRef}
           className={clsx(styles['panel'], isCorrect ? styles['correct'] : styles['wrong'])}
         >
-          <Icon name={isCorrect ? 'check' : 'close'} size={32} className={styles['icon']} />
-          <div className={styles['body']}>
-            <p className={styles['title']}>{isCorrect ? praise : 'Correct solution:'}</p>
-            {word ? (
-              <p className={styles['word']} lang="et">
-                {word}
-              </p>
-            ) : null}
+          <div className={styles['panelColumn']}>
+            <span className={styles['iconCircle']}>
+              <Icon name={isCorrect ? 'check' : 'close'} size={48} className={styles['icon']} />
+            </span>
+            <div className={styles['body']}>
+              <p className={styles['title']}>{isCorrect ? praise : 'Correct solution:'}</p>
+              {word ? (
+                <p className={styles['word']} lang="et">
+                  {word}
+                </p>
+              ) : null}
+            </div>
+            <Button size="lg" className={styles['continue']} onClick={onContinue}>
+              Continue
+            </Button>
           </div>
-          <Button size="lg" className={styles['continue']} onClick={onContinue}>
-            Continue
-          </Button>
         </div>
       ) : (
         <div className={styles['actions']}>
-          <Button variant="secondary" size="lg" onClick={onSkip}>
-            Skip
-          </Button>
-          <Button size="lg" isDisabled={status === 'idle'} onClick={onCheck}>
-            Check
-          </Button>
+          <div className={styles['actionsColumn']}>
+            <Button variant="secondary" size="lg" className={styles['skip']} onClick={onSkip}>
+              Skip
+            </Button>
+            <Button
+              size="lg"
+              className={styles['check']}
+              isDisabled={status === 'idle'}
+              onClick={onCheck}
+            >
+              Check
+            </Button>
+          </div>
         </div>
       )}
     </div>

@@ -1,41 +1,100 @@
 @use '@/styles/mixins' as *;
 
+// The footer fills the column its container gives it. Strips span that width; the content sits in
+// an inner column (about 1213px for the action bar, 1225px for the feedback panel) that is
+// clamped to the window minus the side gutters.
+
 .root {
   box-sizing: border-box;
   width: 100%;
   overflow: hidden;
   background-color: var(--color-bg);
-  border-block-start: 0.125rem solid var(--color-border);
 }
 
 .announcer {
   @include visually-hidden;
 }
 
+// Action bar: a divider across the whole width, a strip about 190px high on wide windows.
 .actions {
+  box-sizing: border-box;
   display: flex;
-  gap: var(--space-4);
   align-items: center;
-  justify-content: space-between;
-  padding: var(--space-4) var(--space-5);
+  min-height: 7.5rem;
+  padding-inline: var(--space-4);
+  border-block-start: 0.125rem solid var(--color-border);
+
+  @include bp(md) {
+    min-height: 11.875rem;
+    padding-inline: var(--space-5);
+  }
 }
 
+.actionsColumn {
+  display: flex;
+  flex: 1;
+  gap: var(--space-3);
+  align-items: center;
+  justify-content: space-between;
+  max-width: 75.8125rem;
+  margin-inline: auto;
+}
+
+// Side by side, each half the width, on mobile; fixed widths from md.
+.skip,
+.check {
+  flex: 1;
+  min-width: 0;
+  height: 4rem;
+
+  @include bp(md) {
+    flex: none;
+  }
+}
+
+.skip {
+  @include bp(md) {
+    width: 12.3125rem;
+  }
+}
+
+.check {
+  @include bp(md) {
+    width: 12.375rem;
+  }
+}
+
+// Feedback panel: a tinted strip, about 185px high on wide windows, about 200px on mobile.
 .panel {
   --panel-accent: var(--color-success);
 
+  box-sizing: border-box;
   display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  align-items: stretch;
-  padding: var(--space-4) var(--space-5);
+  align-items: center;
+  min-height: 12.5rem;
+  padding: var(--space-4);
   color: var(--color-text);
   background-color: color-mix(in srgb, var(--panel-accent) 14%, var(--color-bg));
-  border-block-start: 0.375rem solid var(--panel-accent);
   animation: slide-up var(--duration-slow) var(--easing-standard) both;
 
   @include bp(md) {
-    flex-direction: row;
-    align-items: center;
+    min-height: 11.5625rem;
+    padding: var(--space-4) var(--space-5);
+  }
+}
+
+.panelColumn {
+  display: grid;
+  flex: 1;
+  grid-template-columns: auto 1fr;
+  gap: var(--space-4);
+  align-items: center;
+  max-width: 76.5625rem;
+  margin-inline: auto;
+
+  @include bp(md) {
+    grid-template-columns: auto 1fr auto;
+    gap: var(--space-5);
   }
 }
 
@@ -47,21 +106,35 @@
   --panel-accent: var(--color-danger);
 }
 
-.icon {
+.iconCircle {
+  display: flex;
   flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 5rem;
+  height: 5rem;
+  background-color: var(--color-bg);
+  border-radius: 50%;
+
+  @include bp(md) {
+    width: 6.5625rem;
+    height: 6.5625rem;
+  }
+}
+
+.icon {
   color: var(--panel-accent);
 }
 
 .body {
   display: flex;
-  flex: 1;
   flex-direction: column;
   gap: var(--space-1);
   min-width: 0;
 }
 
 // Text stays the plain text colour (contrast against the tinted panel is well above 4.5:1);
-// the accent border, the icon and the wording carry the state, never colour alone.
+// the accent icon and the wording carry the state, never colour alone.
 .title {
   margin: 0;
   font-size: var(--font-size-lg);
@@ -76,9 +149,14 @@
   overflow-wrap: anywhere;
 }
 
+// Fills the width under the text on mobile, about 200px wide and right-aligned from md.
 .continue {
+  grid-column: 1 / -1;
+  height: 4rem;
+
   @include bp(md) {
-    min-width: 12rem;
+    grid-column: auto;
+    width: 12.5rem;
   }
 }
 
