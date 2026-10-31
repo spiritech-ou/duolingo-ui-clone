@@ -4,9 +4,11 @@
   @include visually-hidden;
 }
 
-// Playback failure message under the cards; always mounted so a new message is announced.
-.playbackSlot {
-  min-height: 1.5rem;
+// Playback failure message under the cards; always mounted so a new message is announced. While
+// empty it takes no space, not even the stack gap above it (nothing sits below it, so a message
+// appearing moves nothing above it).
+.playbackSlot:empty {
+  margin-top: calc(-1 * var(--space-4));
 }
 
 .playbackStatus {
@@ -15,10 +17,35 @@
   text-align: center;
 }
 
-// Layout only: the prompt above the cards, spaced on the focused layout's centred column.
+// Layout only: the question column. The area is not vertically centred: it starts well below the
+// top bar (about 330px from the viewport top on desktop, tighter on mobile).
 .stack {
   display: flex;
   flex-direction: column;
-  gap: var(--space-6);
+  gap: var(--space-4);
   width: 100%;
+  padding-top: var(--space-4);
+
+  @include bp(md) {
+    padding-top: var(--space-8);
+  }
+
+  @include bp(lg) {
+    // About a quarter of the window height down to the tag (330px of the 1311px reference),
+    // less the top bar, so a short window still shows the cards without much scrolling.
+    padding-top: clamp(var(--space-4), 25vh - 6rem, 15rem);
+  }
+}
+
+// The gap between the question and the cards: about 120px on desktop, tighter on mobile.
+.cards {
+  margin-top: var(--space-4);
+
+  @include bp(md) {
+    margin-top: var(--space-8);
+  }
+
+  @include bp(lg) {
+    margin-top: 6.5rem;
+  }
 }

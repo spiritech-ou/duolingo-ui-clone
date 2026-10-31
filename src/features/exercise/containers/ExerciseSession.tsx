@@ -43,6 +43,13 @@ import styles from './ExerciseSession.module.scss';
 /** Profile key used while nobody is signed in (the route guard arrives later); reads the defaults. */
 const NO_USER_ID = '';
 
+/**
+ * Column widths from the spec's Layout section; each is also clamped by the layout's side padding.
+ * The footer needs none: the layout's footer is flush and ExerciseFooter caps its own columns.
+ */
+const TOP_BAR_MAX_WIDTH = '82.5rem';
+const QUESTION_MAX_WIDTH = '49.375rem';
+
 /** What the lesson-over screen shows. */
 export interface LessonCompleteStats {
   xp: number;
@@ -384,6 +391,9 @@ export function ExerciseSession({
 
   return (
     <FocusedLayout
+      headerMaxWidth={TOP_BAR_MAX_WIDTH}
+      contentMaxWidth={QUESTION_MAX_WIDTH}
+      isFooterFlush
       header={
         <ExerciseTopBar
           progress={progress.value}
@@ -432,19 +442,21 @@ export function ExerciseSession({
           />
         ) : null}
         <ExercisePrompt ref={headingRef} english={exercise.english} isNewWord={exercise.isNewWord} />
-        <PictureChoice
-          question={getQuestionText(exercise.english)}
-          options={exercise.options.map((option) => ({
-            id: option.id,
-            word: option.estonian,
-            picture: option.picture,
-          }))}
-          selectedId={selectedId}
-          correctId={feedback ? exercise.correctOptionId : undefined}
-          wrongId={phase === 'wrong' ? (session.selectedOptionId ?? undefined) : undefined}
-          isLocked={feedback}
-          onSelect={handleSelect}
-        />
+        <div className={styles['cards']}>
+          <PictureChoice
+            question={getQuestionText(exercise.english)}
+            options={exercise.options.map((option) => ({
+              id: option.id,
+              word: option.estonian,
+              picture: option.picture,
+            }))}
+            selectedId={selectedId}
+            correctId={feedback ? exercise.correctOptionId : undefined}
+            wrongId={phase === 'wrong' ? (session.selectedOptionId ?? undefined) : undefined}
+            isLocked={feedback}
+            onSelect={handleSelect}
+          />
+        </div>
         {/* The one, always-mounted live region (a status); its message appears inside it. */}
         <div className={styles['playbackSlot']} aria-live="polite" aria-atomic="true">
           {playbackFailed ? <p className={styles['playbackStatus']}>{PLAYBACK_FAILED_TEXT}</p> : null}

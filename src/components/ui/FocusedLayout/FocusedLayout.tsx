@@ -27,6 +27,13 @@ export interface FocusedLayoutProps extends Omit<ComponentPropsWithoutRef<'div'>
   contentMaxWidth?: string;
   /** Maximum width of the footer column, as a CSS length. Default `40rem`. */
   footerMaxWidth?: string;
+  /**
+   * Flush footer mode, default `false`. The footer slot then has no padding, border, background
+   * or column cap of its own and spans the window edge to edge, so the slot child draws its own
+   * strip (divider, tint) and its own centred column. `footerMaxWidth` is ignored. Only the
+   * bottom safe-area inset is kept.
+   */
+  isFooterFlush?: boolean;
 }
 
 type WidthVars = CSSProperties & Record<`--${string}`, string | undefined>;
@@ -43,6 +50,7 @@ export function FocusedLayout({
   headerMaxWidth,
   contentMaxWidth,
   footerMaxWidth,
+  isFooterFlush = false,
   className,
   style,
   ...rest
@@ -71,7 +79,7 @@ export function FocusedLayout({
         <div className={styles['content']}>{children}</div>
       </main>
       {footer ? (
-        <div className={styles['footer']}>
+        <div className={clsx(styles['footer'], isFooterFlush && styles['footerFlush'])}>
           <div className={clsx(styles['inner'], styles['footerInner'])}>{footer}</div>
         </div>
       ) : null}

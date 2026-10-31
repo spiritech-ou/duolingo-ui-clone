@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn } from 'storybook/test';
 import { Button } from '@/components/ui/Button';
+import { ExerciseFooter } from '@/components/ui/ExerciseFooter';
 import { FocusedLayout } from './FocusedLayout';
 
 const header = <p>Step 1 of 2</p>;
@@ -235,6 +236,79 @@ export const OnboardingWidthNarrow: Story = {
     const side = parseFloat(getComputedStyle(canvas.getByRole('main')).paddingLeft);
     await expect(side).toBe(sidePaddingFor(rem));
     await expect(c.content.width).toBeCloseTo(c.root.width - 2 * side, 0);
+  },
+};
+
+// Counts the full-width dividers (top borders as wide as the slot) in the footer slot, itself
+// included; borders of buttons are not dividers.
+function dividersIn(slot: HTMLElement) {
+  const width = slot.getBoundingClientRect().width;
+  return [slot, ...Array.from(slot.querySelectorAll<HTMLElement>('*'))].filter(
+    (el) =>
+      parseFloat(getComputedStyle(el).borderTopWidth) > 0 &&
+      Math.abs(el.getBoundingClientRect().width - width) <= 1,
+  );
+}
+
+const flushFooter = <ExerciseFooter status="idle" />;
+
+export const FlushFooterWide: Story = {
+  args: { header, footer: flushFooter, isFooterFlush: true, footerMaxWidth: '20rem' },
+  decorators: frameOf('100rem'),
+  play: async ({ canvas }) => {
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const c = columns(canvas);
+    const slot = c.footerStrip;
+    // The slot spans the frame; no padding of its own and no cap from footerMaxWidth.
+    await expect(slot.width).toBe(c.root.width);
+    await expect(c.footer.width).toBe(c.root.width);
+    const skip = canvas.getByRole('button', { name: 'Skip' });
+    const check = canvas.getByRole('button', { name: 'Check' });
+    // The strip's column is capped at about 1213px (75.8125rem) and centred.
+    const left = skip.getBoundingClientRect().left;
+    const right = check.getBoundingClientRect().right;
+    await expect(right - left).toBeCloseTo(75.8125 * rem, 0);
+    await expect(Math.abs(left - c.root.left - (c.root.right - right))).toBeLessThanOrEqual(1);
+    // Exactly one divider, across the whole frame.
+    const slotEl = (canvas.getByRole('main').parentElement as HTMLElement).children[2] as HTMLElement;
+    const dividers = dividersIn(slotEl);
+    await expect(dividers).toHaveLength(1);
+    await expect(dividers[0]?.getBoundingClientRect().width).toBe(c.root.width);
+  },
+};
+
+// Full viewport, no frame: the strip spans the window at any browser width.
+export const FlushFooter: Story = {
+  args: {
+    header,
+    footer: flushFooter,
+    isFooterFlush: true,
+    headerMaxWidth: '82.5rem',
+    contentMaxWidth: '49.375rem',
+  },
+  play: async ({ canvas }) => {
+    const c = columns(canvas);
+    await expect(c.footerStrip.width).toBe(window.innerWidth);
+    const slotEl = (canvas.getByRole('main').parentElement as HTMLElement).children[2] as HTMLElement;
+    await expect(dividersIn(slotEl)).toHaveLength(1);
+  },
+};
+
+export const FlushFooterNarrow: Story = {
+  args: { header, footer: flushFooter, isFooterFlush: true },
+  decorators: frameOf('24rem'),
+  play: async ({ canvas }) => {
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const c = columns(canvas);
+    await expect(c.footerStrip.width).toBe(c.root.width);
+    const skip = canvas.getByRole('button', { name: 'Skip' });
+    // Gutter comes from the strip only (1rem on mobile, 1.5rem from md), not doubled. The right
+    // gutter is checked in the visual check at 390px: the fixed md button widths overflow a
+    // narrow frame inside a wide test viewport.
+    const gutter = sidePaddingFor(rem);
+    await expect(skip.getBoundingClientRect().left - c.root.left).toBeCloseTo(gutter, 0);
+    const slotEl = (canvas.getByRole('main').parentElement as HTMLElement).children[2] as HTMLElement;
+    await expect(dividersIn(slotEl)).toHaveLength(1);
   },
 };
 

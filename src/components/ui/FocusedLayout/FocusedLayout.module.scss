@@ -86,3 +86,14 @@ $content-max-width: 40rem;
   background-color: var(--color-bg);
   border-top: 0.125rem solid var(--color-border);
 }
+
+// Flush mode: the slot child draws the strip and its own column.
+.footerFlush {
+  padding: 0 0 env(safe-area-inset-bottom, 0);
+  background-color: transparent;
+  border-top: 0;
+
+  .footerInner {
+    max-width: none;
+  }
+}
