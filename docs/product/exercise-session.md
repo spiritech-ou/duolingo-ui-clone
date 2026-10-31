@@ -29,7 +29,7 @@ Session rules (these define the transitions below):
 | Empty lesson | Response has zero exercises | The blue flame mascot (this is not a failure), "This lesson has no exercises yet", "Back to path" | Back to path | `/learn` |
 | No hearts on entry | Lesson mode and hearts are 0 on arrival | The out-of-hearts screen (below) without fetching | As in Out of hearts | As in Out of hearts |
 | Idle | An exercise is shown with no card selected | Top bar: close button, progress bar, hearts counter, and (only when sound is unavailable, see the Audio states below) a disabled speaker icon. Tag "NEW WORD" when `isNewWord`, the question, three cards, "SKIP" enabled, "CHECK" disabled | Select a card (click or key 1 to 3), skip, close | Select, skip, close |
-| Option selected | A card is selected | The chosen card highlighted (primary outline and text, also shows a check); the other cards normal; "CHECK" enabled; the card's Estonian word is spoken when an Estonian voice is available | Select another card (highlight moves, new word spoken), check, skip, close | Check, skip, close |
+| Option selected | A card is selected | The chosen card highlighted (primary outline and text, also shows a check); the other cards normal; "CHECK" enabled; the card's Estonian word is spoken by the browser's Estonian voice when one exists, otherwise its recorded clip is played when one exists (Audio rules) | Select another card (highlight moves, new word spoken), check, skip, close | Check, skip, close |
 | Correct | CHECK with the right card | The cards lock; bottom panel replaces SKIP/CHECK in the success style: praise line, the Estonian word, "CONTINUE"; the bar advances | Continue, close | Continue |
 | Wrong | CHECK with a wrong card | The cards lock, the chosen card marked wrong, the right card marked correct; hearts counter drops by one; bottom panel in the danger style: the small red flame (about 32px) at the left of the title "Correct solution:", the Estonian word below, "CONTINUE" | Continue, close | Continue |
 | Skipped | SKIP pressed | Same as Wrong, with no card marked wrong (the right card is marked correct); the same panel, with the small red flame at the left of the title "Correct solution:" | Continue, close | Continue |
@@ -58,15 +58,23 @@ Rules that follow from it:
 - The red flame is decorative everywhere in this feature: `alt=""` (no accessible name), because the text already carries the message. It adds no announcement and no focus stop, changes no existing accessible name, and leaves the focus order and the `role="status"` announcements exactly as defined below.
 - The flame is the same artwork in the light and dark themes; only the surface behind it changes.
 
-Audio states (OQ-29 as amended, OQ-41). Voice status is one of `checking`, `available`, `no-voice`, `unsupported`, held for the screen and re-evaluated when the browser reports new voices:
+Audio states (OQ-29 as amended, OQ-41 as amended). Words are spoken in this order: the browser's Estonian voice, then the pre-generated clip of that word, then nothing. Two things are known for the screen and re-evaluated when the browser reports new voices:
+- the voice status: `checking`, `available`, `no-voice` or `unsupported`;
+- the clip status: `checking`, `available` (the manifest loaded, is valid, and lists at least one clip) or `none` (the manifest is missing, cannot be loaded, is not valid, or lists no clip).
+
+Sound exists for the screen when the voice status is `available` or the clip status is `available`. The icon and the notice depend only on that: they show when the voice check and the manifest check have both finished and neither a voice nor any clip is available.
+
+What the containers need to know, in behavioural terms (nothing else about voices, manifests or files): (1) whether any sound exists: still checking, yes, or no, and when no, why: this device has no Estonian voice, or this browser cannot speak at all (this picks the notice text; when a browser cannot speak but clips exist, the answer is simply "yes"); (2) a way to say "speak this word now", called straight from the selection, which cancels whatever is playing and reports one of three outcomes: started, nothing to play for this word (not an error), or failed (shows the message below); (3) a way to stop everything (exercise change, leaving). The container never needs to know whether a given word was spoken by the voice or by a clip.
 
 | State | Trigger | What the user sees | What the user can do | Exit |
 |---|---|---|---|---|
-| Voice check | Screen mounted; the voice list may still be loading (up to 2 s, or until the browser reports voices) | Nothing extra; cards work, selecting a card does not speak yet | Everything | Status becomes `available`, `no-voice` or `unsupported` |
-| Sound on | An Estonian voice exists (a voice whose language is `et-EE` or starts with `et`) | No extra control; selecting a card speaks its word | Everything | A voice-list change |
-| No Estonian voice | Speech synthesis exists but no Estonian voice | A disabled speaker icon (crossed out) in the top bar, and on the first exercise of the session a dismissible notice above the question: "No Estonian voice on this device" / "Words won't be spoken, but you can still do every exercise." with "Got it". Selecting cards works with no sound. No other-language voice is ever used to read Estonian words | Dismiss the notice (saved, so it is not shown again on this browser, `noVoiceNoteDismissed`); press or focus the icon to read the explanation again; do the exercises | A voice appears later (icon and notice disappear) |
-| Speech unsupported | The browser has no speech synthesis | Same layout as No Estonian voice with the text "This browser can't speak words aloud" / "You can still do every exercise." | Same | None |
-| Playback failed | A voice exists but speaking raises an error (an interruption caused by a newer selection or by leaving the screen is not an error) | A short status message under the cards, "Couldn't play this word.", cleared after 4 s or on the next selection; no automatic retry | Select again to retry | Message clears |
+| Sound check | Screen mounted; the voice list may still be loading (up to 2 s, or until the browser reports voices) and the manifest is being read | Nothing extra: no icon, no notice; cards work, selecting a card does not speak yet | Everything | Both checks finish |
+| Voice on | An Estonian voice exists (a voice whose language is `et-EE` or starts with `et`) | No extra control; selecting a card speaks its word with the voice, whether or not the manifest loaded | Everything | A voice-list change |
+| Clips on | No Estonian voice (or no speech synthesis at all) but the clip status is `available` | No extra control, no icon, no notice; selecting a card plays that word's clip. Works in a browser without speech synthesis | Everything | A voice appears (the voice takes over from the next selection); the manifest never reloads during the screen |
+| Word without a clip | Sound exists only through clips and the selected word has no clip in the manifest | Nothing plays, nothing is shown (no icon, no notice, no message) | Everything | Select another card |
+| No Estonian voice | Speech synthesis exists, no Estonian voice, and the clip status is `none` | A disabled speaker icon (crossed out) in the top bar, and on the first exercise of the session a dismissible notice above the question: "No Estonian voice on this device" / "Words won't be spoken, but you can still do every exercise." with "Got it". Selecting cards works with no sound. No other-language voice is ever used to read Estonian words | Dismiss the notice (saved, so it is not shown again on this browser, `noVoiceNoteDismissed`); press or focus the icon to read the explanation again; do the exercises | A voice appears later (icon and notice disappear) |
+| Speech unsupported | The browser has no speech synthesis and the clip status is `none` | Same layout as No Estonian voice with the text "This browser can't speak words aloud" / "You can still do every exercise." | Same | None |
+| Playback failed | A voice or a clip was chosen for the word but playing it raises an error (an interruption caused by a newer selection or by leaving the screen is not an error) | A short status message under the cards, "Couldn't play this word.", cleared after 4 s or on the next selection; no automatic retry, and a failed voice does not fall back to the clip | Select again to retry | Message clears |
 
 Stats rules for Lesson over (OQ-28):
 - XP: 10 for any completed lesson (replays included).
@@ -75,12 +83,21 @@ Stats rules for Lesson over (OQ-28):
 
 First-mistake modal and skipping: skipping counts as the first mistake and also opens the modal if it has not been seen (OQ-26).
 
-Audio rules (OQ-29 as amended, OQ-41):
-- Selecting a card, by click or key, speaks that card's Estonian word with the browser's speech synthesis, using an Estonian voice with language tag `et-EE` (utterance `lang` set to `et-EE`, voice chosen from the available voices whose language is `et-EE` or starts with `et`). If none exists, nothing is spoken and the user is told (Audio states above); the exercise is otherwise identical.
-- A new selection cancels any word still playing before speaking the new one.
-- Nothing is spoken automatically on exercise load, on CHECK, on the feedback panel, or on the end screens.
-- Speech is cancelled when the exercise changes or the screen is left.
-- There is no mute control and no replay button. If synthesis, an Estonian voice or playback is missing, the user is always told through the Audio states above; sound never fails silently.
+Audio rules (OQ-29 as amended, OQ-41 as amended). Decided by the owner (OQ-41): a, b, c, d, e, f, g, h. Designer defaults (OQ-48): i to n.
+- a. Selecting a card, by click or key, speaks that card's Estonian word with the browser's speech synthesis when an Estonian voice exists (utterance `lang` set to `et-EE`, voice chosen from the available voices whose language is `et-EE` or starts with `et`).
+- b. Otherwise the clip of that word is played, started from the same user gesture (the selection click or key press) that would have spoken it.
+- c. Otherwise (no voice and no clip for that word, or the manifest cannot be loaded) nothing is played, and the existing "Sound unavailable" icon and no-voice notice show exactly as before, under the condition in d.
+- d. The icon and the notice appear only when neither a voice nor any clip is available. When clips are available they never appear, even on a device with no Estonian voice or no speech synthesis.
+- e. Clips work in a browser without speech synthesis.
+- f. A clip that fails to play uses the existing "Couldn't play this word." message.
+- g. A missing or broken manifest is never an error screen, banner or message: the screen behaves as if no clips existed.
+- h. Clips are machine-generated and each is flagged `needsReview` until an Estonian speaker has checked it (`vocabulary-dataset.md`); this flag is never shown in the app.
+- i. A new selection cancels any word still playing, voice or clip, before the new one starts.
+- j. Nothing is spoken or played automatically on exercise load, on CHECK, on the feedback panel, or on the end screens. Speech and clips are stopped when the exercise changes or the screen is left.
+- k. The manifest is read once when the screen mounts, in parallel with the voice check, and kept for the screen; an exercise or a retry never waits for it. A selection made before the manifest has loaded and before a voice is known plays nothing (as in the Sound check state); because the click must start the sound, the clip is never fetched and started later.
+- l. The voice always wins: when a voice exists a clip is never played, even if the manifest lists one. A voice that fails does not hand over to the clip.
+- m. A word the selected card shows is matched to the manifest by its exact Estonian text. A word with no entry plays nothing and shows nothing (Word without a clip) as long as sound exists for the screen through other clips; this is the one case where a word stays silent without telling the user, because sound works for the other words. A manifest entry whose file is missing counts as a clip that fails to play (f).
+- n. There is no mute control and no replay button. Apart from m and a failed play (f), whenever neither a voice nor a clip exists the user is told through the Audio states above.
 
 Keyboard rules (OQ-30):
 - Keys `1`, `2`, `3` select the matching card in Idle and Option selected (same as click, including the audio). Pressing the number of the selected card keeps it selected.
@@ -101,7 +118,7 @@ Keyboard rules (OQ-30):
 - Wrong and skipped panel: "Correct solution:" and the Estonian word (for example "tee"). The red flame beside the title has no text of its own.
 - The red flame in the first-mistake modal, the Wrong and Skipped panels, the load error, Not found and Out of hearts has no text and no accessible name (`alt=""`); no string is added by the flame.
 - Screen-reader announcements (`role="status"`): "Correct. {praise}", "Incorrect. Correct solution: {estonian}. {n} hearts left.", "Skipped. Correct solution: {estonian}. {n} hearts left." (in practice the heart sentence is omitted).
-- Audio texts (OQ-41): icon accessible name "Sound unavailable"; icon description for no voice "This device has no Estonian voice, so words won't be spoken."; for unsupported "This browser can't speak words aloud, so sound is off."; notice for no voice "No Estonian voice on this device" / "Words won't be spoken, but you can still do every exercise." with "Got it"; notice for unsupported "This browser can't speak words aloud" / "You can still do every exercise." with "Got it"; playback failure "Couldn't play this word."
+- Audio texts (OQ-41; the recorded clips add no text: no new string, no new label): icon accessible name "Sound unavailable"; icon description for no voice "This device has no Estonian voice, so words won't be spoken."; for unsupported "This browser can't speak words aloud, so sound is off."; notice for no voice "No Estonian voice on this device" / "Words won't be spoken, but you can still do every exercise." with "Got it"; notice for unsupported "This browser can't speak words aloud" / "You can still do every exercise." with "Got it"; playback failure "Couldn't play this word."
 - First-mistake modal: "Each mistake costs 1 heart!", "Stay sharp and focused to keep your hearts. You got this!", "KEEP GOING".
 - Out of hearts: "You're out of hearts", "Practice to earn a heart, or come back later.".
 - Exit dialog: "Quit lesson?", "You'll lose your progress in this lesson.", "KEEP LEARNING", "QUIT". Practice: "Quit practice?", "You'll lose your progress in this practice.".
@@ -115,7 +132,7 @@ Keyboard rules (OQ-30):
 ## Layout
 Measured from `reference/06-exercise-picture-choice.png`, `07-exercise-option-selected.png` and `08-exercise-wrong-answer.png` (captures about 2000 px wide; widths in capture pixels, approximate; see OQ-44). The screen is full-screen with no app header (OQ-34) and has three parts: a top bar, a centred question area and a bottom action bar. Every part is a centred column of its own maximum width.
 
-- Top bar: **about 1320px wide, centred** (close at x 333, progress bar from 389 to 1557, about 1170px wide and 22px high, hearts counter to 1655). The close button is about 24px; the hearts counter (heart plus number) about 62px wide. About 100px below the top of the viewport (bar centre y 101). The speaker icon (no-voice states only) sits between the bar and the hearts counter.
+- Top bar: **about 1320px wide, centred** (close at x 333, progress bar from 389 to 1557, about 1170px wide and 22px high, hearts counter to 1655). The close button is about 24px; the hearts counter (heart plus number) about 62px wide. About 100px below the top of the viewport (bar centre y 101). The speaker icon (only when neither a voice nor any clip is available) sits between the bar and the hearts counter.
 - Question area: **about 790px wide, centred** (598 to 1389). Tag "NEW WORD" (about 30px high) at about y 357, question below it (large heading, about 40px), left-aligned to the column's left edge, about 120px between the question and the cards; question text wraps inside the column. The area is not vertically centred; it starts about 330px below the top of the viewport.
 - Cards: three in one row filling the question column: each about 256px wide and 334px high, about 12px between them (598 to 853, 865 to 1121, 1133 to 1389). Picture in the upper 60% and about 60px of free space above the label; the Estonian word at the bottom-left and the number-key hint at the bottom-right of the card, with about 30px side padding.
 - Bottom action bar: a full-width strip above which a 1-2px divider runs the whole window at about 85% of the viewport height (y 1118 of 1311), height about 190px. "SKIP" is left-aligned (x 387 to 584, about 197px wide, 64px high) and "CHECK" right-aligned (x 1402 to 1600, about 198px wide), their outer edges forming a column about 1213px wide centred on the page; they are vertically centred in the strip.
@@ -135,7 +152,7 @@ Stretches versus fixed: the progress bar, the cards (in width) and the panels' b
 ## Motion and sound
 - The progress bar fills with a short transition when it advances; the feedback panel slides up from the bottom on Correct, Wrong and Skipped; the hearts counter shakes once and the lost heart fades when a heart is lost; the wrong card shakes once; the selected card scales up slightly; the lesson-over mascot scales in. The red flames add no motion of their own: the panel flame arrives with the panel's slide-up and the modal flame with the modal's own appearance; they do not bob, shake or scale. The failure pose (slight tilt, slightly lowered) is static.
 - Reduced motion (`prefers-reduced-motion`): no slide, shake, scale or pop; the bar and panel change instantly; state is carried by colour, icon and text. The red flames are unaffected (they have no motion) and keep their static pose.
-- Sound: only the Estonian word on card selection (see Audio rules), and only when an Estonian voice exists. No effect sounds for correct, wrong or completion. The audio notice appears without motion.
+- Sound: only the Estonian word on card selection (see Audio rules), spoken by the browser's Estonian voice or, when there is none, played from the word's recorded clip. No effect sounds for correct, wrong or completion. The audio notice appears without motion. Clips are not affected by `prefers-reduced-motion` (a word the user chose to hear is not motion).
 
 ## Data needed
 - `GET /api/lessons/:lessonId`
@@ -146,9 +163,10 @@ Stretches versus fixed: the progress bar, the cards (in width) and the panels' b
 - `GET /api/practice?count=5`
   - 200: same shape as a lesson with `id: "practice"`; exercises are drawn at random from the whole pool on every call, `isNewWord` is false.
   - Errors as above.
+- Audio clips (static files, not API endpoints, and never intercepted by the mock layer): `GET /audio/manifest.json` returns the manifest described in `vocabulary-dataset.md` (version, model, voice id, generation time, and a `clips` object keyed by the Estonian word, each entry `{ itemId, file, needsReview }`); `GET /audio/<file>` returns one mp3 clip. A 404, a network failure, a timeout or a manifest that does not match this shape means "no clips" (silent, no message, no retry during the screen). Only the `clips` object, its keys and the `file` of each entry are used by the app; the other fields are provenance.
 - Client-only:
   - Profile: `hearts`, `hasSeenHeartsIntro`, `completedLessonIds`, `noVoiceNoteDismissed` (read and written; see `app-shell-and-routing.md`).
-  - Session state, in memory only: the queue, current exercise, selected option id, correct count, set of missed exercise ids, start time, whether a modal or dialog is open, voice status (`checking`, `available`, `no-voice`, `unsupported`), the transient playback-failed message. Voice status comes from the browser (`speechSynthesis` voices), not from the API.
+  - Session state, in memory only: the queue, current exercise, selected option id, correct count, set of missed exercise ids, start time, whether a modal or dialog is open, voice status (`checking`, `available`, `no-voice`, `unsupported`), clip status (`checking`, `available`, `none`) and the manifest content, the transient playback-failed message. Voice status comes from the browser (`speechSynthesis` voices), clip status from the static manifest, not from the API.
   - Nothing is sent to the server when a lesson ends; completion is written to the profile.
   - The flame colour needs no data: it follows the state (see Flame colour) and uses the red and blue flame artwork already bundled with the app; nothing is fetched or stored for it.
 - Loading, error and empty behaviour for both endpoints is also summarised in `data-loading-states.md`.
@@ -165,9 +183,10 @@ Stretches versus fixed: the progress bar, the cards (in width) and the panels' b
 - Every Estonian word (card label, solution panel, announcements) is wrapped with `lang="et"` so assistive tech can pronounce it correctly or fall back; the surrounding text stays English.
 - The font used for words must contain õ, ä, ö, ü, š and ž; words are never styled with `text-transform: uppercase` and never ASCII-folded.
 - The disabled speaker icon is a focusable button with `aria-disabled="true"`, accessible name "Sound unavailable", and `aria-describedby` pointing at its explanation; activating it re-opens the notice. The notice and the playback-failed message use `role="status"`, so assistive-tech users are told as well as sighted users. State is never shown by the icon colour alone.
+- Clips add no accessibility surface: no player control, no focus stop, no announcement when a clip starts or ends. The icon and notice are absent (not hidden-but-focusable) whenever a voice or any clip exists, so screen-reader users hear no "Sound unavailable" on a device where words are in fact played. A clip playing is not a live change and is not announced.
 
 ## Out of scope
-Other exercise types (translate, word bank, matching, listening, speaking), typo tolerance, timed refill of hearts, buying hearts, streaks, XP totals and leaderboards, a mute setting, a replay-audio button, falling back to a non-Estonian voice, downloading voices or audio files, resuming a lesson after a refresh, "too easy / too difficult / report" feedback, hint lessons, sound effects, a mascot in the Correct panel, a red flame anywhere other than the places listed in Flame colour.
+Other exercise types (translate, word bank, matching, listening, speaking), typo tolerance, timed refill of hearts, buying hearts, streaks, XP totals and leaderboards, a mute setting, a replay-audio button, falling back to a non-Estonian voice, downloading voices, generating speech at run time or calling any text-to-speech service from the app (clips are generated once, offline, see `vocabulary-dataset.md`), an error screen or message for a missing manifest, resuming a lesson after a refresh, "too easy / too difficult / report" feedback, hint lessons, sound effects, a mascot in the Correct panel, a red flame anywhere other than the places listed in Flame colour.
 
 ## Boards
 Pending (Penpot not connected).
