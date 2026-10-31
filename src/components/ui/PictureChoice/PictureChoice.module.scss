@@ -1,15 +1,22 @@
 @use '@/styles/mixins' as *;
 
-// Narrow screens: stacked. From sm up: three cards in a row.
+// Decided by the width of the column it sits in (container query), not the window: a column
+// under 576px (a phone, 358px at 390) stacks three full-width rows 12px apart; a wider column
+// (the 790px question column, a tablet) shows three cards in one row, 12px apart.
 .root {
+  position: relative;
+  container-type: inline-size;
+  inline-size: 100%;
+  max-inline-size: 49.375rem;
+}
+
+.grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: var(--space-3);
-  inline-size: 100%;
 
-  @include bp(sm) {
+  @container (min-width: 36rem) {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: var(--space-4);
   }
 }
 

@@ -106,6 +106,57 @@ export const Locked: Story = {
   },
 };
 
+/** In a 256px column: 256 x 334, picture in the upper 60%, word bottom-left, hint bottom-right. */
+export const DesktopSize: Story = {
+  decorators: [
+    (Story) => (
+      <div style={{ width: '16rem' }}>
+        <Story />
+      </div>
+    ),
+  ],
+  play: async ({ canvasElement }) => {
+    const radio = within(canvasElement).getByRole('radio');
+    const card = radio.closest('label');
+    if (!card) throw new Error('expected a card');
+    const rect = card.getBoundingClientRect();
+    await expect(Math.round(rect.width)).toBe(256);
+    await expect(Math.abs(rect.height - 334)).toBeLessThan(2);
+    const picture = within(card).getByRole('img').getBoundingClientRect();
+    await expect(picture.bottom - rect.top).toBeLessThanOrEqual(rect.height * 0.62);
+    const word = within(card).getByText('tee').getBoundingClientRect();
+    const hint = within(card).getByText('1').getBoundingClientRect();
+    await expect(word.left - rect.left).toBeGreaterThanOrEqual(30);
+    await expect(rect.right - hint.right).toBeGreaterThanOrEqual(30);
+    await expect(word.top - picture.bottom).toBeGreaterThan(40);
+    await expect(card.scrollWidth).toBeLessThanOrEqual(card.clientWidth);
+  },
+};
+
+/** Stacked on a phone: a full-width row (358px column), at least 88px high, picture left. */
+export const PhoneRow: Story = {
+  decorators: [
+    (Story) => (
+      <div style={{ width: '22.375rem' }}>
+        <Story />
+      </div>
+    ),
+  ],
+  play: async ({ canvasElement }) => {
+    const radio = within(canvasElement).getByRole('radio');
+    const card = radio.closest('label');
+    if (!card) throw new Error('expected a card');
+    const rect = card.getBoundingClientRect();
+    await expect(Math.round(rect.width)).toBe(358);
+    await expect(rect.height).toBeGreaterThanOrEqual(88);
+    await expect(rect.height).toBeLessThan(120);
+    const picture = within(card).getByRole('img').getBoundingClientRect();
+    const word = within(card).getByText('tee').getBoundingClientRect();
+    await expect(picture.right).toBeLessThan(word.left);
+    await expect(card.scrollWidth).toBeLessThanOrEqual(card.clientWidth);
+  },
+};
+
 export const LongWord: Story = {
   args: {
     word: 'maasikas',

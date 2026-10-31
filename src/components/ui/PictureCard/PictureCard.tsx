@@ -62,47 +62,48 @@ export function PictureCard({
   };
 
   return (
-    <label
-      className={clsx(
-        styles['root'],
-        status !== 'idle' && styles[status === 'revealed' ? 'correct' : status],
-        isLocked && styles['isLocked'],
-        className,
-      )}
-    >
-      <input
-        {...rest}
-        type="radio"
-        className={styles['input']}
-        name={name}
-        value={value}
-        checked={isChecked}
-        aria-disabled={isLocked ? true : undefined}
-        aria-labelledby={`${pictureId} ${wordId}`}
-        aria-describedby={describedBy}
-        onChange={handleChange}
-      />
-      <span id={pictureId} className={styles['picture']} role="img" aria-label={picture.alt}>
-        {picture.emoji}
-      </span>
-      <span className={styles['footer']}>
-        <span className={styles['keyHint']} aria-hidden="true">
-          {keyHint}
-        </span>
-        <span id={wordId} className={styles['word']} lang="et">
-          {word}
-        </span>
-        {status === 'idle' ? null : (
-          <span className={styles['status']} aria-hidden="true">
-            <Icon name={status === 'wrong' ? 'close' : 'check'} size={20} />
-          </span>
+    <label className={clsx(styles['root'], className)}>
+      <span
+        className={clsx(
+          styles['card'],
+          status !== 'idle' && styles[status === 'revealed' ? 'correct' : status],
+          isLocked && styles['isLocked'],
         )}
-      </span>
-      {status === 'wrong' ? (
-        <span id={incorrectId} className={styles['srOnly']}>
-          incorrect
+      >
+        <input
+          {...rest}
+          type="radio"
+          className={styles['input']}
+          name={name}
+          value={value}
+          checked={isChecked}
+          aria-disabled={isLocked ? true : undefined}
+          aria-labelledby={`${pictureId} ${wordId}`}
+          aria-describedby={describedBy}
+          onChange={handleChange}
+        />
+        <span id={pictureId} className={styles['picture']} role="img" aria-label={picture.alt}>
+          {picture.emoji}
         </span>
-      ) : null}
+        <span className={styles['footer']}>
+          <span id={wordId} className={styles['word']} lang="et">
+            {word}
+          </span>
+          {status === 'idle' ? null : (
+            <span className={styles['status']} aria-hidden="true">
+              <Icon name={status === 'wrong' ? 'close' : 'check'} size={20} />
+            </span>
+          )}
+          <span className={styles['keyHint']} aria-hidden="true">
+            {keyHint}
+          </span>
+        </span>
+        {status === 'wrong' ? (
+          <span id={incorrectId} className={styles['srOnly']}>
+            incorrect
+          </span>
+        ) : null}
+      </span>
     </label>
   );
 }

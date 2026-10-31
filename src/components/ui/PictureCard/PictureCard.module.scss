@@ -1,13 +1,27 @@
 @use '@/styles/mixins' as *;
 
+// The card adapts to its own width (container query), so it works in any column:
+// - under 280px wide (three in a row, about 200 to 256px): a card of the spec's 256 x 334
+//   proportion, picture in the upper 60%, word at the bottom-left and key hint at the
+//   bottom-right; it scales with its width on tablets;
+// - 280px and wider (stacked on a phone): a row at least 88px high, picture left, word, key
+//   hint at the right edge.
 .root {
+  position: relative;
+  display: block;
+  container-type: inline-size;
+  inline-size: 100%;
+}
+
+.card {
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  align-items: center;
+  align-items: stretch;
+  box-sizing: border-box;
   inline-size: 100%;
-  padding: var(--space-4);
+  aspect-ratio: 256 / 334;
+  padding: 0;
   color: var(--color-text);
   cursor: pointer;
   background-color: var(--color-surface);
@@ -27,6 +41,15 @@
     @include focus-ring;
   }
 
+  @container (min-width: 17.5rem) {
+    flex-direction: row;
+    gap: var(--space-4);
+    align-items: center;
+    aspect-ratio: auto;
+    min-block-size: 5.5rem;
+    padding: var(--space-3) var(--space-4);
+  }
+
   @media (prefers-reduced-motion: reduce) {
     transition: none;
   }
@@ -37,18 +60,32 @@
 }
 
 .picture {
-  font-size: 4rem;
+  display: flex;
+  flex: 0 0 60%;
+  align-items: center;
+  justify-content: center;
+  font-size: 34cqi;
   line-height: 1;
+
+  @container (min-width: 17.5rem) {
+    flex: 0 0 auto;
+    font-size: 2.5rem;
+  }
 }
 
 .footer {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2) var(--space-3);
-  align-items: center;
-  justify-content: center;
-  inline-size: 100%;
+  flex: 1;
+  gap: var(--space-3);
+  align-items: flex-end;
+  justify-content: space-between;
   min-inline-size: 0;
+  padding: 0 1.875rem 1.875rem;
+
+  @container (min-width: 17.5rem) {
+    align-items: center;
+    padding: 0;
+  }
 }
 
 .keyHint {
@@ -63,12 +100,18 @@
   color: var(--color-text-muted);
   border: 0.125rem solid var(--color-border);
   border-radius: var(--radius-sm);
+
+  // Keyboard hint: meaningless on touch-only devices.
+  @media (hover: none) and (pointer: coarse) {
+    display: none;
+  }
 }
 
 // The Estonian word is shown exactly as given: no text-transform, app font token.
 .word {
+  flex: 1;
   min-inline-size: 0;
-  overflow-wrap: break-word;
+  overflow-wrap: anywhere;
   font-family: var(--font-family-base);
   font-size: var(--font-size-md);
   font-weight: var(--font-weight-bold);

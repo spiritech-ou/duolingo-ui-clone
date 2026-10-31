@@ -66,19 +66,21 @@ export function PictureChoice({
       aria-describedby={hintId}
       className={clsx(styles['root'], className)}
     >
-      {options.map((option, index) => (
-        <PictureCard
-          key={option.id}
-          name={baseId}
-          value={option.id}
-          word={option.word}
-          picture={option.picture}
-          keyHint={String(index + 1)}
-          status={getStatus(option.id, selectedId, correctId, wrongId)}
-          isLocked={isLocked}
-          {...(onSelect ? { onSelect } : {})}
-        />
-      ))}
+      <div className={styles['grid']}>
+        {options.map((option, index) => (
+          <PictureCard
+            key={option.id}
+            name={baseId}
+            value={option.id}
+            word={option.word}
+            picture={option.picture}
+            keyHint={String(index + 1)}
+            status={getStatus(option.id, selectedId, correctId, wrongId)}
+            isLocked={isLocked}
+            {...(onSelect ? { onSelect } : {})}
+          />
+        ))}
+      </div>
       <span id={hintId} className={styles['hint']}>
         Press 1 to 3 to choose, Enter to check
       </span>
