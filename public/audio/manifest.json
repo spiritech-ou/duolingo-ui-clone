@@ -1,0 +1,608 @@
+{
+  "version": 1,
+  "model": "eleven_v3",
+  "voiceId": "Xb7hH8MSUJpSbSDYk0k2",
+  "generatedAt": "2026-10-31T22:39:49.080Z",
+  "clips": {
+    "tee": {
+      "itemId": "tea",
+      "file": "tea.mp3",
+      "needsReview": true
+    },
+    "kohv": {
+      "itemId": "coffee",
+      "file": "coffee.mp3",
+      "needsReview": true
+    },
+    "leib": {
+      "itemId": "bread",
+      "file": "bread.mp3",
+      "needsReview": true
+    },
+    "piim": {
+      "itemId": "milk",
+      "file": "milk.mp3",
+      "needsReview": true
+    },
+    "vesi": {
+      "itemId": "water",
+      "file": "water.mp3",
+      "needsReview": true
+    },
+    "õun": {
+      "itemId": "apple",
+      "file": "apple.mp3",
+      "needsReview": true
+    },
+    "juust": {
+      "itemId": "cheese",
+      "file": "cheese.mp3",
+      "needsReview": true
+    },
+    "muna": {
+      "itemId": "egg",
+      "file": "egg.mp3",
+      "needsReview": true
+    },
+    "kala": {
+      "itemId": "fish",
+      "file": "fish.mp3",
+      "needsReview": true
+    },
+    "kook": {
+      "itemId": "cake",
+      "file": "cake.mp3",
+      "needsReview": true
+    },
+    "banaan": {
+      "itemId": "banana",
+      "file": "banana.mp3",
+      "needsReview": true
+    },
+    "porgand": {
+      "itemId": "carrot",
+      "file": "carrot.mp3",
+      "needsReview": true
+    },
+    "kartul": {
+      "itemId": "potato",
+      "file": "potato.mp3",
+      "needsReview": true
+    },
+    "tomat": {
+      "itemId": "tomato",
+      "file": "tomato.mp3",
+      "needsReview": true
+    },
+    "kurk": {
+      "itemId": "cucumber",
+      "file": "cucumber.mp3",
+      "needsReview": true
+    },
+    "šokolaad": {
+      "itemId": "chocolate",
+      "file": "chocolate.mp3",
+      "needsReview": true
+    },
+    "jäätis": {
+      "itemId": "ice-cream",
+      "file": "ice-cream.mp3",
+      "needsReview": true
+    },
+    "maasikas": {
+      "itemId": "strawberry",
+      "file": "strawberry.mp3",
+      "needsReview": true
+    },
+    "seen": {
+      "itemId": "mushroom",
+      "file": "mushroom.mp3",
+      "needsReview": true
+    },
+    "ananass": {
+      "itemId": "pineapple",
+      "file": "pineapple.mp3",
+      "needsReview": true
+    },
+    "kass": {
+      "itemId": "cat",
+      "file": "cat.mp3",
+      "needsReview": true
+    },
+    "koer": {
+      "itemId": "dog",
+      "file": "dog.mp3",
+      "needsReview": true
+    },
+    "hobune": {
+      "itemId": "horse",
+      "file": "horse.mp3",
+      "needsReview": true
+    },
+    "lehm": {
+      "itemId": "cow",
+      "file": "cow.mp3",
+      "needsReview": true
+    },
+    "siga": {
+      "itemId": "pig",
+      "file": "pig.mp3",
+      "needsReview": true
+    },
+    "lind": {
+      "itemId": "bird",
+      "file": "bird.mp3",
+      "needsReview": true
+    },
+    "karu": {
+      "itemId": "bear",
+      "file": "bear.mp3",
+      "needsReview": true
+    },
+    "küülik": {
+      "itemId": "rabbit",
+      "file": "rabbit.mp3",
+      "needsReview": true
+    },
+    "mesilane": {
+      "itemId": "bee",
+      "file": "bee.mp3",
+      "needsReview": true
+    },
+    "žiraff": {
+      "itemId": "giraffe",
+      "file": "giraffe.mp3",
+      "needsReview": true
+    },
+    "puu": {
+      "itemId": "tree",
+      "file": "tree.mp3",
+      "needsReview": true
+    },
+    "lill": {
+      "itemId": "flower",
+      "file": "flower.mp3",
+      "needsReview": true
+    },
+    "öö": {
+      "itemId": "night",
+      "file": "night.mp3",
+      "needsReview": true
+    },
+    "päike": {
+      "itemId": "sun",
+      "file": "sun.mp3",
+      "needsReview": true
+    },
+    "kuu": {
+      "itemId": "moon",
+      "file": "moon.mp3",
+      "needsReview": true
+    },
+    "pilv": {
+      "itemId": "cloud",
+      "file": "cloud.mp3",
+      "needsReview": true
+    },
+    "vihm": {
+      "itemId": "rain",
+      "file": "rain.mp3",
+      "needsReview": true
+    },
+    "lumi": {
+      "itemId": "snow",
+      "file": "snow.mp3",
+      "needsReview": true
+    },
+    "mägi": {
+      "itemId": "mountain",
+      "file": "mountain.mp3",
+      "needsReview": true
+    },
+    "vikerkaar": {
+      "itemId": "rainbow",
+      "file": "rainbow.mp3",
+      "needsReview": true
+    },
+    "maja": {
+      "itemId": "house",
+      "file": "house.mp3",
+      "needsReview": true
+    },
+    "uks": {
+      "itemId": "door",
+      "file": "door.mp3",
+      "needsReview": true
+    },
+    "voodi": {
+      "itemId": "bed",
+      "file": "bed.mp3",
+      "needsReview": true
+    },
+    "võti": {
+      "itemId": "key",
+      "file": "key.mp3",
+      "needsReview": true
+    },
+    "telefon": {
+      "itemId": "phone",
+      "file": "phone.mp3",
+      "needsReview": true
+    },
+    "särk": {
+      "itemId": "shirt",
+      "file": "shirt.mp3",
+      "needsReview": true
+    },
+    "kleit": {
+      "itemId": "dress",
+      "file": "dress.mp3",
+      "needsReview": true
+    },
+    "king": {
+      "itemId": "shoe",
+      "file": "shoe.mp3",
+      "needsReview": true
+    },
+    "sokk": {
+      "itemId": "sock",
+      "file": "sock.mp3",
+      "needsReview": true
+    },
+    "müts": {
+      "itemId": "hat",
+      "file": "hat.mp3",
+      "needsReview": true
+    },
+    "raamat": {
+      "itemId": "book",
+      "file": "book.mp3",
+      "needsReview": true
+    },
+    "pliiats": {
+      "itemId": "pencil",
+      "file": "pencil.mp3",
+      "needsReview": true
+    },
+    "kell": {
+      "itemId": "clock",
+      "file": "clock.mp3",
+      "needsReview": true
+    },
+    "kott": {
+      "itemId": "bag",
+      "file": "bag.mp3",
+      "needsReview": true
+    },
+    "arvuti": {
+      "itemId": "computer",
+      "file": "computer.mp3",
+      "needsReview": true
+    },
+    "auto": {
+      "itemId": "car",
+      "file": "car.mp3",
+      "needsReview": true
+    },
+    "buss": {
+      "itemId": "bus",
+      "file": "bus.mp3",
+      "needsReview": true
+    },
+    "rong": {
+      "itemId": "train",
+      "file": "train.mp3",
+      "needsReview": true
+    },
+    "laev": {
+      "itemId": "ship",
+      "file": "ship.mp3",
+      "needsReview": true
+    },
+    "jalgratas": {
+      "itemId": "bicycle",
+      "file": "bicycle.mp3",
+      "needsReview": true
+    },
+    "mees": {
+      "itemId": "man",
+      "file": "man.mp3",
+      "needsReview": true
+    },
+    "naine": {
+      "itemId": "woman",
+      "file": "woman.mp3",
+      "needsReview": true
+    },
+    "poiss": {
+      "itemId": "boy",
+      "file": "boy.mp3",
+      "needsReview": true
+    },
+    "tüdruk": {
+      "itemId": "girl",
+      "file": "girl.mp3",
+      "needsReview": true
+    },
+    "beebi": {
+      "itemId": "baby",
+      "file": "baby.mp3",
+      "needsReview": true
+    },
+    "käsi": {
+      "itemId": "hand",
+      "file": "hand.mp3",
+      "needsReview": true
+    },
+    "silm": {
+      "itemId": "eye",
+      "file": "eye.mp3",
+      "needsReview": true
+    },
+    "kõrv": {
+      "itemId": "ear",
+      "file": "ear.mp3",
+      "needsReview": true
+    },
+    "nina": {
+      "itemId": "nose",
+      "file": "nose.mp3",
+      "needsReview": true
+    },
+    "suu": {
+      "itemId": "mouth",
+      "file": "mouth.mp3",
+      "needsReview": true
+    },
+    "kool": {
+      "itemId": "school",
+      "file": "school.mp3",
+      "needsReview": true
+    },
+    "haigla": {
+      "itemId": "hospital",
+      "file": "hospital.mp3",
+      "needsReview": true
+    },
+    "kirik": {
+      "itemId": "church",
+      "file": "church.mp3",
+      "needsReview": true
+    },
+    "pood": {
+      "itemId": "shop",
+      "file": "shop.mp3",
+      "needsReview": true
+    },
+    "sild": {
+      "itemId": "bridge",
+      "file": "bridge.mp3",
+      "needsReview": true
+    },
+    "kitarr": {
+      "itemId": "guitar",
+      "file": "guitar.mp3",
+      "needsReview": true
+    },
+    "trumm": {
+      "itemId": "drum",
+      "file": "drum.mp3",
+      "needsReview": true
+    },
+    "pall": {
+      "itemId": "ball",
+      "file": "ball.mp3",
+      "needsReview": true
+    },
+    "kingitus": {
+      "itemId": "gift",
+      "file": "gift.mp3",
+      "needsReview": true
+    },
+    "kaamera": {
+      "itemId": "camera",
+      "file": "camera.mp3",
+      "needsReview": true
+    },
+    "pirn": {
+      "itemId": "pear",
+      "file": "pear.mp3",
+      "needsReview": true
+    },
+    "sidrun": {
+      "itemId": "lemon",
+      "file": "lemon.mp3",
+      "needsReview": true
+    },
+    "viinamari": {
+      "itemId": "grape",
+      "file": "grape.mp3",
+      "needsReview": true
+    },
+    "kirss": {
+      "itemId": "cherry",
+      "file": "cherry.mp3",
+      "needsReview": true
+    },
+    "apelsin": {
+      "itemId": "orange",
+      "file": "orange.mp3",
+      "needsReview": true
+    },
+    "pitsa": {
+      "itemId": "pizza",
+      "file": "pizza.mp3",
+      "needsReview": true
+    },
+    "supp": {
+      "itemId": "soup",
+      "file": "soup.mp3",
+      "needsReview": true
+    },
+    "võileib": {
+      "itemId": "sandwich",
+      "file": "sandwich.mp3",
+      "needsReview": true
+    },
+    "mesi": {
+      "itemId": "honey",
+      "file": "honey.mp3",
+      "needsReview": true
+    },
+    "sool": {
+      "itemId": "salt",
+      "file": "salt.mp3",
+      "needsReview": true
+    },
+    "vihmavari": {
+      "itemId": "umbrella",
+      "file": "umbrella.mp3",
+      "needsReview": true
+    },
+    "sõrmus": {
+      "itemId": "ring",
+      "file": "ring.mp3",
+      "needsReview": true
+    },
+    "küünal": {
+      "itemId": "candle",
+      "file": "candle.mp3",
+      "needsReview": true
+    },
+    "haamer": {
+      "itemId": "hammer",
+      "file": "hammer.mp3",
+      "needsReview": true
+    },
+    "kroon": {
+      "itemId": "crown",
+      "file": "crown.mp3",
+      "needsReview": true
+    },
+    "telk": {
+      "itemId": "tent",
+      "file": "tent.mp3",
+      "needsReview": true
+    },
+    "tuli": {
+      "itemId": "fire",
+      "file": "fire.mp3",
+      "needsReview": true
+    },
+    "saar": {
+      "itemId": "island",
+      "file": "island.mp3",
+      "needsReview": true
+    },
+    "paat": {
+      "itemId": "boat",
+      "file": "boat.mp3",
+      "needsReview": true
+    },
+    "vulkaan": {
+      "itemId": "volcano",
+      "file": "volcano.mp3",
+      "needsReview": true
+    },
+    "vaal": {
+      "itemId": "whale",
+      "file": "whale.mp3",
+      "needsReview": true
+    },
+    "kaheksajalg": {
+      "itemId": "octopus",
+      "file": "octopus.mp3",
+      "needsReview": true
+    },
+    "krabi": {
+      "itemId": "crab",
+      "file": "crab.mp3",
+      "needsReview": true
+    },
+    "kilpkonn": {
+      "itemId": "turtle",
+      "file": "turtle.mp3",
+      "needsReview": true
+    },
+    "konn": {
+      "itemId": "frog",
+      "file": "frog.mp3",
+      "needsReview": true
+    },
+    "lammas": {
+      "itemId": "sheep",
+      "file": "sheep.mp3",
+      "needsReview": true
+    },
+    "rebane": {
+      "itemId": "fox",
+      "file": "fox.mp3",
+      "needsReview": true
+    },
+    "hunt": {
+      "itemId": "wolf",
+      "file": "wolf.mp3",
+      "needsReview": true
+    },
+    "hiir": {
+      "itemId": "mouse",
+      "file": "mouse.mp3",
+      "needsReview": true
+    },
+    "elevant": {
+      "itemId": "elephant",
+      "file": "elephant.mp3",
+      "needsReview": true
+    },
+    "täht": {
+      "itemId": "star",
+      "file": "star.mp3",
+      "needsReview": true
+    },
+    "maa": {
+      "itemId": "earth",
+      "file": "earth.mp3",
+      "needsReview": true
+    },
+    "rakett": {
+      "itemId": "rocket",
+      "file": "rocket.mp3",
+      "needsReview": true
+    },
+    "välk": {
+      "itemId": "lightning",
+      "file": "lightning.mp3",
+      "needsReview": true
+    },
+    "laine": {
+      "itemId": "wave",
+      "file": "wave.mp3",
+      "needsReview": true
+    },
+    "liblikas": {
+      "itemId": "butterfly",
+      "file": "butterfly.mp3",
+      "needsReview": true
+    },
+    "ämblik": {
+      "itemId": "spider",
+      "file": "spider.mp3",
+      "needsReview": true
+    },
+    "tigu": {
+      "itemId": "snail",
+      "file": "snail.mp3",
+      "needsReview": true
+    },
+    "öökull": {
+      "itemId": "owl",
+      "file": "owl.mp3",
+      "needsReview": true
+    },
+    "part": {
+      "itemId": "duck",
+      "file": "duck.mp3",
+      "needsReview": true
+    }
+  }
+}
