@@ -1,0 +1,73 @@
+import { useEffect, useRef } from 'react';
+import type { ApiError } from '@/api/client';
+import { Button } from '@/components/ui/Button';
+import { FocusedLayout } from '@/components/ui/FocusedLayout';
+import { IconButton } from '@/components/ui/IconButton';
+import { StatusScreen } from '@/components/ui/StatusScreen';
+import { getLoadScreenCopy, type LoadScreenKind } from '../logic/loadStates';
+import type { SessionMode } from '../logic/sessionTypes';
+
+export interface ExerciseLoadScreenProps {
+  kind: LoadScreenKind;
+  mode: SessionMode;
+  /** The failure behind an `error` screen, for its message. */
+  error?: ApiError;
+  onRetry: () => void;
+  /** Close button of the loading screen, and "Back to path". */
+  onLeave: () => void;
+}
+
+/**
+ * Loading, load-error, not-found and empty screens of a lesson or practice route.
+ * Remount it (`key={kind}`) when the kind changes so the focus rules run for each screen.
+ */
+export function ExerciseLoadScreen({ kind, mode, error, onRetry, onLeave }: ExerciseLoadScreenProps) {
+  const titleRef = useRef<HTMLHeadingElement>(null);
+  const firstActionRef = useRef<HTMLElement>(null);
+  const copy = getLoadScreenCopy(kind, mode, error);
+
+  useEffect(() => {
+    // Error and not found: the main action; empty: the heading; loading: nothing.
+    if (kind === 'error' || kind === 'notFound') firstActionRef.current?.focus();
+    else if (kind === 'empty') titleRef.current?.focus();
+  }, [kind]);
+
+  const backButton = (
+    <Button variant={kind === 'error' ? 'secondary' : 'primary'} onClick={onLeave}>
+      Back to path
+    </Button>
+  );
+
+  return (
+    <FocusedLayout
+      header={
+        kind === 'loading' ? (
+          <IconButton icon="close" label="Close" onClick={onLeave} />
+        ) : undefined
+      }
+    >
+      <StatusScreen
+        key={kind}
+        variant={kind === 'loading' ? 'loading' : kind === 'error' ? 'error' : 'empty'}
+        mood={kind === 'loading' ? 'default' : 'sad'}
+        title={copy.title}
+        {...(copy.message ? { message: copy.message } : {})}
+        titleRef={titleRef}
+        firstActionRef={firstActionRef}
+        {...(kind === 'loading'
+          ? {}
+          : {
+              actions:
+                kind === 'error' ? (
+                  <>
+                    <Button onClick={onRetry}>Try again</Button>
+                    {backButton}
+                  </>
+                ) : (
+                  backButton
+                ),
+            })}
+      />
+    </FocusedLayout>
+  );
+}

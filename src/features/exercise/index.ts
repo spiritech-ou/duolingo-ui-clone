@@ -4,6 +4,8 @@ export type {
   LessonCompleteStats,
   SessionDialog,
 } from './containers/ExerciseSession';
+export { LessonPage } from './containers/LessonPage';
+export { PracticePage } from './containers/PracticePage';
 export { ExerciseRun } from './containers/ExerciseRun';
 export type { ExerciseRunProps } from './containers/ExerciseRun';
 export { LessonOverScreen } from './containers/LessonOverScreen';

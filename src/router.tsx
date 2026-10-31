@@ -87,7 +87,6 @@ const headerGroup: RouteObject = {
 
 // Bare group: focused full-screen routes with no app header (OQ-34). Each page renders
 // FocusedLayout, which owns <main>, so these must stay outside Layout.
-// Later: /lesson/:lessonId and /practice are added here.
 const bareGroup: RouteObject[] = [
   {
     path: '/onboarding/level',
@@ -103,6 +102,22 @@ const bareGroup: RouteObject[] = [
     lazy: async () => {
       const { OnboardingStartPage } = await import('@/features/onboarding');
       return { Component: OnboardingStartPage };
+    },
+  },
+  {
+    path: '/lesson/:lessonId',
+    errorElement: <RouteError />,
+    lazy: async () => {
+      const { LessonPage } = await import('@/features/exercise');
+      return { Component: LessonPage };
+    },
+  },
+  {
+    path: '/practice',
+    errorElement: <RouteError />,
+    lazy: async () => {
+      const { PracticePage } = await import('@/features/exercise');
+      return { Component: PracticePage };
     },
   },
 ];
