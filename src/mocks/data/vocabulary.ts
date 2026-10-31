@@ -54,8 +54,14 @@ function word(
  *   Unit 3 "Around the house": lesson 1 Home, lesson 2 Clothes, lesson 3 School and
  *     office, lesson 4 Transport (all chosen here).
  *
- * Units 4 to 6 are appended to the end of UNIT_DEFINITIONS (same shapes, 4 lessons of
- * 5 items each, ids `unit-N` / `uN-lM`); nothing else in this module needs to change.
+ *   Unit 4 "People and places": lesson 1 People, lesson 2 Body, lesson 3 Town,
+ *     lesson 4 Fun things (all chosen here).
+ *   Unit 5 "Fruit, things and outdoors": lesson 1 More fruit, lesson 2 More food,
+ *     lesson 3 Everyday objects, lesson 4 Outdoors (all chosen here).
+ *   Unit 6 "Wildlife and sky": lesson 1 Sea and pond animals, lesson 2 Forest and farm
+ *     animals, lesson 3 Sky and space, lesson 4 Insects and birds (all chosen here).
+ *
+ * All 6 units are present: 24 lessons of 5 items, 120 items in total.
  */
 export const UNIT_DEFINITIONS: readonly UnitDefinition[] = [
   {
@@ -219,6 +225,171 @@ export const UNIT_DEFINITIONS: readonly UnitDefinition[] = [
           word('train', 'rong', '🚆', 'A train'),
           word('ship', 'laev', '🚢', 'A ship'),
           word('bicycle', 'jalgratas', '🚲', 'A bicycle'),
+        ],
+      },
+    ],
+  },
+  {
+    id: 'unit-4',
+    title: 'People and places',
+    description: 'Describe people, your body, the town and things for fun.',
+    lessons: [
+      {
+        id: 'u4-l1',
+        title: 'People',
+        description: 'Man, woman, boy, girl and baby.',
+        items: [
+          word('man', 'mees', '👨', 'A man'),
+          word('woman', 'naine', '👩', 'A woman'),
+          word('boy', 'poiss', '👦', 'A boy'),
+          word('girl', 'tüdruk', '👧', 'A girl'),
+          word('baby', 'beebi', '👶', 'A baby'),
+        ],
+      },
+      {
+        id: 'u4-l2',
+        title: 'Body',
+        description: 'Hand, eye, ear, nose and mouth.',
+        items: [
+          word('hand', 'käsi', '✋', 'An open hand'),
+          word('eye', 'silm', '👁️', 'An eye'),
+          word('ear', 'kõrv', '👂', 'An ear'),
+          word('nose', 'nina', '👃', 'A nose'),
+          word('mouth', 'suu', '👄', 'A mouth'),
+        ],
+      },
+      {
+        id: 'u4-l3',
+        title: 'Town',
+        description: 'School, hospital, church, shop and bridge.',
+        items: [
+          word('school', 'kool', '🏫', 'A school building'),
+          word('hospital', 'haigla', '🏥', 'A hospital building'),
+          word('church', 'kirik', '⛪', 'A church'),
+          word('shop', 'pood', '🏪', 'A small shop'),
+          word('bridge', 'sild', '🌉', 'A bridge at night'),
+        ],
+      },
+      {
+        id: 'u4-l4',
+        title: 'Fun things',
+        description: 'Guitar, drum, ball, gift and camera.',
+        items: [
+          word('guitar', 'kitarr', '🎸', 'A guitar'),
+          word('drum', 'trumm', '🥁', 'A drum'),
+          word('ball', 'pall', '⚽', 'A football'),
+          word('gift', 'kingitus', '🎁', 'A wrapped gift'),
+          word('camera', 'kaamera', '📷', 'A camera'),
+        ],
+      },
+    ],
+  },
+  {
+    id: 'unit-5',
+    title: 'Fruit, things and outdoors',
+    description: 'More fruit and food, everyday objects and the great outdoors.',
+    lessons: [
+      {
+        id: 'u5-l1',
+        title: 'More fruit',
+        description: 'Pear, lemon, grape, cherry and orange.',
+        items: [
+          word('pear', 'pirn', '🍐', 'A pear'),
+          word('lemon', 'sidrun', '🍋', 'A lemon'),
+          word('grape', 'viinamari', '🍇', 'A bunch of grapes'),
+          word('cherry', 'kirss', '🍒', 'A pair of cherries'),
+          word('orange', 'apelsin', '🍊', 'An orange'),
+        ],
+      },
+      {
+        id: 'u5-l2',
+        title: 'More food',
+        description: 'Pizza, soup, sandwich, honey and salt.',
+        items: [
+          word('pizza', 'pitsa', '🍕', 'A slice of pizza'),
+          word('soup', 'supp', '🍲', 'A pot of soup'),
+          word('sandwich', 'võileib', '🥪', 'A sandwich'),
+          word('honey', 'mesi', '🍯', 'A pot of honey'),
+          word('salt', 'sool', '🧂', 'A salt shaker'),
+        ],
+      },
+      {
+        id: 'u5-l3',
+        title: 'Everyday objects',
+        description: 'Umbrella, ring, candle, hammer and crown.',
+        items: [
+          word('umbrella', 'vihmavari', '☔', 'An umbrella with raindrops'),
+          word('ring', 'sõrmus', '💍', 'A ring'),
+          word('candle', 'küünal', '🕯️', 'A lit candle'),
+          word('hammer', 'haamer', '🔨', 'A hammer'),
+          word('crown', 'kroon', '👑', 'A crown'),
+        ],
+      },
+      {
+        id: 'u5-l4',
+        title: 'Outdoors',
+        description: 'Tent, fire, island, boat and volcano.',
+        items: [
+          word('tent', 'telk', '⛺', 'A tent'),
+          word('fire', 'tuli', '🔥', 'A fire'),
+          word('island', 'saar', '🏝️', 'A small island with a palm tree'),
+          word('boat', 'paat', '⛵', 'A sailing boat'),
+          word('volcano', 'vulkaan', '🌋', 'An erupting volcano'),
+        ],
+      },
+    ],
+  },
+  {
+    id: 'unit-6',
+    title: 'Wildlife and sky',
+    description: 'Animals of the sea, forest and air, and the sky above.',
+    lessons: [
+      {
+        id: 'u6-l1',
+        title: 'Sea and pond animals',
+        description: 'Whale, octopus, crab, turtle and frog.',
+        items: [
+          word('whale', 'vaal', '🐳', 'A whale'),
+          word('octopus', 'kaheksajalg', '🐙', 'An octopus'),
+          word('crab', 'krabi', '🦀', 'A crab'),
+          word('turtle', 'kilpkonn', '🐢', 'A turtle'),
+          word('frog', 'konn', '🐸', 'A frog'),
+        ],
+      },
+      {
+        id: 'u6-l2',
+        title: 'Forest and farm animals',
+        description: 'Sheep, fox, wolf, mouse and elephant.',
+        items: [
+          word('sheep', 'lammas', '🐑', 'A sheep'),
+          word('fox', 'rebane', '🦊', 'A fox'),
+          word('wolf', 'hunt', '🐺', 'A wolf'),
+          word('mouse', 'hiir', '🐭', 'A mouse'),
+          word('elephant', 'elevant', '🐘', 'An elephant'),
+        ],
+      },
+      {
+        id: 'u6-l3',
+        title: 'Sky and space',
+        description: 'Star, earth, rocket, lightning and wave.',
+        items: [
+          word('star', 'täht', '⭐', 'A yellow star'),
+          word('earth', 'maa', '🌍', 'The planet Earth'),
+          word('rocket', 'rakett', '🚀', 'A rocket'),
+          word('lightning', 'välk', '⚡', 'A lightning bolt'),
+          word('wave', 'laine', '🌊', 'A sea wave'),
+        ],
+      },
+      {
+        id: 'u6-l4',
+        title: 'Insects and birds',
+        description: 'Butterfly, spider, snail, owl and duck.',
+        items: [
+          word('butterfly', 'liblikas', '🦋', 'A butterfly'),
+          word('spider', 'ämblik', '🕷️', 'A spider'),
+          word('snail', 'tigu', '🐌', 'A snail'),
+          word('owl', 'öökull', '🦉', 'An owl'),
+          word('duck', 'part', '🦆', 'A duck'),
         ],
       },
     ],

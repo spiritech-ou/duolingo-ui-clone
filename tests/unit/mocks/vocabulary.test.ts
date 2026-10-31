@@ -9,6 +9,17 @@ const lessons = UNIT_DEFINITIONS.flatMap((unit) => unit.lessons);
 const VALID_ESTONIAN = /^[a-zõäöüšž]+$/;
 
 describe('vocabulary dataset', () => {
+  it('has 6 units, 24 lessons and exactly 120 items', () => {
+    expect(UNIT_DEFINITIONS).toHaveLength(6);
+    expect(lessons).toHaveLength(24);
+    expect(VOCABULARY_ITEMS).toHaveLength(120);
+    expect(COURSE_UNITS).toHaveLength(6);
+  });
+
+  it.each(['õ', 'ä', 'ö', 'ü', 'š', 'ž'])('contains the special letter %s', (letter) => {
+    expect(VOCABULARY_ITEMS.some((item) => item.estonian.includes(letter))).toBe(true);
+  });
+
   it('has the same number of items as lessons times five', () => {
     expect(VOCABULARY_ITEMS).toHaveLength(lessons.length * 5);
   });
