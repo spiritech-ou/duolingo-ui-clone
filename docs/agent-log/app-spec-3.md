@@ -1,0 +1,59 @@
+# Commands
+
+- run: 20261031T052028Z-ui-designer-app-spec-3
+- role: ui-designer
+- label: app-spec-3
+- prompt: Change of language: the course is English to Estonian, not French. Read the updated docs/product/brief.md (the bullet about the course language and the note before the screenshots). Update every spec so it agrees: course name and all onboarding copy say Estonian (for example How much Estonian do you know?), the example words and their picture cues are Estonian with the correct spelling (letters o with tilde, a, o and u with umlaut, s and z with caron), the audio uses the browser's Estonian voice (language tag et-EE). Many devices have no Estonian voice, so specify the behaviour when none is available: the audio control is shown disabled or hidden with a short explanation, the exercise still works without sound, and nothing fails silently. Also specify that the vocabulary is a fixed dataset of about 120 items served by the mock API, flagged for review by an Estonian speaker since it is not machine-translated by Google. Keep everything else as approved. Add any new product decision as an open question with your default, mark the changes in open-questions.md, and report what changed.
+- model: claude-sonnet-5-5
+- hq commit: 0f195270efcedb0457d239478aa0f1d468735c3b
+- cost usd: 1.7459826
+- turns: 47
+- denials: 0
+- tool errors: 0
+
+- 05:20:28 Read: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/brief.md => ok
+- 05:20:29 Bash: grep -rniE 'french|fr-FR|francais|thé|croissant|café|translat|Google' docs/product/login.md docs/product/app-shell-and-routing.md docs/product/onboarding.md docs/product/learning-path.md docs/product/exercise-session.md docs/product/data-loading-states.md docs/product/open-questions.md => ok
+- 05:21:12 Bash: sed -n 30,52p docs/product/onboarding.md => ok
+- 05:21:15 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/onboarding.md => ok
+- 05:21:16 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/onboarding.md => ok
+- 05:21:17 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/onboarding.md => ok
+- 05:21:19 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/onboarding.md => ok
+- 05:21:20 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/onboarding.md => ok
+- 05:21:22 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/onboarding.md => ok
+- 05:21:23 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/learning-path.md => ok
+- 05:21:24 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/learning-path.md => ok
+- 05:21:26 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/learning-path.md => ok
+- 05:21:27 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/learning-path.md => ok
+- 05:21:28 Bash: grep -n 'Unit banner\|Unit 1\|descriptions\|Greetings' docs/product/learning-path.md; sed -n 52,56p docs/product/learning-path.md => ok
+- 05:21:32 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/learning-path.md => ok
+- 05:21:33 Read: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/exercise-session.md => ok
+- 05:21:37 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/exercise-session.md => ok
+- 05:21:38 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/exercise-session.md => ok
+- 05:21:40 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/exercise-session.md => ok
+- 05:21:46 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/exercise-session.md => ok
+- 05:21:49 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/exercise-session.md => ok
+- 05:21:51 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/exercise-session.md => ok
+- 05:21:52 Read: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/exercise-session.md => ok
+- 05:21:55 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/exercise-session.md => ok
+- 05:21:58 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/exercise-session.md => ok
+- 05:22:00 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/exercise-session.md => ok
+- 05:22:03 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/exercise-session.md => ok
+- 05:22:06 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/exercise-session.md => ok
+- 05:22:09 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/exercise-session.md => ok
+- 05:22:11 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/exercise-session.md => ok
+- 05:22:13 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/app-shell-and-routing.md => ok
+- 05:22:14 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/app-shell-and-routing.md => ok
+- 05:22:44 Write: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/vocabulary-dataset.md => ok
+- 05:22:48 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/vocabulary-dataset.md => ok
+- 05:22:50 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/data-loading-states.md => ok
+- 05:22:51 Bash: sed -n 1,12p docs/product/open-questions.md; grep -n 'OQ-13\|OQ-14\|OQ-18\|OQ-29\|OQ-39\|Still pending' docs/product/open-questions.md => ok
+- 05:22:55 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/open-questions.md => ok
+- 05:22:57 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/open-questions.md => ok
+- 05:22:59 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/open-questions.md => ok
+- 05:23:01 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/open-questions.md => ok
+- 05:23:03 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/open-questions.md => ok
+- 05:23:10 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/open-questions.md => ok
+- 05:23:10 Bash: grep -rniE 'french|fr-FR|fran' docs/product/login.md docs/product/app-shell-and-routing.md docs/product/onboarding.md docs/product/learning-path.md docs/product/exercise-session.md docs/product/data-loading-states.md docs/product/vocabulary-dataset.md docs/product/open-questions.md => ok
+- 05:23:13 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/exercise-session.md => ok
+- 05:23:14 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/exercise-session.md => ok
+- 05:23:16 Edit: /Users/devodii/Desktop/work/spirit-technologies/duolingo-ui-clone-forks/vite-react-developer-2e197577/docs/product/open-questions.md => ok
