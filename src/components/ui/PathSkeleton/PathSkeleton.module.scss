@@ -1,0 +1,61 @@
+@use '@/styles/mixins' as *;
+
+// Mirrors UnitSection: same gaps, banner radius and node zigzag.
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  width: 100%;
+}
+
+.status {
+  @include visually-hidden;
+}
+
+.shape {
+  background-color: var(--color-border);
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+.banner {
+  height: 6rem;
+  border-radius: var(--radius-lg);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.item {
+  display: flex;
+  justify-content: center;
+}
+
+.node {
+  --path-node-step: 1.25rem;
+
+  flex-shrink: 0;
+  width: 4.5rem;
+  height: 4.5rem;
+  border-radius: 50%;
+  translate: calc(var(--path-node-offset, 0) * var(--path-node-step)) 0;
+
+  @include bp(sm) {
+    --path-node-step: 2.5rem;
+  }
+}
+
+@keyframes shimmer {
+  50% {
+    opacity: 0.5;
+  }
+}
+
+// Static placeholder: no animation.
+@media (prefers-reduced-motion: reduce) {
+  .shape {
+    animation: none;
+  }
+}
