@@ -7,19 +7,19 @@
 
 // Both themes define exactly the same set of semantic color tokens.
 $dark: (
-  'bg': p('ink-900'),
-  'surface': p('ink-850'),
-  'text': p('ink-100'),
-  'text-muted': p('ink-400'),
+  'bg': p('neutral-1000'),
+  'surface': p('neutral-900'),
+  'text': p('neutral-100'),
+  'text-muted': p('neutral-400'),
   'primary': p('blue-400'),
   'primary-hover': p('blue-300'),
-  'on-primary': p('ink-950'),
-  'primary-soft': p('ink-800'),
+  'on-primary': p('neutral-1000'),
+  'primary-soft': p('neutral-850'),
   'success': p('teal-400'),
   'danger': p('red-400'),
   'warning': p('amber-400'),
   'info': p('violet-400'),
-  'border': p('ink-600'),
+  'border': p('neutral-600'),
 );
 
 $light: (
