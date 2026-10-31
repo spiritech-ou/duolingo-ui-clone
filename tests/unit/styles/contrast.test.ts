@@ -51,6 +51,8 @@ const PAIRS: readonly (readonly [string, string, number])[] = [
   ['--color-on-primary', '--color-primary-hover', 4.5],
   ['--color-primary', '--color-primary-soft', 4.5],
   ['--color-border', '--color-bg', 3],
+  ['--color-border', '--color-surface', 3],
+  ['--color-danger', '--color-surface', 3],
   ['--color-primary', '--color-bg', 3],
 ];
 
