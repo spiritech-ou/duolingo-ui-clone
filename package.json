@@ -19,6 +19,7 @@
     "check": "npm run typecheck && npm run lint && npm run lint:styles && npm run test && npm run test:storybook"
   },
   "dependencies": {
+    "@fontsource-variable/outfit": "5.3.0",
     "@hookform/resolvers": "6.0.2",
     "clsx": "2.1.1",
     "motion": "14.9.0",

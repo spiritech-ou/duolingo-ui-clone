@@ -1,0 +1,18 @@
+.sample {
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-2xl);
+  line-height: var(--line-height-tight);
+  color: var(--color-text);
+}
+
+.regular {
+  font-weight: var(--font-weight-regular);
+}
+
+.medium {
+  font-weight: var(--font-weight-medium);
+}
+
+.bold {
+  font-weight: var(--font-weight-bold);
+}

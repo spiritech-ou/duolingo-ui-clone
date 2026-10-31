@@ -77,7 +77,7 @@ $light: (
     --easing-#{$name}: #{$value};
   }
 
-  --font-family-base: system-ui, -apple-system, 'Segoe UI', roboto, sans-serif;
+  --font-family-base: 'Outfit Variable', system-ui, -apple-system, 'Segoe UI', roboto, 'Helvetica Neue', arial, sans-serif;
 }
 
 :root[data-theme='dark'] {
