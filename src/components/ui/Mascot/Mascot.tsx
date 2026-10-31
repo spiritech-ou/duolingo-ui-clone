@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import clsx from 'clsx';
 import flame from '@/assets/brand/flame.svg';
+import flameRed from '@/assets/brand/flame-red.svg';
 import styles from './Mascot.module.scss';
 
 export type MascotMood = 'default' | 'sad' | 'celebrating';
@@ -9,7 +10,7 @@ export interface MascotProps {
   size?: number;
   /** Accessible name. When omitted the image is decorative (`alt=""`). */
   label?: string;
-  /** Mood, produced with CSS on the flame art (tilt, tone, lift). */
+  /** Mood: `sad` shows the red flame artwork, tilted and lowered; the others keep the blue flame. */
   mood?: MascotMood;
   /** Gentle idle bob, for loading screens. */
   isBobbing?: boolean;
@@ -38,7 +39,7 @@ export function Mascot({
         isBobbing && styles['isBobbing'],
         hasBounced && styles['isBouncing'],
       )}
-      src={flame}
+      src={mood === 'sad' ? flameRed : flame}
       alt={label ?? ''}
       width={size}
       height={size}
