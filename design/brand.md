@@ -6,6 +6,7 @@ The product mascot is the Spiritech blue flame. It plays the role the owl plays 
 
 - `design/logo/flame-source.png`: the original artwork supplied by the product owner (flame on a black background).
 - `design/logo/flame.svg`: vector trace of the flame, gradient fill plus white inner flame. Use this for the favicon, the app mark and the mascot.
+- `design/logo/flame-red.svg`: the same flame in a red gradient (top #f06060 to bottom #a11d33, white inner flame). It is the mascot's failure and error look.
 - `design/logo/flame-transparent.png`: 1024 px transparent raster of the same artwork, for places where an SVG is not usable.
 
 ## Palette sampled from the artwork
@@ -30,4 +31,5 @@ The flame is a vertical gradient from light blue at the top to deep blue at the 
 - Success, danger, warning and info colours are ours to choose. They must not be Duolingo's green or blue.
 - Every text token must pass the contrast tests the scaffold ships (4.5:1 for normal text, 3:1 for large text and UI components) in both themes. Darken or lighten the token, never relax the test.
 - The typeface is Outfit for every text style, headings and body. Self-host it (no external font CDN) and make sure the loaded subsets include the Latin Extended letters the Estonian course needs (õ, ä, ö, ü, š, ž) so no word falls back to another font. The human approved adding the font package for this.
+- Failure states show the mascot as the red flame (`flame-red.svg`), never as a grey or desaturated flame: a wrong answer, a lost heart, an error and the out-of-hearts screen, so the user feels at once that something went wrong. Success and neutral states keep the blue flame.
 - The flame is used large (mascot, 96 to 160 px) beside speech bubbles and small (24 to 32 px) as the app mark and favicon.
