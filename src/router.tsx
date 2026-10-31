@@ -1,6 +1,14 @@
-import { createBrowserRouter, Link, Outlet, useRouteError, type RouteObject } from 'react-router';
+import {
+  createBrowserRouter,
+  Link,
+  Navigate,
+  Outlet,
+  useRouteError,
+  type RouteObject,
+} from 'react-router';
 import { Button } from '@/components/ui/Button';
 import { Mascot } from '@/components/ui/Mascot';
+import { RouteGuard } from '@/features/auth';
 import { useThemeStore } from '@/store/useThemeStore';
 import styles from './router.module.scss';
 
@@ -24,17 +32,6 @@ function Layout() {
         <Outlet />
       </main>
     </div>
-  );
-}
-
-function Home() {
-  return (
-    <section className={styles['hero']}>
-      <Mascot size={128} label="Spiritech flame" />
-      <h1>Welcome</h1>
-      <p>The app shell is ready. Features come next.</p>
-      <Button>Get started</Button>
-    </section>
   );
 }
 
@@ -64,12 +61,12 @@ function RouteError() {
 }
 
 // Header group: wrapped by Layout (flame mark, product name, theme toggle, <main>).
-// Only /login, /learn, the placeholder Home and the not-found route belong here.
+// Only /login, /learn, the / redirect and the not-found route belong here.
 const headerGroup: RouteObject = {
   element: <Layout />,
   errorElement: <RouteError />,
   children: [
-    { path: '/', element: <Home /> }, // placeholder; replaced by the redirect to /learn with the guard task
+    { path: '/', element: <Navigate to="/learn" replace /> }, // the guard then applies to /learn
     {
       path: '/login',
       lazy: async () => {
@@ -110,4 +107,7 @@ const bareGroup: RouteObject[] = [
   },
 ];
 
-export const router = createBrowserRouter([headerGroup, ...bareGroup]);
+// The guard is a pathless parent of both groups, so it wraps every route including /login.
+export const router = createBrowserRouter([
+  { element: <RouteGuard />, children: [headerGroup, ...bareGroup] },
+]);
