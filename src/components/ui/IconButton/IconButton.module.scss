@@ -1,0 +1,46 @@
+@use '@/styles/mixins' as *;
+
+.root {
+  @include pressable;
+
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-primary);
+  cursor: pointer;
+  background-color: var(--color-surface);
+  border: 0.125rem solid var(--color-border);
+  border-radius: var(--radius-lg);
+
+  &:hover:not(:disabled, .isAriaDisabled) {
+    background-color: var(--color-primary-soft);
+  }
+
+  // Disabled is never colour alone: dimmed, dashed border and a not-allowed cursor.
+  &:disabled,
+  &.isAriaDisabled {
+    cursor: not-allowed;
+    border-style: dashed;
+    opacity: 0.55;
+  }
+
+  &.isAriaDisabled:active {
+    transform: none;
+  }
+}
+
+.sm {
+  width: 2rem;
+  height: 2rem;
+}
+
+.md {
+  width: 2.75rem;
+  height: 2.75rem;
+}
+
+.lg {
+  width: 3.5rem;
+  height: 3.5rem;
+}
