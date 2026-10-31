@@ -1,18 +1,15 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router';
 import type { Exercise } from '@/api/schemas/lesson';
 import type { SpeechAdapter } from '@/hooks/useSpeech';
 import { selectProfile, useProfileStore } from '@/store/useProfileStore';
-import { useSessionStore } from '@/store/useSessionStore';
+import { selectCurrentUserId, useSessionStore } from '@/store/useSessionStore';
 import type { SessionMode } from '../logic/sessionTypes';
 import { ExerciseSession } from './ExerciseSession';
 import type { LessonCompleteStats } from './ExerciseSession';
 import { LessonOverScreen } from './LessonOverScreen';
 import { OutOfHeartsScreen } from './OutOfHeartsScreen';
 import { PracticeCompleteScreen } from './PracticeCompleteScreen';
-
-/** Profile key used while nobody is signed in (the route guard arrives later); reads the defaults. */
-const NO_USER_ID = '';
 
 export interface ExerciseRunProps {
   mode: SessionMode;
@@ -36,7 +33,7 @@ type End =
  */
 export function ExerciseRun({ mode, lessonId, exercises, speechAdapter }: ExerciseRunProps) {
   const navigate = useNavigate();
-  const userId = useSessionStore((store) => store.session?.user.id ?? NO_USER_ID);
+  const userId = useSessionStore(selectCurrentUserId);
   const hearts = useProfileStore(selectProfile(userId)).hearts;
   const markLessonCompleted = useProfileStore((store) => store.markLessonCompleted);
   const gainHeart = useProfileStore((store) => store.gainHeart);
@@ -49,16 +46,29 @@ export function ExerciseRun({ mode, lessonId, exercises, speechAdapter }: Exerci
     void navigate('/practice', { replace: true });
   };
 
-  // The callbacks run once, from the session's CONTINUE press, so the saves happen exactly once.
+  // The run ends once. A second completion callback (a double firing, also under StrictMode) is
+  // ignored, so the heart is gained and the lesson saved exactly once. A ref survives StrictMode's
+  // re-render and remount, and is set synchronously, before any state update lands.
+  const hasEnded = useRef(false);
+  const claimEnd = (): boolean => {
+    if (hasEnded.current) return false;
+    hasEnded.current = true;
+    return true;
+  };
   const handleLessonComplete = (stats: LessonCompleteStats): void => {
+    if (!claimEnd()) return;
     if (mode === 'lesson') markLessonCompleted(userId, lessonId);
     setEnd({ kind: 'lessonOver', stats });
   };
   const handlePracticeComplete = (): void => {
+    if (!claimEnd()) return;
     gainHeart(userId);
     setEnd({ kind: 'practiceComplete' });
   };
-  const handleOutOfHearts = (): void => setEnd({ kind: 'outOfHearts' });
+  const handleOutOfHearts = (): void => {
+    if (!claimEnd()) return;
+    setEnd({ kind: 'outOfHearts' });
+  };
 
   if (end?.kind === 'lessonOver') {
     return <LessonOverScreen key="lessonOver" stats={end.stats} onContinue={goToPath} />;

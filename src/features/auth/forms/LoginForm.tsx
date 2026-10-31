@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import type { FormEvent } from 'react';
+import type { FormEvent, Ref } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/Button';
@@ -24,9 +24,11 @@ export interface LoginFormProps {
    */
   onSubmit: (values: LoginFormValues) => Promise<void>;
   defaultValues?: Partial<LoginFormValues>;
+  /** Ref to the "Log in" heading, so the page can focus it on arrival. */
+  titleRef?: Ref<HTMLHeadingElement>;
 }
 
-export function LoginForm({ onSubmit, defaultValues }: LoginFormProps) {
+export function LoginForm({ onSubmit, defaultValues, titleRef }: LoginFormProps) {
   const headingId = useId();
   const bannerRef = useRef<HTMLDivElement>(null);
   const [isInertMessageShown, setIsInertMessageShown] = useState(false);
@@ -82,7 +84,7 @@ export function LoginForm({ onSubmit, defaultValues }: LoginFormProps) {
     <div className={styles['root']}>
       <header className={styles['header']}>
         <Mascot size={96} />
-        <h1 id={headingId} className={styles['heading']}>
+        <h1 ref={titleRef} id={headingId} tabIndex={-1} className={styles['heading']}>
           Log in
         </h1>
       </header>

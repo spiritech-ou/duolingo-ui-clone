@@ -3,12 +3,9 @@ import { useNavigate, useParams } from 'react-router';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useLesson } from '@/hooks/useLesson';
 import { selectProfile, useProfileStore } from '@/store/useProfileStore';
-import { useSessionStore } from '@/store/useSessionStore';
+import { selectCurrentUserId, useSessionStore } from '@/store/useSessionStore';
 import { ExerciseLoader } from './ExerciseLoader';
 import { OutOfHeartsScreen } from './OutOfHeartsScreen';
-
-/** Profile key used while nobody is signed in; reads the defaults. */
-const NO_USER_ID = '';
 
 interface LessonRouteProps {
   lessonId: string;
@@ -16,7 +13,7 @@ interface LessonRouteProps {
 
 function LessonRoute({ lessonId }: LessonRouteProps) {
   const navigate = useNavigate();
-  const userId = useSessionStore((store) => store.session?.user.id ?? NO_USER_ID);
+  const userId = useSessionStore(selectCurrentUserId);
   const hearts = useProfileStore(selectProfile(userId)).hearts;
   // Decided once on arrival: losing the last heart mid-lesson is the session's own end screen,
   // and must not swap the route's content from under the run.

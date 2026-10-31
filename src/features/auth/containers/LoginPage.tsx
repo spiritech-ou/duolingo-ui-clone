@@ -24,14 +24,11 @@ export function LoginPage() {
   const location = useLocation();
   const setSession = useSessionStore((store) => store.setSession);
   const ensureProfile = useProfileStore((store) => store.ensureProfile);
-  const rootRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLHeadingElement>(null);
 
-  // Arrival: focus the "Log in" heading (rendered by the form, made focusable here).
+  // Arrival: focus the "Log in" heading (rendered by the form, which makes it focusable).
   useEffect(() => {
-    const heading = rootRef.current?.querySelector('h1');
-    if (!heading) return;
-    heading.tabIndex = -1;
-    heading.focus();
+    titleRef.current?.focus();
   }, []);
 
   // The form shows a rejection's message as the banner (see LoginForm's onSubmit contract).
@@ -53,9 +50,5 @@ export function LoginPage() {
     });
   };
 
-  return (
-    <div ref={rootRef}>
-      <LoginForm onSubmit={handleSubmit} />
-    </div>
-  );
+  return <LoginForm onSubmit={handleSubmit} titleRef={titleRef} />;
 }

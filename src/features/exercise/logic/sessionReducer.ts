@@ -1,12 +1,10 @@
-import { MAX_HEARTS } from '@/api/schemas/profile';
 import type { Exercise } from '@/api/schemas/lesson';
+import { clampHearts } from '@/store/useProfileStore';
 import { calculateAccuracy, isPerfectLesson } from './sessionStats';
 import type { CreateSessionInput, SessionAction, SessionState } from './sessionTypes';
 
 /** XP for any completed lesson, replays included. */
 export const LESSON_XP = 10;
-
-const clampHearts = (hearts: number): number => Math.min(MAX_HEARTS, Math.max(0, hearts));
 
 /**
  * Initial session. A lesson that starts with 0 hearts is out of hearts at once;

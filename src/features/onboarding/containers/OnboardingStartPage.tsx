@@ -7,20 +7,17 @@ import { RadioCardGroup } from '@/components/ui/RadioCardGroup';
 import { SpeechBubble } from '@/components/ui/SpeechBubble';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { selectProfile, useProfileStore } from '@/store/useProfileStore';
-import { useSessionStore } from '@/store/useSessionStore';
+import { selectCurrentUserId, useSessionStore } from '@/store/useSessionStore';
 import { CONTINUE_HINT } from '../logic/levels';
 import { findStartChoice, START_OPTIONS, START_PROMPT } from '../logic/startChoices';
 import { getStartUnitIndex } from '../logic/startUnit';
 import { CONTENT_MAX_WIDTH } from './layout';
 import styles from './OnboardingStartPage.module.scss';
 
-/** Profile key used while nobody is signed in (the route guard arrives later); reads the defaults. */
-const NO_USER_ID = '';
-
 export function OnboardingStartPage() {
   useDocumentTitle('Onboarding');
   const navigate = useNavigate();
-  const userId = useSessionStore((store) => store.session?.user.id ?? NO_USER_ID);
+  const userId = useSessionStore(selectCurrentUserId);
   const level = useProfileStore(selectProfile(userId)).onboarding.level;
   const completeOnboarding = useProfileStore((store) => store.completeOnboarding);
 

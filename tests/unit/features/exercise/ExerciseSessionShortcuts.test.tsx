@@ -6,6 +6,7 @@ import type { Exercise } from '@/api/schemas/lesson';
 import { ExerciseSession } from '@/features/exercise';
 import { selectProfile, useProfileStore } from '@/store/useProfileStore';
 import { useSessionStore } from '@/store/useSessionStore';
+import { getAnnouncer } from './announcer';
 import { makeSynth } from './fakeSynth';
 
 const USER = { id: 'u1', email: 'a@b.co', displayName: 'Ann' };
@@ -89,7 +90,7 @@ describe('ExerciseSession keyboard shortcuts', () => {
     const { user } = setup();
     await user.keyboard('2');
     await user.keyboard('{Enter}');
-    expect(screen.getByRole('status')).toHaveTextContent('Correct.');
+    expect(getAnnouncer()).toHaveTextContent('Correct.');
     expect(screen.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '1');
     // Focus is now on CONTINUE: the button handles this Enter, the resolver must not add a second.
     await user.keyboard('{Enter}');
@@ -111,7 +112,7 @@ describe('ExerciseSession keyboard shortcuts', () => {
     await user.click(card('oige0'));
     expect(card('oige0')).toHaveFocus();
     await user.keyboard('{Enter}');
-    expect(screen.getByRole('status')).toHaveTextContent('Correct.');
+    expect(getAnnouncer()).toHaveTextContent('Correct.');
   });
 
   it('Enter on the focused SKIP button skips once and gives no extra action', async () => {
@@ -119,14 +120,14 @@ describe('ExerciseSession keyboard shortcuts', () => {
     screen.getByRole('button', { name: 'Skip' }).focus();
     await user.keyboard('{Enter}');
     expect(hearts()).toBe(4);
-    expect(screen.getByRole('status')).toHaveTextContent('Skipped.');
+    expect(getAnnouncer()).toHaveTextContent('Skipped.');
   });
 
   it('a held Enter checks once and does not continue', async () => {
     const { user } = setup();
     await user.keyboard('2');
     await user.keyboard('{Enter>4}');
-    expect(screen.getByRole('status')).toHaveTextContent('Correct.');
+    expect(getAnnouncer()).toHaveTextContent('Correct.');
     expect(heading(0)).toBeInTheDocument();
     await user.keyboard('{/Enter}');
     expect(heading(0)).toBeInTheDocument();

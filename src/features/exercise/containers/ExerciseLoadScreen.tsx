@@ -53,7 +53,6 @@ export function ExerciseLoadScreen({ kind, mode, error, onRetry, onLeave }: Exer
     >
       <div className={styles['column']}>
         <StatusScreen
-          key={kind}
           variant={kind === 'loading' ? 'loading' : kind === 'error' ? 'error' : 'empty'}
           // Red flame only for failures; loading and the empty lesson keep the blue one.
           mood={kind === 'error' || kind === 'notFound' ? 'sad' : 'default'}

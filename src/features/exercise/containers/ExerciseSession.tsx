@@ -12,7 +12,7 @@ import { ExerciseTopBar } from '@/components/ui/ExerciseTopBar';
 import { FocusedLayout } from '@/components/ui/FocusedLayout';
 import { PictureChoice } from '@/components/ui/PictureChoice';
 import { selectProfile, useProfileStore } from '@/store/useProfileStore';
-import { useSessionStore } from '@/store/useSessionStore';
+import { selectCurrentUserId, useSessionStore } from '@/store/useSessionStore';
 import {
   createSession,
   getAccuracy,
@@ -39,9 +39,6 @@ import { ExitDialog } from './ExitDialog';
 import { FirstMistakeModal } from './FirstMistakeModal';
 import { SoundNotice } from './SoundNotice';
 import styles from './ExerciseSession.module.scss';
-
-/** Profile key used while nobody is signed in (the route guard arrives later); reads the defaults. */
-const NO_USER_ID = '';
 
 /**
  * Column widths from the spec's Layout section; each is also clamped by the layout's side padding.
@@ -127,7 +124,7 @@ export function ExerciseSession({
   loadClips,
   createAudio,
 }: ExerciseSessionProps) {
-  const userId = useSessionStore((store) => store.session?.user.id ?? NO_USER_ID);
+  const userId = useSessionStore(selectCurrentUserId);
   const profile = useProfileStore(selectProfile(userId));
   const loseHeart = useProfileStore((store) => store.loseHeart);
   const markHeartsIntroSeen = useProfileStore((store) => store.markHeartsIntroSeen);
@@ -246,6 +243,8 @@ export function ExerciseSession({
   }, [isBlocked, openDialog, blocker]);
 
   // A lesson that starts with no hearts is out of hearts at once.
+  // Only turn 0 counts: later transitions call the callbacks from `dispatch`, and the flag keeps
+  // a changing callback identity from reporting twice.
   const reportedEmpty = useRef(false);
   useEffect(() => {
     if (session.phase === 'outOfHearts' && !reportedEmpty.current && turn === 0) {
@@ -253,9 +252,7 @@ export function ExerciseSession({
       isLeaving.current = true;
       onOutOfHearts();
     }
-    // Runs for the initial state only; later transitions call the callbacks from `dispatch`.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [session.phase, turn, onOutOfHearts]);
 
   // A new exercise (including a retried one) moves focus to the question heading.
   useEffect(() => {
@@ -465,8 +462,8 @@ export function ExerciseSession({
             onSelect={handleSelect}
           />
         </div>
-        {/* The one, always-mounted live region (a status); its message appears inside it. */}
-        <div className={styles['playbackSlot']} aria-live="polite" aria-atomic="true">
+        {/* The one, always-mounted live region; role=status already implies polite and atomic. */}
+        <div className={styles['playbackSlot']} role="status">
           {playbackFailed ? <p className={styles['playbackStatus']}>{PLAYBACK_FAILED_TEXT}</p> : null}
         </div>
       </div>

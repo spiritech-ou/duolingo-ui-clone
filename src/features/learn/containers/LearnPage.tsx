@@ -12,7 +12,7 @@ import { useCourse } from '@/hooks/useCourse';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useCourseStore } from '@/store/useCourseStore';
 import { selectProfile, useProfileStore } from '@/store/useProfileStore';
-import { useSessionStore } from '@/store/useSessionStore';
+import { selectCurrentUserId, useSessionStore } from '@/store/useSessionStore';
 import {
   getArrivalTarget,
   peekDeparture,
@@ -31,9 +31,6 @@ import {
 } from '../logic/learningPath';
 import styles from './LearnPage.module.scss';
 
-/** Profile key used while nobody is signed in (the route guard arrives later); reads the defaults. */
-const NO_USER_ID = '';
-
 type View = 'loading' | 'error' | 'empty' | 'ready';
 
 function getView(status: 'idle' | 'loading' | 'success' | 'error', course: Course | null): View {
@@ -47,7 +44,7 @@ export function LearnPage() {
   const navigate = useNavigate();
   const { state, retry } = useCourse();
   const resetCourse = useCourseStore((store) => store.reset);
-  const userId = useSessionStore((store) => store.session?.user.id ?? NO_USER_ID);
+  const userId = useSessionStore(selectCurrentUserId);
   const clearSession = useSessionStore((store) => store.clearSession);
   const profile = useProfileStore(selectProfile(userId));
   const dismissPlacementNote = useProfileStore((store) => store.dismissPlacementNote);
@@ -84,20 +81,24 @@ export function LearnPage() {
   const [departure] = useState(() => peekDeparture(userId));
   const arrival = getArrivalTarget(recommendedId, profile.completedLessonIds, departure);
   const celebratedId = arrival.celebrate ? recommendedId : null;
+  // The arrival effect reads the latest render's values through a ref, so it depends on `view` only.
+  const arrivalInput = useRef({ focusLessonId: arrival.focusLessonId, lessonIds });
+  useEffect(() => {
+    arrivalInput.current = { focusLessonId: arrival.focusLessonId, lessonIds };
+  });
   useEffect(() => {
     if (view !== 'ready' || arrivedRef.current) return;
     arrivedRef.current = true;
     resetArrivalMemory();
+    const { focusLessonId, lessonIds: ids } = arrivalInput.current;
     let target: HTMLElement | null | undefined = recommendedRef.current;
     if (!target) {
       const buttons = navRef.current?.querySelectorAll<HTMLElement>('button');
-      const index = arrival.focusLessonId ? lessonIds.indexOf(arrival.focusLessonId) : 0;
+      const index = focusLessonId ? ids.indexOf(focusLessonId) : 0;
       target = buttons?.[Math.max(index, 0)];
     }
     target?.scrollIntoView({ block: 'center', behavior: 'instant' });
     target?.focus({ preventScroll: true });
-    // Runs once per visit on purpose: the values it reads are those of the first ready render.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view]);
 
   // The note's live region is mounted empty and filled one tick later, so assistive tech announces it.

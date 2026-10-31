@@ -1,13 +1,11 @@
 import { useNavigate } from 'react-router';
 import type { LoadState } from '@/hooks/useAsyncData';
+import { PRACTICE_ID } from '@/api/schemas/lesson';
 import type { Lesson, Practice } from '@/api/schemas/lesson';
 import { getFailureKind } from '../logic/loadStates';
 import type { SessionMode } from '../logic/sessionTypes';
 import { ExerciseLoadScreen } from './ExerciseLoadScreen';
 import { ExerciseRun } from './ExerciseRun';
-
-/** `lessonId` ExerciseRun gets in practice mode, where it is ignored. */
-const PRACTICE_RUN_ID = 'practice';
 
 export interface ExerciseLoaderProps {
   mode: SessionMode;
@@ -46,9 +44,9 @@ export function ExerciseLoader({ mode, lessonId, state, retry }: ExerciseLoaderP
       }
       return (
         <ExerciseRun
-          key={mode === 'lesson' ? lessonId : PRACTICE_RUN_ID}
+          key={mode === 'lesson' ? lessonId : PRACTICE_ID}
           mode={mode}
-          lessonId={mode === 'lesson' ? lessonId : PRACTICE_RUN_ID}
+          lessonId={mode === 'lesson' ? lessonId : PRACTICE_ID}
           exercises={state.data.exercises}
         />
       );

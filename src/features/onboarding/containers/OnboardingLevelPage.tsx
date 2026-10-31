@@ -8,7 +8,7 @@ import { SignalBars } from '@/components/ui/SignalBars';
 import { SpeechBubble } from '@/components/ui/SpeechBubble';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { selectProfile, useProfileStore } from '@/store/useProfileStore';
-import { useSessionStore } from '@/store/useSessionStore';
+import { selectCurrentUserId, useSessionStore } from '@/store/useSessionStore';
 import {
   CONTINUE_HINT,
   findLevelOption,
@@ -20,9 +20,6 @@ import { getStartUnitIndex } from '../logic/startUnit';
 import { CONTENT_MAX_WIDTH } from './layout';
 import styles from './OnboardingLevelPage.module.scss';
 
-/** Profile key used while nobody is signed in (the route guard arrives later); reads the defaults. */
-const NO_USER_ID = '';
-
 const RADIO_OPTIONS = LEVEL_OPTIONS.map((option) => ({
   value: String(option.level),
   label: option.label,
@@ -32,7 +29,7 @@ const RADIO_OPTIONS = LEVEL_OPTIONS.map((option) => ({
 export function OnboardingLevelPage() {
   useDocumentTitle('Onboarding');
   const navigate = useNavigate();
-  const userId = useSessionStore((store) => store.session?.user.id ?? NO_USER_ID);
+  const userId = useSessionStore(selectCurrentUserId);
   const draftLevel = useProfileStore(selectProfile(userId)).onboarding.level;
   const saveDraftLevel = useProfileStore((store) => store.saveDraftLevel);
   const completeOnboarding = useProfileStore((store) => store.completeOnboarding);

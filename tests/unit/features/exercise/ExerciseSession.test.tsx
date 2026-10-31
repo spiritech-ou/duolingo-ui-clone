@@ -7,6 +7,7 @@ import { ExerciseSession } from '@/features/exercise';
 import type { SessionMode } from '@/features/exercise/logic/sessionTypes';
 import { selectProfile, useProfileStore } from '@/store/useProfileStore';
 import { useSessionStore } from '@/store/useSessionStore';
+import { getAnnouncer } from './announcer';
 import { makeSynth } from './fakeSynth';
 
 const USER = { id: 'u1', email: 'a@b.co', displayName: 'Ann' };
@@ -89,7 +90,7 @@ describe('ExerciseSession', () => {
     expect(screen.getAllByRole('radio')).toHaveLength(3);
     expect(screen.getByRole('button', { name: 'Skip' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Check' })).toBeDisabled();
-    expect(screen.getByRole('status')).toBeEmptyDOMElement();
+    expect(getAnnouncer()).toBeEmptyDOMElement();
     expect(screen.getByRole('img', { name: '5 hearts left' })).toBeInTheDocument();
   });
 
@@ -111,7 +112,7 @@ describe('ExerciseSession', () => {
     await user.click(card('tee'));
     await user.click(screen.getByRole('button', { name: 'Check' }));
     expect(bar()).toHaveAttribute('aria-valuenow', '1');
-    expect(screen.getByRole('status')).toHaveTextContent('Correct. Great job!');
+    expect(getAnnouncer()).toHaveTextContent('Correct. Great job!');
     expect(screen.getByRole('button', { name: 'Continue' })).toHaveFocus();
     expect(card('tee')).toBeChecked();
     await user.click(screen.getByRole('button', { name: 'Continue' }));
@@ -120,12 +121,12 @@ describe('ExerciseSession', () => {
     expect(screen.queryByText('NEW WORD')).not.toBeInTheDocument();
     await user.click(card('piim'));
     await user.click(screen.getByRole('button', { name: 'Check' }));
-    expect(screen.getByRole('status')).toHaveTextContent('Correct. Nice one!');
+    expect(getAnnouncer()).toHaveTextContent('Correct. Nice one!');
     await user.click(screen.getByRole('button', { name: 'Continue' }));
 
     await user.click(card('õun'));
     await user.click(screen.getByRole('button', { name: 'Check' }));
-    expect(screen.getByRole('status')).toHaveTextContent('Correct. Perfect!');
+    expect(getAnnouncer()).toHaveTextContent('Correct. Perfect!');
     expect(onLessonComplete).not.toHaveBeenCalled();
     await user.click(screen.getByRole('button', { name: 'Continue' }));
 
@@ -150,7 +151,7 @@ describe('ExerciseSession', () => {
     expect(screen.getByRole('img', { name: '4 hearts left' })).toBeInTheDocument();
     expect(bar()).toHaveAttribute('aria-valuenow', '0');
     expect(screen.getByText('Correct solution:')).toBeInTheDocument();
-    expect(screen.getByRole('status')).toHaveTextContent(
+    expect(getAnnouncer()).toHaveTextContent(
       'Incorrect. Correct solution: tee. 4 hearts left.',
     );
     expect(screen.getByRole('button', { name: 'Continue' })).toHaveFocus();
@@ -190,7 +191,7 @@ describe('ExerciseSession', () => {
 
     expect(hearts()).toBe(4);
     expect(bar()).toHaveAttribute('aria-valuenow', '0');
-    expect(screen.getByRole('status')).toHaveTextContent(
+    expect(getAnnouncer()).toHaveTextContent(
       'Skipped. Correct solution: tee. 4 hearts left.',
     );
     expect(screen.getByRole('button', { name: 'Continue' })).toHaveFocus();
@@ -216,7 +217,7 @@ describe('ExerciseSession', () => {
     await user.click(card('kohv'));
     await user.click(screen.getByRole('button', { name: 'Check' }));
     expect(hearts()).toBe(0);
-    expect(screen.getByRole('status')).toHaveTextContent('No hearts left.');
+    expect(getAnnouncer()).toHaveTextContent('No hearts left.');
     expect(onOutOfHearts).not.toHaveBeenCalled();
     await user.click(screen.getByRole('button', { name: 'Continue' }));
     expect(onOutOfHearts).toHaveBeenCalledTimes(1);
@@ -238,7 +239,7 @@ describe('ExerciseSession', () => {
     await user.click(screen.getByRole('button', { name: 'Check' }));
     expect(hearts()).toBe(5);
     expect(screen.getByRole('img', { name: '5 hearts left' })).toBeInTheDocument();
-    expect(screen.getByRole('status').textContent).toBe('Incorrect. Correct solution: tee.');
+    expect(getAnnouncer().textContent).toBe('Incorrect. Correct solution: tee.');
     await user.click(screen.getByRole('button', { name: 'Continue' }));
     await user.click(card('tee'));
     await user.click(screen.getByRole('button', { name: 'Check' }));
@@ -291,7 +292,7 @@ describe('ExerciseSession first-mistake modal', () => {
     expect(within(modal).getByRole('button', { name: 'Keep going' })).toHaveFocus();
     // The Wrong panel is behind it, and the page behind is inert.
     expect(screen.getByText('Correct solution:')).toBeInTheDocument();
-    expect(screen.getByRole('status')).toHaveTextContent('Incorrect. Correct solution: tee. 4 hearts left.');
+    expect(getAnnouncer()).toHaveTextContent('Incorrect. Correct solution: tee. 4 hearts left.');
     expect(document.querySelector('[inert] [role="radiogroup"]')).not.toBeNull();
     expect(hasSeenIntro()).toBe(false);
   });

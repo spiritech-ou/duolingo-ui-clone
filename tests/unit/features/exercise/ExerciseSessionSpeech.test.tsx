@@ -194,15 +194,18 @@ describe('ExerciseSession speech and sound notices', () => {
       expect(synth.spoken).toHaveLength(2);
     });
 
-    it('announces the failure through a single polite live region', async () => {
+    it('announces the failure through a single status region', async () => {
       const synth = makeSynth();
       const { user } = setup(synth);
       await settle();
       await user.click(card('kohv'));
       act(() => synth.spoken[0]?.onError('synthesis-failed'));
       const message = screen.getByText("Couldn't play this word.");
-      expect(message.closest('[aria-live]')).toHaveAttribute('aria-live', 'polite');
-      expect(message.closest('[role="status"]')).toBeNull();
+      // One literal status region (implicitly polite and atomic); no second live region around it.
+      const region = message.closest('[role="status"]');
+      expect(region).not.toBeNull();
+      expect(region).not.toHaveAttribute('aria-live');
+      expect(message.parentElement?.closest('[aria-live]')).toBeNull();
     });
 
     it('cancels speech when the screen is left', async () => {
