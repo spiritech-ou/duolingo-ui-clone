@@ -17,6 +17,7 @@ import {
   LOWEST_LEVEL,
 } from '../logic/levels';
 import { getStartUnitIndex } from '../logic/startUnit';
+import { CONTENT_MAX_WIDTH } from './layout';
 import styles from './OnboardingLevelPage.module.scss';
 
 /** Profile key used while nobody is signed in (the route guard arrives later); reads the defaults. */
@@ -67,6 +68,8 @@ export function OnboardingLevelPage() {
 
   return (
     <FocusedLayout
+      contentMaxWidth={CONTENT_MAX_WIDTH}
+      footerMaxWidth="none"
       footer={
         <div className={styles['footer']}>
           <Button
@@ -91,12 +94,14 @@ export function OnboardingLevelPage() {
         <span id={promptId} className={styles['hidden']}>
           {LEVEL_PROMPT}
         </span>
-        <SpeechBubble
-          role="heading"
-          message={selected?.reaction ?? LEVEL_PROMPT}
-          {...(level !== null ? { bounceKey: level } : {})}
-          ref={promptRef}
-        />
+        <div className={styles['row']}>
+          <SpeechBubble
+            role="heading"
+            message={selected?.reaction ?? LEVEL_PROMPT}
+            {...(level !== null ? { bounceKey: level } : {})}
+            ref={promptRef}
+          />
+        </div>
         {/* Mounted from the start so the reaction is announced when it appears. */}
         <div role="status" aria-live="polite" aria-atomic="true" className={styles['hidden']}>
           {selected?.reaction ?? ''}

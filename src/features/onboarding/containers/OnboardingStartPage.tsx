@@ -11,6 +11,7 @@ import { useSessionStore } from '@/store/useSessionStore';
 import { CONTINUE_HINT } from '../logic/levels';
 import { findStartChoice, START_OPTIONS, START_PROMPT } from '../logic/startChoices';
 import { getStartUnitIndex } from '../logic/startUnit';
+import { CONTENT_MAX_WIDTH } from './layout';
 import styles from './OnboardingStartPage.module.scss';
 
 /** Profile key used while nobody is signed in (the route guard arrives later); reads the defaults. */
@@ -54,6 +55,8 @@ export function OnboardingStartPage() {
 
   return (
     <FocusedLayout
+      contentMaxWidth={CONTENT_MAX_WIDTH}
+      footerMaxWidth="none"
       header={
         <Button variant="secondary" size="sm" className={styles['back']} onClick={handleBack}>
           Back
@@ -83,8 +86,11 @@ export function OnboardingStartPage() {
         <span id={promptId} className={styles['hidden']}>
           {START_PROMPT}
         </span>
-        <SpeechBubble role="heading" message={START_PROMPT} ref={promptRef} />
+        <div className={styles['row']}>
+          <SpeechBubble role="heading" message={START_PROMPT} ref={promptRef} />
+        </div>
         <RadioCardGroup
+          size="lg"
           aria-labelledby={promptId}
           options={START_OPTIONS}
           value={choice}

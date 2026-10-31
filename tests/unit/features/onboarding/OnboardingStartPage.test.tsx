@@ -54,6 +54,24 @@ describe('OnboardingStartPage', () => {
     expect(button).toHaveAccessibleDescription('Choose an option to continue');
   });
 
+  it('tabs through Back, the radiogroup and CONTINUE in that order', async () => {
+    renderPage();
+    const visited: string[] = [];
+    await userEvent.click(document.body); // leave the focused prompt: start from the top of the page
+    for (let i = 0; i < 6; i += 1) {
+      await userEvent.tab();
+      const active = document.activeElement;
+      const radio = active?.getAttribute('type') === 'radio';
+      visited.push(radio ? 'radio' : (active?.textContent ?? ''));
+    }
+    const back = visited.indexOf('Back');
+    const group = visited.indexOf('radio');
+    const next = visited.indexOf('Continue');
+    expect(back).toBeGreaterThanOrEqual(0);
+    expect(back).toBeLessThan(group);
+    expect(group).toBeLessThan(next);
+  });
+
   it('does nothing when CONTINUE is pressed with no choice', async () => {
     const router = renderPage();
     await userEvent.click(screen.getByRole('button', { name: 'Continue' }));

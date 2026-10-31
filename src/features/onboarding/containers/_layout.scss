@@ -1,0 +1,47 @@
+@use '@/styles/mixins' as *;
+
+// Shared layout of both onboarding steps: 640px column, hanging mascot row, action bar button.
+$column: 40rem;
+$hang: 20.625rem; // 330px left of the column's left edge in the reference
+$edge-gutter: var(--space-6);
+
+@mixin page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  width: 100%;
+
+  // Mascot row starts about 130px below the top of the viewport (20px content padding included).
+  @include bp(md) {
+    gap: 2.5rem;
+    margin-top: 6.875rem;
+  }
+}
+
+// Tablet and mobile: the row sits at the column's left edge. Desktop: it hangs left, as far as
+// the window allows (never past the gutter), so it is wider than the column.
+@mixin row {
+  width: 100%;
+
+  @include bp(xl) {
+    --hang: min(#{$hang}, calc((100vw - #{$column}) / 2 - #{$edge-gutter}));
+
+    width: calc(100% + var(--hang));
+    margin-inline-start: calc(-1 * var(--hang));
+  }
+}
+
+@mixin continue-button {
+  width: 100%;
+  min-height: 3.5rem;
+
+  @include bp(md) {
+    width: 13.5rem;
+    min-height: 3.75rem;
+  }
+
+  &[aria-disabled='true'] {
+    cursor: not-allowed;
+    opacity: 0.55;
+  }
+}

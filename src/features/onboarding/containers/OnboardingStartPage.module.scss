@@ -1,20 +1,41 @@
 @use '@/styles/mixins' as *;
+@use './layout';
 
+$back-height: 2.5rem;
+
+// Back is first in the DOM (focus order Back, group, Continue) through the layout's header slot,
+// whose strip stays empty: the page is pulled up by that strip's height.
 .page {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-5);
-  width: 100%;
+  @include layout.page;
+
+  margin-top: calc(-2 * var(--space-3));
+
+  @include bp(md) {
+    margin-top: calc(6.875rem - 2 * var(--space-3));
+  }
 }
 
 .hidden {
   @include visually-hidden;
 }
 
+.row {
+  @include layout.row;
+}
+
+// Mobile: room above Continue for Back. From tablet: Back sits left of the strip, Continue right.
 .footer {
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
+  padding-block-start: calc(#{$back-height} + var(--space-2));
+
+  @include bp(md) {
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    padding-block-start: 0;
+  }
 }
 
 .hint {
@@ -22,14 +43,18 @@
 }
 
 .continue {
-  width: 100%;
-
-  &[aria-disabled='true'] {
-    cursor: not-allowed;
-    opacity: 0.55;
-  }
+  @include layout.continue-button;
 }
 
+// Fixed over the bottom strip: the strip is the footer's padding (space-4 plus the safe area).
 .back {
-  align-self: flex-start;
+  position: fixed;
+  inset-block-end: calc(var(--space-4) + env(safe-area-inset-bottom, 0) + 4.125rem + var(--space-2));
+  inset-inline-start: calc(env(safe-area-inset-left, 0) + var(--focused-side-padding));
+  min-block-size: $back-height;
+
+  @include bp(md) {
+    // Centred against the Continue button (about 66px with its border, Back about 41px).
+    inset-block-end: calc(var(--space-4) + env(safe-area-inset-bottom, 0) + 0.78rem);
+  }
 }
