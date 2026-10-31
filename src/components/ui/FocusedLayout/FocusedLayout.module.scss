@@ -16,6 +16,13 @@ $content-max-width: 40rem;
   overflow: hidden;
   color: var(--color-text);
   background-color: var(--color-bg);
+
+  // Side padding: 16px on mobile, 24px from tablet up.
+  --focused-side-padding: var(--space-4);
+
+  @include bp(md) {
+    --focused-side-padding: var(--space-5);
+  }
 }
 
 // Without a footer the content must still clear the home indicator.
@@ -25,13 +32,22 @@ $content-max-width: 40rem;
 
 .inner {
   width: 100%;
-  max-width: $content-max-width;
   margin-inline: auto;
+}
+
+// Column widths are chosen by the consumer through --header-max-width, --content-max-width and
+// --footer-max-width (set from props); the fallbacks are the former single 40rem column.
+.headerInner {
+  max-width: var(--header-max-width, #{$content-max-width});
+}
+
+.footerInner {
+  max-width: var(--footer-max-width, #{$content-max-width});
 }
 
 .header {
   flex: 0 0 auto;
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-3) var(--focused-side-padding);
 }
 
 .main {
@@ -39,6 +55,9 @@ $content-max-width: 40rem;
   flex: 1 1 auto;
   flex-direction: column;
   min-height: 0;
+  padding-inline: var(--focused-side-padding);
+
+  // Children wider than the content column overflow it visibly; only the window edge clips.
   overflow: hidden auto;
   overscroll-behavior: contain;
 
@@ -54,15 +73,16 @@ $content-max-width: 40rem;
   box-sizing: border-box;
   width: 100%;
   min-width: 0;
-  max-width: $content-max-width;
-  padding: var(--space-5) var(--space-4);
+  max-width: var(--content-max-width, calc(#{$content-max-width} - 2 * var(--space-4)));
+  padding-block: var(--space-5);
   margin-inline: auto;
   overflow-wrap: anywhere;
 }
 
 .footer {
   flex: 0 0 auto;
-  padding: var(--space-4) var(--space-4) calc(var(--space-4) + env(safe-area-inset-bottom, 0));
+  padding: var(--space-4) var(--focused-side-padding)
+    calc(var(--space-4) + env(safe-area-inset-bottom, 0));
   background-color: var(--color-bg);
   border-top: 0.125rem solid var(--color-border);
 }

@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn } from 'storybook/test';
 import { Button } from '@/components/ui/Button';
@@ -115,6 +116,125 @@ export const ReadableMaxWidth: Story = {
     const mainRect = main.getBoundingClientRect();
     const contentRect = content.getBoundingClientRect();
     await expect(Math.abs(contentRect.left - mainRect.left - (mainRect.right - contentRect.right))).toBeLessThanOrEqual(1);
+  },
+};
+
+const frameOf = (width: string) => [
+  (Story: () => ReactElement) => (
+    <div style={{ width }}>
+      <Story />
+    </div>
+  ),
+];
+
+// Expected side padding for the current viewport: 1rem below 48rem, 1.5rem from it up.
+const sidePaddingFor = (rem: number) =>
+  (window.matchMedia('(min-width: 48rem)').matches ? 1.5 : 1) * rem;
+
+function columns(canvas: { getByRole: (role: 'main') => HTMLElement }) {
+  const main = canvas.getByRole('main');
+  // The decorator wraps the frame, so the frame is the parent of the main landmark.
+  const root = main.parentElement as HTMLElement;
+  const rect = (el: Element | null) => (el as HTMLElement).getBoundingClientRect();
+  return {
+    root: rect(root),
+    header: rect(root.children[0]?.firstElementChild ?? null),
+    content: rect(main.firstElementChild),
+    footer: rect(root.children[2]?.firstElementChild ?? null),
+    headerStrip: rect(root.children[0] ?? null),
+    footerStrip: rect(root.children[2] ?? null),
+  };
+}
+
+const exerciseWidths = {
+  header,
+  footer,
+  headerMaxWidth: '82.5rem',
+  contentMaxWidth: '49.375rem',
+  footerMaxWidth: '76rem',
+} as const;
+
+export const ExerciseWidthsWide: Story = {
+  args: exerciseWidths,
+  decorators: frameOf('100rem'),
+  play: async ({ canvas }) => {
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const c = columns(canvas);
+    await expect(c.header.width).toBeCloseTo(82.5 * rem, 0);
+    await expect(c.content.width).toBeCloseTo(49.375 * rem, 0);
+    await expect(c.footer.width).toBeCloseTo(76 * rem, 0);
+    // Strips span the whole frame; columns are centred.
+    await expect(c.headerStrip.width).toBe(c.root.width);
+    await expect(c.footerStrip.width).toBe(c.root.width);
+    const centre = c.root.left + c.root.width / 2;
+    for (const col of [c.header, c.content, c.footer]) {
+      await expect(Math.abs(col.left + col.width / 2 - centre)).toBeLessThanOrEqual(1);
+    }
+  },
+};
+
+export const ExerciseWidthsNarrow: Story = {
+  args: exerciseWidths,
+  decorators: frameOf('24rem'),
+  play: async ({ canvas }) => {
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const c = columns(canvas);
+    // Every column is clamped to the frame minus the side padding (1rem each side on mobile).
+    // Side padding is 1rem below the md breakpoint (48rem) and 1.5rem from it, by viewport.
+    const side = parseFloat(getComputedStyle(canvas.getByRole('main')).paddingLeft);
+    await expect(side).toBe(sidePaddingFor(rem));
+    const available = c.root.width - 2 * side;
+    await expect(c.header.width).toBeCloseTo(available, 0);
+    await expect(c.content.width).toBeCloseTo(available, 0);
+    await expect(c.footer.width).toBeCloseTo(available, 0);
+  },
+};
+
+export const OnboardingWidthWithHangingChild: Story = {
+  args: {
+    header,
+    footer,
+    contentMaxWidth: '40rem',
+    children: (
+      <div data-testid="wide-row" style={{ width: '60rem', height: '2rem' }}>
+        Mascot row wider than the column
+      </div>
+    ),
+  },
+  decorators: frameOf('90rem'),
+  play: async ({ canvas }) => {
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const c = columns(canvas);
+    await expect(c.content.width).toBeCloseTo(40 * rem, 0);
+    // Default header and footer columns stay at 40rem.
+    await expect(c.header.width).toBeCloseTo(40 * rem, 0);
+    await expect(c.footer.width).toBeCloseTo(40 * rem, 0);
+    // The wide child hangs outside the column and is not clipped to it (the frame is wider).
+    const rowEl = canvas.getByText('Mascot row wider than the column');
+    const row = rowEl.getBoundingClientRect();
+    await expect(row.width).toBeCloseTo(60 * rem, 0);
+    await expect(row.width).toBeGreaterThan(c.content.width + 10 * rem);
+    // The row starts at the column's left edge, hangs out past its right edge, and the point
+    // past the column edge hits the child (not clipped).
+    await expect(row.right).toBeGreaterThan(c.content.right);
+    await expect(document.elementFromPoint(c.content.right + 2 * rem, row.top + 4)).toBe(rowEl);
+    await expect(row.left).toBeGreaterThanOrEqual(c.root.left);
+    await expect(row.right).toBeLessThanOrEqual(c.root.right);
+    await expect(canvas.getByRole('main').scrollWidth).toBeLessThanOrEqual(
+      canvas.getByRole('main').clientWidth,
+    );
+  },
+};
+
+export const OnboardingWidthNarrow: Story = {
+  args: { header, footer, contentMaxWidth: '40rem' },
+  decorators: frameOf('24rem'),
+  play: async ({ canvas }) => {
+    const c = columns(canvas);
+    const rem = parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const side = parseFloat(getComputedStyle(canvas.getByRole('main')).paddingLeft);
+    await expect(side).toBe(sidePaddingFor(rem));
+    await expect(c.content.width).toBeCloseTo(c.root.width - 2 * side, 0);
   },
 };
 
