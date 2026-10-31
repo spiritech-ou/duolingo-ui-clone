@@ -6,22 +6,34 @@
   min-height: 100vh;
 }
 
+// Full-width strip; the content row is the same extent as the widest column (/learn, 40rem).
 .header {
+  border-bottom: 0.0625rem solid var(--color-border);
+}
+
+.headerRow {
+  box-sizing: border-box;
   display: flex;
+  gap: var(--space-3);
   align-items: center;
   justify-content: space-between;
-  padding: var(--space-3) var(--space-4);
-  border-bottom: 0.0625rem solid var(--color-border);
+  width: 100%;
+  max-width: 40rem;
+  min-height: 4rem;
+  padding-inline: var(--space-4);
+  margin-inline: auto;
 
   @include bp(md) {
-    padding: var(--space-3) var(--space-6);
+    padding-inline: var(--space-5);
   }
 }
 
 .brand {
   display: inline-flex;
+  flex-shrink: 0;
   gap: var(--space-2);
   align-items: center;
+  min-height: 2.75rem;
   font-weight: var(--font-weight-bold);
   color: var(--color-text);
   text-decoration: none;
@@ -31,21 +43,63 @@
   }
 }
 
+// Collapses before it wraps: hidden visually below 30rem, still the link's accessible name.
+.brandName {
+  @include visually-hidden;
+
+  @include bp(sm) {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    clip-path: none;
+    white-space: nowrap;
+  }
+}
+
 .main {
   flex: 1;
+  min-width: 0;
   padding: var(--space-5) var(--space-4);
 }
 
+// Same gutters as .main, for error screens rendered without the layout.
+.errorPage {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 100vh;
+  padding: var(--space-5) var(--space-4);
+}
+
+// Offset from the header: main adds 1.5rem above, so 3rem total on mobile, 6rem from md.
 .hero {
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
   align-items: center;
+  width: 100%;
   max-width: 30rem;
+  margin-block-start: var(--space-5);
   margin-inline: auto;
   text-align: center;
+
+  @include bp(md) {
+    margin-block-start: calc(var(--space-8) + var(--space-2));
+  }
+
+  p {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
 }
 
 .link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.75rem;
+  min-height: 2.75rem;
   color: var(--color-primary);
 }

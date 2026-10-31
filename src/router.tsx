@@ -20,13 +20,15 @@ function Layout() {
   return (
     <div className={styles['layout']}>
       <header className={styles['header']}>
-        <Link to="/" className={styles['brand']}>
-          <Mascot size={32} />
-          <span>Spiritech</span>
-        </Link>
-        <Button variant="secondary" size="sm" onClick={() => setChoice(next)}>
-          Switch to {next} theme
-        </Button>
+        <div className={styles['headerRow']}>
+          <Link to="/" className={styles['brand']}>
+            <Mascot size={32} />
+            <span className={styles['brandName']}>Spiritech</span>
+          </Link>
+          <Button variant="secondary" size="sm" onClick={() => setChoice(next)}>
+            Switch to {next} theme
+          </Button>
+        </div>
       </header>
       <main className={styles['main']}>
         <Outlet />
@@ -49,14 +51,17 @@ function NotFound() {
 function RouteError() {
   const error = useRouteError();
   const message = error instanceof Error ? error.message : 'Unknown error';
+  // The error element replaces its route's layout, so it carries the page gutters itself.
   return (
-    <section className={styles['hero']} role="alert">
-      <h1>Something went wrong</h1>
-      <p>{message}</p>
-      <Link to="/" className={styles['link']}>
-        Back to home
-      </Link>
-    </section>
+    <div className={styles['errorPage']}>
+      <section className={styles['hero']} role="alert">
+        <h1>Something went wrong</h1>
+        <p>{message}</p>
+        <Link to="/" className={styles['link']}>
+          Back to home
+        </Link>
+      </section>
+    </div>
   );
 }
 
