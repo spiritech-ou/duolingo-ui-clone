@@ -57,7 +57,7 @@ Language change (course is English to Estonian, per the updated brief): rows tou
 | OQ-21 | Approved (explicitly) | Skip costs a heart and shows the solution. |
 | OQ-22 | Approved | Wrong and skipped exercises return to the end of the queue; the progress bar counts only correct answers. |
 | OQ-23 | Approved (explicitly) | Hearts start at 5, max 5, saved immediately (quitting does not refund), no timed refill; the only way back is practice. |
-| OQ-24 | Approved (explicitly) | Out of hearts discards the lesson and offers "PRACTICE TO EARN A HEART" or "QUIT LESSON". Practice is 5 random exercises, costs no hearts, grants +1 heart, then returns to the path. |
+| OQ-24 | Approved (explicitly) | Out of hearts (shown with the red flame, OQ-46) discards the lesson and offers "PRACTICE TO EARN A HEART" or "QUIT LESSON". Practice is 5 random exercises, costs no hearts, grants +1 heart, then returns to the path. |
 | OQ-25 | Approved | Opening a lesson with 0 hearts shows the out-of-hearts screen directly, without loading. |
 | OQ-26 | Approved | The "Each mistake costs 1 heart!" modal shows once per user on the first wrong answer or skip, in lesson mode; Enter or Escape dismisses it. |
 | OQ-27 | Approved | Praise rotates through "Great job!", "Nice one!", "Perfect!", "Well done!" in order. |
@@ -70,6 +70,16 @@ Language change (course is English to Estonian, per the updated brief): rows tou
 | OQ-41 | **Open (new)** | Behaviour when the device has no Estonian voice (or no speech support): the exercise works fully without sound; a disabled, crossed-out speaker icon appears in the exercise top bar (hidden when a voice exists, so there is still no mute or replay control); the first exercise of a session shows a dismissible notice "No Estonian voice on this device / Words won't be spoken, but you can still do every exercise." (dismissal saved per browser, the icon stays and re-opens the explanation); a different message covers browsers with no speech support; a failed playback shows "Couldn't play this word." for 4 s. No other-language voice is used as a fallback because it would mispronounce Estonian. Voice detection waits up to 2 s for the browser's voice list. Alternatives: show the icon always, show the notice every session, or fall back to a non-Estonian voice. |
 | OQ-42 | **Open (new)** | Vocabulary: a fixed, team-authored dataset of exactly 120 nouns (5 per lesson), nominative singular, served by the mock API, never imported directly, never machine-translated. Marked unreviewed and needing an Estonian speaker's review (checklist in `vocabulary-dataset.md`); the flag lives in the data file comment and that spec, not in the API or the app UI. Alternative: a visible "unreviewed vocabulary" label in the app until review is done. |
 | OQ-43 | **Open (new)** | Estonian text handling: words are shown exactly as stored (NFC, õ ä ö ü š ž), never upper-cased or accent-stripped; every Estonian word is wrapped in `lang="et"`; the font must include those letters; interface copy and unit titles stay English; the reference screenshots' French wording is read as Estonian. Alternative: translate the interface into Estonian (out of scope today). |
+
+## Failure look of the mascot (red flame)
+
+`design/brand.md` requires the red flame for a wrong answer, a lost heart, error states and the out-of-hearts screen. These two decisions were raised as questions OQ-B and OQ-C in the review of the exercise spec and accepted by the product owner; they are numbered here so the specs can refer to them.
+
+| ID | Status | Decision |
+|---|---|---|
+| OQ-45 | Approved (explicitly; raised as OQ-B) | A red flame of about 96px at the top of the first-mistake modal, above the hearts row; and a small red flame of about 32px at the left of the title "Correct solution:" in the Wrong and Skipped panels. The Correct panel stays as it is (no red flame). The text carries the message, so both flames are decorative. Specified in `exercise-session.md`. |
+| OQ-46 | Approved (explicitly; raised as OQ-C) | Which states are failures (red flame) and which are not (blue flame). Failure: load error (lesson, practice and the learning path), "We couldn't find this lesson" (not found), and the out-of-hearts screen. Not failure: "This lesson has no exercises yet", the learning-path empty state "No lessons yet", loading, Lesson over, Practice complete and the "You finished the Estonian course!" card. Specified in `exercise-session.md` (Flame colour) and `data-loading-states.md`. |
+| OQ-47 | **Open (new)** | Designer defaults and gaps around OQ-45 and OQ-46, in force until the owner changes them. Defaults for details the owner did not state: (1) the flame is static, fixed at 32px and 96px on every breakpoint, with an 8px gap to the title text; (2) the Estonian word under the title starts at the flame's left edge (alternative: at the title text's left edge, an extra 40px indent); (3) the modal grows by about 112px (the flame plus a 16px gap) and scrolls inside the window when too short; (4) Wrong and Skipped in practice also show the panel flame (practice never shows the modal); (5) on the lesson and practice routes "Try again" shows Loading, so the flame is blue again until a new failure, while on the learning path the retry shows the skeleton, which has no mascot. Screens outside the accepted list, left unchanged: (6) the shell's "Page not found" and "Something went wrong" screens in `app-shell-and-routing.md` have no mascot, although `design/brand.md` lists "an error" as a red-flame case; (7) the login banner for a failed sign-in has no mascot; (8) "The Correct panel stays blue" is read as "the Correct panel has no mascot" (no blue flame is added); the alternative is a blue flame there. Please approve or change. |
 
 ## Data fetching
 
@@ -89,7 +99,7 @@ Layout sections were added to every screen spec after the fact. Values come from
 ## Still pending for the human
 
 - Open: OQ-44 (layout values the references did not show, above).
-
+- Open: OQ-47 (designer defaults around the red flame, and the screens outside the accepted list: the shell's error screens, the login banner, the Correct panel). OQ-45 and OQ-46 are decided and need no action.
 - Open: OQ-40 (recommended-node rule, from the previous round), OQ-41 (no-voice behaviour), OQ-42 (vocabulary dataset and review flag), OQ-43 (Estonian text handling).
 - Review by an Estonian speaker of the 120 words is a hard dependency for trusting the vocabulary (see `vocabulary-dataset.md`).
 - Penpot is not connected, so no boards exist. The `Boards` section of each spec reads "Pending (Penpot not connected)". Brand colours, the flame artwork and tokens for success, danger, warning and info are still for the design pass; the specs use semantic token names only.

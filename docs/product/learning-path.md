@@ -26,9 +26,9 @@ Completed and recommended each have their own distinct style; available nodes lo
 | Ready, first arrival after "Find my level" | Onboarding finished with `find-level` and `placementNoteDismissed` false | A note above the first unit: "We recommend starting at Unit N based on your answer." with a "Got it" button | Dismiss it | Dismiss (stored, not shown again) |
 | Node opened | Press any node (completed, recommended or available) | Navigates to `/lesson/:lessonId` | Nothing | Lesson route |
 | No hearts | `hearts` is 0 | Counter shows 0 in a muted style with the label "No hearts left"; nodes still open normally (the lesson route handles it, see `exercise-session.md`) | Open nodes, which lead to the out-of-hearts screen | Earn a heart by practice |
-| Course finished | Every lesson completed, so no recommended node | The last unit followed by a closing card "You finished the Estonian course!" with the mascot; all nodes show completed and stay replayable | Replay any lesson, log out | Replay (OQ-18) |
-| Empty | Course returns no units, or units with no lessons | Mascot and the text "No lessons yet" with "Check back soon." and a "Reload" button | Reload | Reload refetches |
-| Load error | Request fails, times out (10 s) or data fails validation | Mascot, heading and message from "Copy", a "Try again" button | Try again, log out | Retry succeeds (Loading then Ready), or leave |
+| Course finished | Every lesson completed, so no recommended node | The last unit followed by a closing card "You finished the Estonian course!" with the blue flame mascot; all nodes show completed and stay replayable | Replay any lesson, log out | Replay (OQ-18) |
+| Empty | Course returns no units, or units with no lessons | The blue flame mascot and the text "No lessons yet" with "Check back soon." and a "Reload" button | Reload | Reload refetches |
+| Load error | Request fails, times out (10 s) or data fails validation | The red flame mascot (OQ-45, OQ-46; `data-loading-states.md`), heading and message from "Copy", a "Try again" button | Try again, log out | Retry succeeds (Loading then Ready), or leave |
 | Retrying | "Try again" pressed | Same layout as Loading | Log out | Data arrives or fails |
 | Return from a lesson | Back on `/learn` after a lesson or practice | The path with up-to-date node states and hearts; the recommended node (which may have changed after a completion) centred, with a short highlight; if none is recommended, the lesson just left stays in view | As in Ready | As in Ready |
 

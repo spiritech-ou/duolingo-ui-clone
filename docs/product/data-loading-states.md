@@ -21,12 +21,22 @@ Shared rules (apply to every fetching screen, OQ-32):
 
 | Screen | Request | Loading | Error | Empty | Not found |
 |---|---|---|---|---|---|
-| `/learn` | `GET /api/course` | Top bar plus a skeleton of one unit banner and five nodes (first visit only) | Mascot, "We couldn't load your lessons", message by failure kind, "Try again" | Mascot, "No lessons yet", "Check back soon.", "Reload" | None |
-| `/lesson/:lessonId` | `GET /api/lessons/:lessonId` | Full-screen mascot with "Getting your lesson ready…" | Mascot, "We couldn't load this lesson", message by kind, "Try again" and "Back to path" | Mascot, "This lesson has no exercises yet", "Back to path" | Mascot, "We couldn't find this lesson", "Back to path" |
-| `/practice` | `GET /api/practice?count=5` | Full-screen mascot with "Getting your practice ready…" | Same as a lesson, headline "We couldn't load this practice" | Same as a lesson | None |
+| `/learn` | `GET /api/course` | Top bar plus a skeleton of one unit banner and five nodes (first visit only); no mascot | Red flame mascot, "We couldn't load your lessons", message by failure kind, "Try again" | Blue flame mascot, "No lessons yet", "Check back soon.", "Reload" | None |
+| `/lesson/:lessonId` | `GET /api/lessons/:lessonId` | Full-screen blue flame mascot (bobbing) with "Getting your lesson ready…" | Red flame mascot, "We couldn't load this lesson", message by kind, "Try again" and "Back to path" | Blue flame mascot, "This lesson has no exercises yet", "Back to path" | Red flame mascot, "We couldn't find this lesson", "Back to path" |
+| `/practice` | `GET /api/practice?count=5` | Full-screen blue flame mascot (bobbing) with "Getting your practice ready…" | Same as a lesson (red flame), headline "We couldn't load this practice" | Same as a lesson (blue flame) | None |
 | `/login` submit | `POST /api/auth/login` | Busy button, read-only fields | Banner (401 or failed), see `login.md` | None | None |
 
 State transitions for a fetching screen: Loading goes to Ready, Empty, Error or Not found; Error goes back to Loading on "Try again"; Empty on the path goes to Loading on "Reload".
+
+Flame colour on state screens (OQ-45, OQ-46; brand rule in `design/brand.md`: a failure shows the red flame, drawn tilted and slightly lowered; everything else keeps the blue flame). A failure is a state in which the user did not get what they asked for and something went wrong; an empty result, a wait and a success are not failures.
+
+| Flame | State screens |
+|---|---|
+| Red | Load error on `/learn`; Load error on `/lesson/:lessonId`; Load error on `/practice`; Not found on `/lesson/:lessonId`; Out of hearts (defined in `exercise-session.md`, with the red flame in the first-mistake modal and the Wrong and Skipped panels) |
+| Blue | Loading on `/lesson/:lessonId` and `/practice` (bobbing); Empty on `/learn` ("No lessons yet"); Empty on `/lesson/:lessonId` and `/practice` ("This lesson has no exercises yet"); Loading on `/lesson/:lessonId` and `/practice` after "Try again"; Lesson over and Practice complete (defined in `exercise-session.md`); the "You finished the Estonian course!" card |
+| None | The `/learn` Loading and Retrying skeleton (no mascot); `/login` submit states (banner, no mascot); the shell's "Page not found" and "Something went wrong" screens (no mascot today, see OQ-47) |
+
+Rules: on `/lesson/:lessonId` and `/practice`, pressing "Try again" returns to Loading, so the flame turns blue again (bobbing); a second failure shows the red flame again. On `/learn`, pressing "Try again" (Load error) or "Reload" (Empty) returns to the Loading skeleton, which has no mascot: the red or blue flame is replaced by the skeleton, and a second failure or empty result shows the flame again. The red flame is the same size and position as the blue one it replaces on the same screen (see Layout), so the two colours swap without the layout moving. The flame colour never changes the message, the buttons or their order.
 
 Mock scenarios (OQ-35): so every state above can be reached without breaking the server, the mock layer reads an optional `localStorage` key `mockScenario` with one of `ok` (default), `slow` (responses take 3 s), `timeout` (never respond), `error` (5xx), `empty` (course with no units, lesson with no exercises), `notfound` (404 on lessons). The scenario affects only course, lesson and practice requests; login errors use the email rules in `login.md`. There is no UI for this switch.
 
@@ -36,6 +46,7 @@ Mock scenarios (OQ-35): so every state above can be reached without breaking the
 - Buttons: "Try again", "Reload", "Back to path".
 - Loading: "Loading your lessons" (visually hidden, path skeleton), "Getting your lesson ready…", "Getting your practice ready…".
 - Headlines and empty copy are as in the table above.
+- The flame, red or blue, has no text and no accessible name; no string is added by it.
 
 ## Layout
 No reference screenshot shows a loading, error or empty state (OQ-44), so these values are derived from the references' single-column screens: the login column (about 500px) and the onboarding mascot-and-text pattern.
@@ -48,10 +59,12 @@ Container rule for every state screen: **one centred column, about 480px wide ma
 - On `/learn` the state screen sits below the top bar and inside the page column; the skeleton reproduces one unit banner plus five nodes at the same size and pitch as in `learning-path.md`, so the Ready state replaces it without layout shift.
 - Login's submit states are in `login.md` Layout: the busy button keeps its width and height (the spinner replaces nothing but the label's position), so the form does not move.
 
+The mascot is the red flame on a failure screen (Load error, Not found) and the blue flame on the others (see "Flame colour on state screens"); size and position are the same for both colours: about 120px on desktop and tablet and about 96px on mobile, centred at the top of the column. The red flame keeps its static pose (slight tilt, slightly lowered) and does not bob.
+
 Stretches versus fixed: the text and buttons follow the column (buttons fill it on mobile only); the column maximum, mascot size and heights are fixed.
 
 ## Motion and sound
-The mascot on loading screens bobs gently; skeleton shapes shimmer. Reduced motion: no bob and no shimmer, a static placeholder. No sound.
+The blue mascot on loading screens bobs gently; skeleton shapes shimmer. The red flame on failure screens does not bob or move. Reduced motion: no bob and no shimmer, a static placeholder; the red flame is unchanged (it never moves). No sound.
 
 ## Data needed
 Endpoints and shapes are defined in `learning-path.md` (`GET /api/course`), `exercise-session.md` (`GET /api/lessons/:lessonId`, `GET /api/practice`) and `login.md` (`POST /api/auth/login`). Common error body for every endpoint: `{ "code": string, "message": string }`. The course is English to Estonian and its words come from the fixed dataset in `vocabulary-dataset.md`. The browser's voice list is not a request and has no loading or error state of its own: its "checking", "no voice" and "unsupported" states are in `exercise-session.md` (Audio states). Client-only: the fetch status of each request as a discriminated union (`idle`, `loading`, `success`, `error`) in the data layer; the cached course.
@@ -60,7 +73,7 @@ Endpoints and shapes are defined in `learning-path.md` (`GET /api/course`), `exe
 - Loading: the region has `aria-busy="true"` and a polite `role="status"` text; skeleton shapes are `aria-hidden`.
 - Error and not found: `role="alert"`; focus moves to the main action button ("Try again", or "Back to path" when retrying makes no sense) so keyboard users land on it.
 - Empty: `role="status"`, focus stays on the heading.
-- The mascot is decorative (`alt=""`) on every state screen because the text carries the message.
+- The mascot is decorative (`alt=""`) on every state screen, red or blue, because the text carries the message. The red flame changes no announcement, no `role="alert"` or `role="status"` text and no focus target: "Try again" (or "Back to path") still receives focus on Load error and Not found exactly as above. Failure is never signalled by the flame's colour alone; the headline and message say it.
 
 ## Out of scope
 Automatic retry with backoff, offline mode, background sync, optimistic updates, partial-page error boundaries, analytics on errors, a visible way to switch mock scenarios.
