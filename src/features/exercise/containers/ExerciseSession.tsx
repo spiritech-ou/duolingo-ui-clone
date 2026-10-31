@@ -27,6 +27,7 @@ import {
   getQuestionText,
   getSkippedAnnouncement,
 } from '../logic/sessionCopy';
+import { resolveShortcut } from '../logic/sessionShortcuts';
 import type { SessionAction, SessionMode, SessionState } from '../logic/sessionTypes';
 import { ExitDialog } from './ExitDialog';
 import { FirstMistakeModal } from './FirstMistakeModal';
@@ -140,8 +141,8 @@ export function ExerciseSession({
   // Set when CONTINUE should take focus once nothing modal is open (after CHECK or SKIP, or after
   // the first-mistake modal closes, because the Dialog gives focus back to its own opener first).
   const wantsContinueFocus = useRef(false);
-  // True from an Enter press that dismissed the modal until Enter is released, so holding it
-  // cannot repeat onto CONTINUE (which now has focus).
+  // True from an Enter keydown until it is released (keyup, window blur or a pointer press), so a
+  // held Enter cannot repeat onto a button that gained focus (CONTINUE, KEEP GOING).
   const enterHeld = useRef(false);
 
   const dismissFirstMistake = useCallback((): void => {
@@ -228,43 +229,95 @@ export function ExerciseSession({
     footerRef.current?.focusContinue();
   }, [phase, openDialog]);
 
-  // Enter dismisses the first-mistake modal like its button, and nothing else happens: a press on
-  // the button itself is left to the button's own click, any other focus (the panel) is handled
-  // here, and repeats of a press that dismissed it are swallowed.
   const isFirstMistakeOpen = openDialog === 'firstMistake';
+  const isInProgress = exercise !== undefined && !isEnd(phase);
+  const isExitOpen = openDialog === 'exit' || (isBlocked && openDialog !== 'firstMistake');
+  const isAnyDialogOpen = isExitOpen || isFirstMistakeOpen;
+
+  // The one keydown listener (OQ-30). It reads the latest render through a ref, so it is attached
+  // once. Capture phase, so a held Enter can be stopped before it reaches a focused button.
+  const latest = useRef({ handleSelect, handleCheck, handleContinue });
+  const latestView = useRef({
+    phase,
+    exercise,
+    selectedOptionId: session.selectedOptionId,
+    isAnyDialogOpen,
+    isFirstMistakeOpen,
+    dismissFirstMistake,
+  });
   useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent): void => {
-      if (event.key !== 'Enter' || event.isComposing) return;
-      if (event.repeat) {
-        if (enterHeld.current) {
-          event.preventDefault();
-          event.stopPropagation();
-        }
-        return;
-      }
-      if (!isFirstMistakeOpen) return;
-      enterHeld.current = true;
-      if (event.target instanceof HTMLButtonElement) return;
+    latest.current = { handleSelect, handleCheck, handleContinue };
+    latestView.current = {
+      phase,
+      exercise,
+      selectedOptionId: session.selectedOptionId,
+      isAnyDialogOpen,
+      isFirstMistakeOpen,
+      dismissFirstMistake,
+    };
+  });
+  useEffect(() => {
+    const swallow = (event: KeyboardEvent): void => {
       event.preventDefault();
       event.stopPropagation();
-      dismissFirstMistake();
+    };
+    const handleKeyDown = (event: KeyboardEvent): void => {
+      const view = latestView.current;
+      if (event.key === 'Enter' && !event.isComposing) {
+        // A held Enter must never repeat onto a button that gained focus (browsers click it per
+        // repeat): swallow repeats while a press is tracked, and always while the modal is open.
+        if (event.repeat) {
+          if (enterHeld.current || view.isFirstMistakeOpen) swallow(event);
+          return;
+        }
+        enterHeld.current = true;
+        // Enter dismisses the first-mistake modal like its button. On the button itself it is left
+        // to the button's own click; any other focus (the panel) is handled here.
+        if (view.isFirstMistakeOpen) {
+          if (!(event.target instanceof HTMLButtonElement)) {
+            swallow(event);
+            view.dismissFirstMistake();
+          }
+          return;
+        }
+      }
+      if (!view.exercise || isEnd(view.phase)) return;
+      const action = resolveShortcut({
+        event,
+        phase: view.phase,
+        optionIds: view.exercise.options.map((option) => option.id),
+        selectedOptionId: view.selectedOptionId,
+        isDialogOpen: view.isAnyDialogOpen,
+        isButtonFocused:
+          event.target instanceof HTMLButtonElement || event.target instanceof HTMLAnchorElement,
+      });
+      if (action.type === 'none') return;
+      swallow(event);
+      if (action.type === 'select') latest.current.handleSelect(action.optionId);
+      else if (action.type === 'check') latest.current.handleCheck();
+      else latest.current.handleContinue();
+    };
+    const releaseEnter = (): void => {
+      enterHeld.current = false;
     };
     const handleKeyUp = (event: KeyboardEvent): void => {
-      if (event.key === 'Enter') enterHeld.current = false;
+      if (event.key === 'Enter') releaseEnter();
     };
     document.addEventListener('keydown', handleKeyDown, true);
     document.addEventListener('keyup', handleKeyUp, true);
+    // keyup is lost when the window loses focus; a pointer press is a new interaction.
+    window.addEventListener('blur', releaseEnter);
+    document.addEventListener('pointerdown', releaseEnter, true);
     return () => {
       document.removeEventListener('keydown', handleKeyDown, true);
       document.removeEventListener('keyup', handleKeyUp, true);
+      window.removeEventListener('blur', releaseEnter);
+      document.removeEventListener('pointerdown', releaseEnter, true);
     };
-  }, [isFirstMistakeOpen, dismissFirstMistake]);
+  }, []);
 
   // Escape outside a modal opens the exit dialog. A bubble-phase listener on purpose: an open
   // Dialog handles its own Escape in the capture phase and stops it, so a second one never stacks.
-  const isInProgress = exercise !== undefined && !isEnd(phase);
-  const isExitOpen = openDialog === 'exit' || (isBlocked && openDialog !== 'firstMistake');
-  const isAnyDialogOpen = isExitOpen || openDialog === 'firstMistake';
   useEffect(() => {
     if (!isInProgress || isAnyDialogOpen) return undefined;
     const handleKeyDown = (event: KeyboardEvent): void => {
