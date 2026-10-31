@@ -7,6 +7,7 @@ import { ExerciseSession } from '@/features/exercise';
 import type { SessionMode } from '@/features/exercise/logic/sessionTypes';
 import { selectProfile, useProfileStore } from '@/store/useProfileStore';
 import { useSessionStore } from '@/store/useSessionStore';
+import { makeSynth } from './fakeSynth';
 
 const USER = { id: 'u1', email: 'a@b.co', displayName: 'Ann' };
 
@@ -44,12 +45,14 @@ function setup(options: { mode?: SessionMode; count?: number } = {}) {
     onQuit: vi.fn(),
   };
   const user = userEvent.setup();
+  const synth = makeSynth();
   // The container blocks browser Back, which needs a data router.
   const router = createMemoryRouter([
     {
       path: '/',
       element: (
         <ExerciseSession
+          speechAdapter={synth}
           mode={options.mode ?? 'lesson'}
           exercises={lesson(options.count)}
           {...props}

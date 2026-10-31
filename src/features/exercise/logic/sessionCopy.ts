@@ -51,3 +51,32 @@ export function getIncorrectAnnouncement(input: FeedbackAnnouncementInput): stri
 export function getSkippedAnnouncement(input: FeedbackAnnouncementInput): string {
   return missAnnouncement('Skipped', input);
 }
+
+/** Why sound is off; `checking` and `available` have no copy because nothing is shown. */
+export type SoundUnavailableReason = 'no-voice' | 'unsupported';
+
+export interface SoundUnavailableCopy {
+  /** Notice headline. */
+  readonly title: string;
+  /** Notice text. */
+  readonly text: string;
+  /** Explanation linked to the top-bar icon. */
+  readonly iconDescription: string;
+}
+
+export const SOUND_UNAVAILABLE_LABEL = 'Sound unavailable';
+export const PLAYBACK_FAILED_TEXT = "Couldn't play this word.";
+
+export function getSoundUnavailableCopy(reason: SoundUnavailableReason): SoundUnavailableCopy {
+  return reason === 'no-voice'
+    ? {
+        title: 'No Estonian voice on this device',
+        text: "Words won't be spoken, but you can still do every exercise.",
+        iconDescription: "This device has no Estonian voice, so words won't be spoken.",
+      }
+    : {
+        title: "This browser can't speak words aloud",
+        text: 'You can still do every exercise.',
+        iconDescription: "This browser can't speak words aloud, so sound is off.",
+      };
+}

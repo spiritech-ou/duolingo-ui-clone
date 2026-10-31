@@ -2,6 +2,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useBlocker } from 'react-router';
 import type { Location } from 'react-router';
 import type { Exercise } from '@/api/schemas/lesson';
+import { IconButton } from '@/components/ui/IconButton';
+import { useSpeech } from '@/hooks/useSpeech';
+import type { SpeechAdapter } from '@/hooks/useSpeech';
 import { ExerciseFooter } from '@/components/ui/ExerciseFooter';
 import type { ExerciseFooterHandle } from '@/components/ui/ExerciseFooter';
 import { ExercisePrompt } from '@/components/ui/ExercisePrompt';
@@ -26,11 +29,15 @@ import {
   getPraise,
   getQuestionText,
   getSkippedAnnouncement,
+  getSoundUnavailableCopy,
+  PLAYBACK_FAILED_TEXT,
+  SOUND_UNAVAILABLE_LABEL,
 } from '../logic/sessionCopy';
 import { resolveShortcut } from '../logic/sessionShortcuts';
 import type { SessionAction, SessionMode, SessionState } from '../logic/sessionTypes';
 import { ExitDialog } from './ExitDialog';
 import { FirstMistakeModal } from './FirstMistakeModal';
+import { SoundNotice } from './SoundNotice';
 import styles from './ExerciseSession.module.scss';
 
 /** Profile key used while nobody is signed in (the route guard arrives later); reads the defaults. */
@@ -61,6 +68,8 @@ export interface ExerciseSessionProps {
   onOutOfHearts: () => void;
   /** The learner chose QUIT in the exit dialog; the route leaves (replacing the history entry). */
   onQuit: () => void;
+  /** Speech synthesis seam for tests; the browser's is used when omitted. */
+  speechAdapter?: SpeechAdapter;
 }
 
 interface Run {
@@ -103,11 +112,20 @@ export function ExerciseSession({
   onPracticeComplete,
   onOutOfHearts,
   onQuit,
+  speechAdapter,
 }: ExerciseSessionProps) {
   const userId = useSessionStore((store) => store.session?.user.id ?? NO_USER_ID);
   const profile = useProfileStore(selectProfile(userId));
   const loseHeart = useProfileStore((store) => store.loseHeart);
   const markHeartsIntroSeen = useProfileStore((store) => store.markHeartsIntroSeen);
+  const dismissNoVoiceNote = useProfileStore((store) => store.dismissNoVoiceNote);
+  const { voiceStatus, playbackFailed, speak, cancel } = useSpeech(
+    speechAdapter ? { adapter: speechAdapter } : {},
+  );
+  // The learner pressed the icon to read the no-sound notice again.
+  // It is tied to the exercise and the reason it was opened for, so it lapses on its own when
+  // either changes.
+  const [reopened, setReopened] = useState<{ turn: number; reason: string } | null>(null);
 
   // The session starts from the profile's hearts and from now (the first exercise appearing). Every
   // loss is saved the moment it happens, so the reducer's hearts and the profile's stay equal.
@@ -179,8 +197,18 @@ export function ExerciseSession({
     }
   }
 
-  // Selection seam: speech and the number-key shortcuts of later tasks go through this handler.
-  const handleSelect = (optionId: string): void => dispatch({ type: 'select', optionId });
+  // The one selection path (click, number keys, arrows). Speech starts here, from the gesture, and
+  // only while the cards are selectable: never on load, CHECK or the feedback panel.
+  const handleSelect = (optionId: string): void => {
+    dispatch({ type: 'select', optionId });
+    if (isFeedback(session.phase)) return;
+    const word = exercise?.options.find((option) => option.id === optionId)?.estonian;
+    if (word) speak(word);
+  };
+  const handleDismissSoundNote = (): void => {
+    dismissNoVoiceNote(userId);
+    setReopened(null);
+  };
   const handleCheck = (): void => dispatch({ type: 'check' });
   const handleSkip = (): void => dispatch({ type: 'skip' });
   const handleContinue = (): void => dispatch({ type: 'continue', now: Date.now() });
@@ -218,6 +246,9 @@ export function ExerciseSession({
   useEffect(() => {
     headingRef.current?.focus();
   }, [turn]);
+
+  // Speech stops when the exercise changes (the cleanup runs before the next turn) and on leaving.
+  useEffect(() => cancel, [turn, cancel]);
 
   // After CHECK or SKIP the panel has committed; only then can focus move to CONTINUE. While the
   // first-mistake modal is open it keeps focus; closing it ends here, after the Dialog has
@@ -341,6 +372,16 @@ export function ExerciseSession({
     exercise.options.find((option) => option.id === exercise.correctOptionId)?.estonian;
   const progress = getProgress(session);
 
+  // No sound: the icon stays for the whole session; the notice shows on the first exercise unless
+  // it was dismissed before, and again whenever the icon is pressed. A voice appearing clears both.
+  const soundReason =
+    voiceStatus === 'no-voice' || voiceStatus === 'unsupported' ? voiceStatus : null;
+  const isNoteShown =
+    soundReason !== null &&
+    ((reopened?.turn === turn && reopened.reason === soundReason) ||
+      (turn === 0 && !profile.noVoiceNoteDismissed));
+  const soundCopy = soundReason ? getSoundUnavailableCopy(soundReason) : null;
+
   return (
     <FocusedLayout
       header={
@@ -349,6 +390,24 @@ export function ExerciseSession({
           total={progress.max}
           hearts={session.hearts}
           onClose={handleClose}
+          {...(soundCopy
+            ? {
+                trailing: (
+                  <>
+                    <IconButton
+                      icon="speaker-off"
+                      label={SOUND_UNAVAILABLE_LABEL}
+                      isAriaDisabled
+                      aria-describedby="sound-unavailable-description"
+                      onClick={() => setReopened({ turn, reason: soundReason ?? '' })}
+                    />
+                    <span id="sound-unavailable-description" className={styles['hidden']}>
+                      {soundCopy.iconDescription}
+                    </span>
+                  </>
+                ),
+              }
+            : {})}
         />
       }
       footer={
@@ -365,6 +424,13 @@ export function ExerciseSession({
       }
     >
       <div className={styles['stack']}>
+        {isNoteShown && soundReason ? (
+          <SoundNotice
+            reason={soundReason}
+            onDismiss={handleDismissSoundNote}
+            pendingClassName={styles['hidden']}
+          />
+        ) : null}
         <ExercisePrompt ref={headingRef} english={exercise.english} isNewWord={exercise.isNewWord} />
         <PictureChoice
           question={getQuestionText(exercise.english)}
@@ -379,6 +445,10 @@ export function ExerciseSession({
           isLocked={feedback}
           onSelect={handleSelect}
         />
+        {/* The one, always-mounted live region (a status); its message appears inside it. */}
+        <div className={styles['playbackSlot']} aria-live="polite" aria-atomic="true">
+          {playbackFailed ? <p className={styles['playbackStatus']}>{PLAYBACK_FAILED_TEXT}</p> : null}
+        </div>
       </div>
       {isFirstMistakeOpen ? (
         <FirstMistakeModal hearts={session.hearts} onDismiss={dismissFirstMistake} />

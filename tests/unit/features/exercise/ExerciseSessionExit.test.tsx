@@ -7,6 +7,7 @@ import { ExerciseSession } from '@/features/exercise';
 import type { SessionMode } from '@/features/exercise/logic/sessionTypes';
 import { useProfileStore } from '@/store/useProfileStore';
 import { useSessionStore } from '@/store/useSessionStore';
+import { makeSynth } from './fakeSynth';
 
 const USER = { id: 'u1', email: 'a@b.co', displayName: 'Ann' };
 
@@ -32,6 +33,7 @@ function setup(options: { mode?: SessionMode; count?: number } = {}) {
         path: '/lesson',
         element: (
           <ExerciseSession
+            speechAdapter={makeSynth()}
             mode={options.mode ?? 'lesson'}
             exercises={Array.from({ length: options.count ?? 2 }, (_, i) => makeExercise(i))}
             onLessonComplete={() => {

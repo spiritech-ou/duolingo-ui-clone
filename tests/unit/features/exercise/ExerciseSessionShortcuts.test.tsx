@@ -6,6 +6,7 @@ import type { Exercise } from '@/api/schemas/lesson';
 import { ExerciseSession } from '@/features/exercise';
 import { selectProfile, useProfileStore } from '@/store/useProfileStore';
 import { useSessionStore } from '@/store/useSessionStore';
+import { makeSynth } from './fakeSynth';
 
 const USER = { id: 'u1', email: 'a@b.co', displayName: 'Ann' };
 
@@ -30,6 +31,7 @@ function setup(count = 3) {
       path: '/',
       element: (
         <ExerciseSession
+          speechAdapter={makeSynth()}
           mode="lesson"
           exercises={Array.from({ length: count }, (_, i) => makeExercise(i))}
           onLessonComplete={onLessonComplete}
