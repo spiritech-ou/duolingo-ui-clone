@@ -3,6 +3,7 @@
 .root {
   @include pressable;
 
+  position: relative;
   display: inline-flex;
   gap: var(--space-2);
   align-items: center;
@@ -14,17 +15,24 @@
   border: 0.125rem solid transparent;
   border-radius: var(--radius-lg);
 
-  &:disabled {
+  &:disabled,
+  &[aria-disabled='true'] {
     cursor: not-allowed;
     opacity: 0.55;
   }
+}
+
+// Busy: the spinner is centred over the label, which keeps its space,
+// so the button never changes size.
+.isLoading .label {
+  opacity: 0;
 }
 
 .primary {
   color: var(--color-on-primary);
   background-color: var(--color-primary);
 
-  &:hover:not(:disabled) {
+  &:hover:not(:disabled, [aria-disabled='true']) {
     background-color: var(--color-primary-hover);
   }
 }
@@ -34,7 +42,7 @@
   background-color: var(--color-surface);
   border-color: var(--color-border);
 
-  &:hover:not(:disabled) {
+  &:hover:not(:disabled, [aria-disabled='true']) {
     background-color: var(--color-primary-soft);
   }
 }
@@ -55,6 +63,9 @@
 }
 
 .spinner {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  margin: -0.5em 0 0 -0.5em;
   width: 1em;
   height: 1em;
   border: 0.125rem solid currentcolor;
