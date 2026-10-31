@@ -26,6 +26,8 @@ export interface GenerateOptions {
    * models endpoint reports a plain two-letter code (`et`); otherwise it is omitted.
    */
   readonly sendLanguageCode?: boolean;
+  /** Stop after this many newly written clips (skipped clips do not count); the manifest still covers every existing clip. */
+  readonly limit?: number;
   readonly deps: AudioDeps;
 }
 
@@ -89,6 +91,7 @@ export async function generateAudio(options: GenerateOptions): Promise<GenerateR
   let skipped = 0;
   try {
     for (const item of options.items) {
+      if (options.limit !== undefined && generated >= options.limit) break;
       const path = join(options.outDir, clipFileName(item));
       if (options.force !== true && (await deps.fs.exists(path))) {
         skipped += 1;
