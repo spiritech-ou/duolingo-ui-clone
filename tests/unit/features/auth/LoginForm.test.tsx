@@ -192,23 +192,36 @@ describe('LoginForm busy state', () => {
 
     const busy = await screen.findByRole('button', { name: 'Logging in' });
     expect(busy).toHaveAttribute('aria-busy', 'true');
-    expect(busy).toBeDisabled();
+    // Busy is aria-disabled, not natively disabled, so focus stays on the button.
+    expect(busy).toHaveAttribute('aria-disabled', 'true');
+    expect(busy).not.toBeDisabled();
+    expect(busy).toHaveFocus();
     expect(email).toHaveAttribute('readonly');
     expect(password).toHaveAttribute('readonly');
     for (const name of SOCIAL_NAMES) expect(screen.getByRole('button', { name })).toBeDisabled();
 
-    // Read-only fields ignore typing; a second submit attempt sends nothing more.
+    // Read-only fields ignore typing; a second Enter or click on the button sends nothing more.
     await user.type(email, 'zzz');
     expect(email).toHaveValue(VALID.email);
-    await user.type(password, '{Enter}');
+    await user.click(busy);
+    await user.click(busy);
+    expect(busy).toHaveFocus();
+    await user.keyboard('{Enter}');
+    await user.keyboard(' ');
+    expect(busy).toHaveFocus();
     expect(onSubmit).toHaveBeenCalledTimes(1);
 
     await act(async () => {
       pending.resolve();
       await pending.promise;
     });
-    // Success keeps the button busy until the route changes.
-    expect(screen.getByRole('button', { name: 'Logging in' })).toHaveAttribute('aria-busy', 'true');
+    // Success keeps the button busy, aria-disabled and focused until the route changes.
+    const afterSuccess = screen.getByRole('button', { name: 'Logging in' });
+    expect(afterSuccess).toHaveAttribute('aria-busy', 'true');
+    expect(afterSuccess).toHaveAttribute('aria-disabled', 'true');
+    expect(afterSuccess).toHaveFocus();
+    await user.keyboard('{Enter}');
+    expect(onSubmit).toHaveBeenCalledTimes(1);
     expect(email).toHaveAttribute('readonly');
     expect(password).toHaveAttribute('readonly');
     expect(onSubmit).toHaveBeenCalledTimes(1);
