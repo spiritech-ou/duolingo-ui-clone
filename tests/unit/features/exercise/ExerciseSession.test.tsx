@@ -1,5 +1,6 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { createMemoryRouter, RouterProvider } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Exercise } from '@/api/schemas/lesson';
 import { ExerciseSession } from '@/features/exercise';
@@ -43,10 +44,21 @@ function setup(options: { mode?: SessionMode; count?: number } = {}) {
     onQuit: vi.fn(),
   };
   const user = userEvent.setup();
-  render(
-    <ExerciseSession mode={options.mode ?? 'lesson'} exercises={lesson(options.count)} {...props} />,
-  );
-  return { user, ...props };
+  // The container blocks browser Back, which needs a data router.
+  const router = createMemoryRouter([
+    {
+      path: '/',
+      element: (
+        <ExerciseSession
+          mode={options.mode ?? 'lesson'}
+          exercises={lesson(options.count)}
+          {...props}
+        />
+      ),
+    },
+  ]);
+  render(<RouterProvider router={router} />);
+  return { user, router, ...props };
 }
 
 const hearts = () => selectProfile(USER.id)(useProfileStore.getState()).hearts;
@@ -249,13 +261,6 @@ describe('ExerciseSession', () => {
     expect(hearts()).toBe(3);
   });
 
-  it('the close button opens the exit-dialog seam without touching the session', async () => {
-    const { user, onQuit } = setup();
-    await user.click(screen.getByRole('button', { name: 'Close' }));
-    expect(document.querySelector('[data-dialog="exit"]')).not.toBeNull();
-    expect(onQuit).not.toHaveBeenCalled();
-    expect(screen.getAllByRole('radio')).toHaveLength(3);
-  });
 });
 
 describe('ExerciseSession first-mistake modal', () => {

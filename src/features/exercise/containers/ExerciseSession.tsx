@@ -1,4 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useBlocker } from 'react-router';
+import type { Location } from 'react-router';
 import type { Exercise } from '@/api/schemas/lesson';
 import { ExerciseFooter } from '@/components/ui/ExerciseFooter';
 import type { ExerciseFooterHandle } from '@/components/ui/ExerciseFooter';
@@ -26,6 +28,7 @@ import {
   getSkippedAnnouncement,
 } from '../logic/sessionCopy';
 import type { SessionAction, SessionMode, SessionState } from '../logic/sessionTypes';
+import { ExitDialog } from './ExitDialog';
 import { FirstMistakeModal } from './FirstMistakeModal';
 import styles from './ExerciseSession.module.scss';
 
@@ -42,7 +45,7 @@ export interface LessonCompleteStats {
   isPerfect: boolean;
 }
 
-/** Dialogs the container can have open; the dialogs themselves arrive in later tasks. */
+/** Dialogs the container can have open. */
 export type SessionDialog = 'exit' | 'firstMistake';
 
 export interface ExerciseSessionProps {
@@ -55,7 +58,7 @@ export interface ExerciseSessionProps {
   onPracticeComplete?: () => void;
   /** A mistake left 0 hearts and the learner pressed CONTINUE (or the lesson started with 0). */
   onOutOfHearts: () => void;
-  /** The learner chose to leave (used by the exit dialog, a later task). */
+  /** The learner chose QUIT in the exit dialog; the route leaves (replacing the history entry). */
   onQuit: () => void;
 }
 
@@ -67,6 +70,12 @@ interface Run {
 
 function isFeedback(phase: SessionState['phase']): phase is 'correct' | 'wrong' | 'skipped' {
   return phase === 'correct' || phase === 'wrong' || phase === 'skipped';
+}
+
+function isEnd(
+  phase: SessionState['phase'],
+): phase is 'lessonOver' | 'practiceComplete' | 'outOfHearts' {
+  return phase === 'lessonOver' || phase === 'practiceComplete' || phase === 'outOfHearts';
 }
 
 function getAnnouncement(session: SessionState, exercise: Exercise | undefined): string {
@@ -92,7 +101,7 @@ export function ExerciseSession({
   onLessonComplete,
   onPracticeComplete,
   onOutOfHearts,
-  // `onQuit` is wired by the exit dialog task; it is part of the contract the routes already pass.
+  onQuit,
 }: ExerciseSessionProps) {
   const userId = useSessionStore((store) => store.session?.user.id ?? NO_USER_ID);
   const profile = useProfileStore(selectProfile(userId));
@@ -105,8 +114,22 @@ export function ExerciseSession({
     session: createSession({ exercises, mode, hearts: profile.hearts, now: Date.now() }),
     turn: 0,
   }));
-  // Seam for the exit dialog and first-mistake modal tasks; null while nothing is open.
+  // The dialog opened by a button, key or the first mistake; null while nothing is open.
   const [openDialog, setOpenDialog] = useState<SessionDialog | null>(null);
+
+  // Set the moment the session is over or the learner chose to quit, so the navigation that follows
+  // (set synchronously, before any re-render) is never intercepted by the Back blocker.
+  const isLeaving = useRef(false);
+  // Browser Back (or any other leave) while the session is in progress is held by the router's
+  // blocker; the exit dialog asks what to do. Moves within the same path are not leaving.
+  const blocker = useBlocker(
+    useCallback(
+      ({ currentLocation, nextLocation }: { currentLocation: Location; nextLocation: Location }) =>
+        !isLeaving.current && currentLocation.pathname !== nextLocation.pathname,
+      [],
+    ),
+  );
+  const isBlocked = blocker.state === 'blocked';
 
   const { session, turn } = run;
   const exercise = getCurrentExercise(session);
@@ -139,6 +162,7 @@ export function ExerciseSession({
     }
     if (isFeedback(next.phase) && next.phase !== session.phase) wantsContinueFocus.current = true;
     setRun({ session: next, turn: action.type === 'continue' ? turn + 1 : turn });
+    if (isEnd(next.phase)) isLeaving.current = true;
     if (action.type !== 'continue') return;
     if (next.phase === 'lessonOver') {
       onLessonComplete({
@@ -160,12 +184,29 @@ export function ExerciseSession({
   const handleSkip = (): void => dispatch({ type: 'skip' });
   const handleContinue = (): void => dispatch({ type: 'continue', now: Date.now() });
   const handleClose = (): void => setOpenDialog('exit');
+  // KEEP LEARNING and Escape: close the dialog and release a held Back, which stays on the page.
+  const handleKeepLearning = (): void => {
+    setOpenDialog((current) => (current === 'exit' ? null : current));
+    if (blocker.state === 'blocked') blocker.reset();
+  };
+  // QUIT: stop blocking first, drop a held Back (the route then leaves, replacing the entry), and tell it.
+  const handleQuit = (): void => {
+    isLeaving.current = true;
+    if (blocker.state === 'blocked') blocker.reset();
+    onQuit();
+  };
+
+  // Back arrived while the first-mistake modal is open: only one dialog at a time, so ignore it.
+  useEffect(() => {
+    if (isBlocked && openDialog === 'firstMistake') blocker.reset();
+  }, [isBlocked, openDialog, blocker]);
 
   // A lesson that starts with no hearts is out of hearts at once.
   const reportedEmpty = useRef(false);
   useEffect(() => {
     if (session.phase === 'outOfHearts' && !reportedEmpty.current && turn === 0) {
       reportedEmpty.current = true;
+      isLeaving.current = true;
       onOutOfHearts();
     }
     // Runs for the initial state only; later transitions call the callbacks from `dispatch`.
@@ -219,10 +260,25 @@ export function ExerciseSession({
     };
   }, [isFirstMistakeOpen, dismissFirstMistake]);
 
+  // Escape outside a modal opens the exit dialog. A bubble-phase listener on purpose: an open
+  // Dialog handles its own Escape in the capture phase and stops it, so a second one never stacks.
+  const isInProgress = exercise !== undefined && !isEnd(phase);
+  const isExitOpen = openDialog === 'exit' || (isBlocked && openDialog !== 'firstMistake');
+  const isAnyDialogOpen = isExitOpen || openDialog === 'firstMistake';
+  useEffect(() => {
+    if (!isInProgress || isAnyDialogOpen) return undefined;
+    const handleKeyDown = (event: KeyboardEvent): void => {
+      if (event.key !== 'Escape' || event.isComposing || event.repeat || event.defaultPrevented) {
+        return;
+      }
+      setOpenDialog('exit');
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isInProgress, isAnyDialogOpen]);
+
   // End screens belong to the routes; the callbacks above already told them.
-  if (!exercise || phase === 'lessonOver' || phase === 'practiceComplete' || phase === 'outOfHearts') {
-    return null;
-  }
+  if (!exercise || isEnd(phase)) return null;
 
   const feedback = isFeedback(phase);
   const isSkipped = phase === 'skipped';
@@ -254,8 +310,6 @@ export function ExerciseSession({
           onContinue={handleContinue}
         />
       }
-      // Marks the exit dialog until its task renders the real one.
-      data-dialog={openDialog === 'exit' ? 'exit' : undefined}
     >
       <div className={styles['stack']}>
         <ExercisePrompt ref={headingRef} english={exercise.english} isNewWord={exercise.isNewWord} />
@@ -275,6 +329,9 @@ export function ExerciseSession({
       </div>
       {isFirstMistakeOpen ? (
         <FirstMistakeModal hearts={session.hearts} onDismiss={dismissFirstMistake} />
+      ) : null}
+      {isExitOpen ? (
+        <ExitDialog mode={mode} onKeepLearning={handleKeepLearning} onQuit={handleQuit} />
       ) : null}
     </FocusedLayout>
   );
