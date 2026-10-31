@@ -724,6 +724,30 @@ describe('useSpeech clips', () => {
     expect(result.current.playbackFailed).toBe(true);
   });
 
+  it('selecting a word without a clip stops the clip still playing', async () => {
+    const synth = createFakeSynth({ supported: false });
+    const { created, createAudio } = createFakeAudioFactory();
+    const { result } = renderHook(() =>
+      useSpeech({ adapter: synth, loadClips: loadStub, createAudio }),
+    );
+    await flush();
+    act(() => {
+      result.current.speak('tee');
+    });
+    const first = lastAudio(created);
+    let outcome = '';
+    act(() => {
+      outcome = result.current.speak('leib');
+    });
+    expect(outcome).toBe('nothing');
+    expect(first.pauseCalls).toBe(1);
+    expect(created).toHaveLength(1);
+    act(() => {
+      first.onerror?.();
+    });
+    expect(result.current.playbackFailed).toBe(false);
+  });
+
   it('does not play when the browser has no Audio', async () => {
     const synth = createFakeSynth({ supported: false });
     const { result } = renderHook(() =>

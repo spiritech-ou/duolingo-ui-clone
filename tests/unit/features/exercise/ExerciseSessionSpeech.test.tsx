@@ -4,7 +4,8 @@ import { createMemoryRouter, RouterProvider } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Exercise } from '@/api/schemas/lesson';
 import { ExerciseSession } from '@/features/exercise';
-import type { SpeechAdapter } from '@/hooks/useSpeech';
+import type { AudioClips } from '@/api/endpoints/audio';
+import type { ClipAudio, CreateClipAudio, SpeechAdapter } from '@/hooks/useSpeech';
 import { selectProfile, useProfileStore } from '@/store/useProfileStore';
 import { useSessionStore } from '@/store/useSessionStore';
 import { ENGLISH, ESTONIAN, makeSynth } from './fakeSynth';
@@ -26,7 +27,51 @@ const makeExercise = (n: number, right: string, others: [string, string]): Exerc
 
 const EXERCISES = [makeExercise(0, 'tee', ['kohv', 'leib']), makeExercise(1, 'piim', ['vesi', 'mahl'])];
 
-function setup(synth: SpeechAdapter, mode: 'lesson' | 'practice' = 'lesson') {
+const NO_CLIPS: AudioClips = {};
+const clipFor = (word: string): AudioClips[string] => ({
+  itemId: `item-${word}`,
+  file: `${word}.mp3`,
+  needsReview: false,
+});
+const CLIPS: AudioClips = { kohv: clipFor('kohv'), tee: clipFor('tee') };
+
+interface FakeClip extends ClipAudio {
+  url: string;
+  plays: number;
+  pauses: number;
+}
+
+/** Records the clips created and lets a test end or fail them. */
+function makeAudio() {
+  const created: FakeClip[] = [];
+  const createAudio: CreateClipAudio = (url) => {
+    const clip: FakeClip = {
+      url,
+      plays: 0,
+      pauses: 0,
+      onended: null,
+      onerror: null,
+      play: () => {
+        clip.plays += 1;
+      },
+      pause: () => {
+        clip.pauses += 1;
+      },
+    };
+    created.push(clip);
+    return clip;
+  };
+  return { created, createAudio };
+}
+
+interface SetupOptions {
+  mode?: 'lesson' | 'practice';
+  clips?: AudioClips;
+  audio?: ReturnType<typeof makeAudio>;
+}
+
+function setup(synth: SpeechAdapter, { mode = 'lesson', clips = NO_CLIPS, audio }: SetupOptions = {}) {
+  const fakeAudio = audio ?? makeAudio();
   const user = userEvent.setup({ advanceTimers: (ms) => vi.advanceTimersByTimeAsync(ms) });
   const router = createMemoryRouter([
     {
@@ -36,6 +81,8 @@ function setup(synth: SpeechAdapter, mode: 'lesson' | 'practice' = 'lesson') {
           mode={mode}
           exercises={EXERCISES}
           speechAdapter={synth}
+          loadClips={() => Promise.resolve(clips)}
+          createAudio={fakeAudio.createAudio}
           onLessonComplete={vi.fn()}
           onOutOfHearts={vi.fn()}
           onQuit={vi.fn()}
@@ -44,7 +91,7 @@ function setup(synth: SpeechAdapter, mode: 'lesson' | 'practice' = 'lesson') {
     },
   ]);
   const { unmount } = render(<RouterProvider router={router} />);
-  return { user, unmount };
+  return { user, unmount, audio: fakeAudio };
 }
 
 const card = (word: string) => screen.getByRole('radio', { name: new RegExp(word) });
@@ -127,7 +174,7 @@ describe('ExerciseSession speech and sound notices', () => {
 
     it('speaks in practice mode too', async () => {
       const synth = makeSynth();
-      const { user } = setup(synth, 'practice');
+      const { user } = setup(synth, { mode: 'practice' });
       await settle();
       expect(synth.spoken).toHaveLength(0);
       await user.click(card('leib'));
@@ -267,6 +314,9 @@ describe('ExerciseSession speech and sound notices', () => {
     it('shows the unsupported texts at once and cards still work', async () => {
       const synth = makeSynth({ supported: false });
       const { user } = setup(synth);
+      // The icon waits for the clip manifest (empty here), which resolves on the first tick.
+      expect(screen.queryByRole('button', { name: 'Sound unavailable' })).toBeNull();
+      await act(() => vi.advanceTimersByTimeAsync(0));
 
       const icon = screen.getByRole('button', { name: 'Sound unavailable' });
       expect(icon).toHaveAccessibleDescription("This browser can't speak words aloud, so sound is off.");
@@ -280,6 +330,93 @@ describe('ExerciseSession speech and sound notices', () => {
 
       await user.click(screen.getByRole('button', { name: 'Got it' }));
       expect(dismissed()).toBe(true);
+    });
+  });
+
+  describe('with recorded clips', () => {
+    const noSoundShown = () => {
+      expect(screen.queryByRole('button', { name: 'Sound unavailable' })).toBeNull();
+      expect(screen.queryByText('No Estonian voice on this device')).toBeNull();
+      expect(screen.queryByText("This browser can't speak words aloud")).toBeNull();
+    };
+
+    it('voice only: the voice speaks and no clip is created', async () => {
+      const synth = makeSynth();
+      const { user, audio } = setup(synth, { clips: CLIPS });
+      await settle();
+      await user.click(card('kohv'));
+      expect(synth.spoken.map((s) => s.text)).toEqual(['kohv']);
+      expect(audio.created).toHaveLength(0);
+      noSoundShown();
+    });
+
+    it('clip only (no voice): plays the clip on selection, with no icon or notice', async () => {
+      const synth = makeSynth({ voices: [ENGLISH] });
+      const { user, audio } = setup(synth, { clips: CLIPS });
+      await settle();
+      noSoundShown();
+      expect(audio.created).toHaveLength(0);
+
+      await user.click(card('kohv'));
+      expect(audio.created.map((c) => [c.url, c.plays])).toEqual([['/audio/kohv.mp3', 1]]);
+      expect(synth.spoken).toHaveLength(0);
+
+      // A word without a clip is silent.
+      await user.click(card('leib'));
+      expect(audio.created).toHaveLength(1);
+      expect(screen.queryByText("Couldn't play this word.")).toBeNull();
+
+      // CHECK never plays a clip.
+      await user.click(screen.getByRole('button', { name: 'Check' }));
+      expect(audio.created).toHaveLength(1);
+    });
+
+    it('clip only: a stored dismissal is irrelevant while a clip exists', async () => {
+      useProfileStore.getState().dismissNoVoiceNote(USER.id);
+      setup(makeSynth({ voices: [ENGLISH] }), { clips: CLIPS });
+      await settle();
+      noSoundShown();
+    });
+
+    it('clip only (no speech synthesis): plays the clip, with no icon or notice', async () => {
+      const synth = makeSynth({ supported: false });
+      const { user, audio } = setup(synth, { clips: CLIPS });
+      await settle();
+      noSoundShown();
+
+      await user.click(card('tee'));
+      expect(audio.created.map((c) => [c.url, c.plays])).toEqual([['/audio/tee.mp3', 1]]);
+      expect(synth.spoken).toHaveLength(0);
+    });
+
+    it('neither: shows the icon and the notice, and the dismissal persists', async () => {
+      const synth = makeSynth({ voices: [ENGLISH] });
+      const first = setup(synth, { clips: NO_CLIPS });
+      await settle();
+      expect(screen.getByRole('button', { name: 'Sound unavailable' })).toBeInTheDocument();
+      expect(screen.getByText('No Estonian voice on this device')).toBeInTheDocument();
+
+      await first.user.click(screen.getByRole('button', { name: 'Got it' }));
+      expect(dismissed()).toBe(true);
+      await first.user.click(card('kohv'));
+      expect(first.audio.created).toHaveLength(0);
+      first.unmount();
+
+      setup(makeSynth({ voices: [ENGLISH] }), { clips: NO_CLIPS });
+      await settle();
+      expect(screen.getByRole('button', { name: 'Sound unavailable' })).toBeInTheDocument();
+      expect(screen.queryByText('No Estonian voice on this device')).toBeNull();
+    });
+
+    it('a failed clip shows "Couldn\'t play this word." and clears after 4 s', async () => {
+      const { user, audio } = setup(makeSynth({ voices: [ENGLISH] }), { clips: CLIPS });
+      await settle();
+      await user.click(card('kohv'));
+      act(() => audio.created[0]?.onerror?.());
+      expect(screen.getByText("Couldn't play this word.")).toBeInTheDocument();
+
+      await act(() => vi.advanceTimersByTimeAsync(4100));
+      expect(screen.queryByText("Couldn't play this word.")).toBeNull();
     });
   });
 });

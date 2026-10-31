@@ -4,7 +4,7 @@ import type { Location } from 'react-router';
 import type { Exercise } from '@/api/schemas/lesson';
 import { IconButton } from '@/components/ui/IconButton';
 import { useSpeech } from '@/hooks/useSpeech';
-import type { SpeechAdapter } from '@/hooks/useSpeech';
+import type { SpeechAdapter, UseSpeechOptions } from '@/hooks/useSpeech';
 import { ExerciseFooter } from '@/components/ui/ExerciseFooter';
 import type { ExerciseFooterHandle } from '@/components/ui/ExerciseFooter';
 import { ExercisePrompt } from '@/components/ui/ExercisePrompt';
@@ -77,6 +77,10 @@ export interface ExerciseSessionProps {
   onQuit: () => void;
   /** Speech synthesis seam for tests; the browser's is used when omitted. */
   speechAdapter?: SpeechAdapter;
+  /** Clip manifest loader seam for tests; the real request is used when omitted. */
+  loadClips?: UseSpeechOptions['loadClips'];
+  /** Clip audio element seam for tests; the browser's Audio is used when omitted. */
+  createAudio?: UseSpeechOptions['createAudio'];
 }
 
 interface Run {
@@ -120,15 +124,19 @@ export function ExerciseSession({
   onOutOfHearts,
   onQuit,
   speechAdapter,
+  loadClips,
+  createAudio,
 }: ExerciseSessionProps) {
   const userId = useSessionStore((store) => store.session?.user.id ?? NO_USER_ID);
   const profile = useProfileStore(selectProfile(userId));
   const loseHeart = useProfileStore((store) => store.loseHeart);
   const markHeartsIntroSeen = useProfileStore((store) => store.markHeartsIntroSeen);
   const dismissNoVoiceNote = useProfileStore((store) => store.dismissNoVoiceNote);
-  const { voiceStatus, playbackFailed, speak, cancel } = useSpeech(
-    speechAdapter ? { adapter: speechAdapter } : {},
-  );
+  const { soundStatus, soundUnavailableReason, playbackFailed, speak, cancel } = useSpeech({
+    ...(speechAdapter ? { adapter: speechAdapter } : {}),
+    ...(loadClips ? { loadClips } : {}),
+    ...(createAudio ? { createAudio } : {}),
+  });
   // The learner pressed the icon to read the no-sound notice again.
   // It is tied to the exercise and the reason it was opened for, so it lapses on its own when
   // either changes.
@@ -379,10 +387,10 @@ export function ExerciseSession({
     exercise.options.find((option) => option.id === exercise.correctOptionId)?.estonian;
   const progress = getProgress(session);
 
-  // No sound: the icon stays for the whole session; the notice shows on the first exercise unless
-  // it was dismissed before, and again whenever the icon is pressed. A voice appearing clears both.
-  const soundReason =
-    voiceStatus === 'no-voice' || voiceStatus === 'unsupported' ? voiceStatus : null;
+  // No sound at all (no voice and no clip): the icon stays for the whole session; the notice shows
+  // on the first exercise unless it was dismissed before, and again whenever the icon is pressed.
+  // A voice or clips appearing clears both; a stored dismissal is irrelevant while sound exists.
+  const soundReason = soundStatus === 'none' ? soundUnavailableReason : null;
   const isNoteShown =
     soundReason !== null &&
     ((reopened?.turn === turn && reopened.reason === soundReason) ||

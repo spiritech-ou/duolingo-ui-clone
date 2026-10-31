@@ -276,6 +276,10 @@ export function useSpeech({
         });
         return 'started';
       }
+      // A newer selection always stops what is playing, even when it has nothing to play.
+      activeRef.current += 1;
+      stopClip();
+      if (supported) adapter.cancel();
       // Voice first: while the voice check is still running no clip is played; the clip is
       // used only once it is known that no voice exists (unsupported, or settled without one).
       const voiceKnownAbsent = !supported || settledRef.current;
@@ -289,9 +293,6 @@ export function useSpeech({
       if (audio === null) return 'nothing';
       clearFailTimer();
       setPlaybackFailed(false);
-      stopClip();
-      if (supported) adapter.cancel();
-      activeRef.current += 1;
       const id = activeRef.current;
       audioRef.current = audio;
       const fail = () => {
