@@ -55,7 +55,8 @@ export function ExerciseLoadScreen({ kind, mode, error, onRetry, onLeave }: Exer
         <StatusScreen
           key={kind}
           variant={kind === 'loading' ? 'loading' : kind === 'error' ? 'error' : 'empty'}
-          mood={kind === 'loading' ? 'default' : 'sad'}
+          // Red flame only for failures; loading and the empty lesson keep the blue one.
+          mood={kind === 'error' || kind === 'notFound' ? 'sad' : 'default'}
           title={copy.title}
           {...(copy.message ? { message: copy.message } : {})}
           titleRef={titleRef}
