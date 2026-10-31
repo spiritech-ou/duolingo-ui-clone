@@ -6,12 +6,14 @@ import { playwright } from '@vitest/browser-playwright';
 import { defineConfig } from 'vite';
 
 const srcDir = fileURLToPath(new URL('./src', import.meta.url));
+const scriptsDir = fileURLToPath(new URL('./scripts', import.meta.url));
 const storybookDir = fileURLToPath(new URL('./.storybook', import.meta.url));
 
 export default defineConfig({
   plugins: [react()],
   resolve: {
-    alias: { '@': srcDir },
+    // '@scripts' lets tests import the one-off scripts without climbing relative paths.
+    alias: { '@': srcDir, '@scripts': scriptsDir },
   },
   css: {
     preprocessorOptions: {

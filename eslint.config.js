@@ -92,7 +92,7 @@ export default tseslint.config(
     },
   },
   {
-    files: ['tests/**/*.{ts,tsx}', 'vite.config.ts', 'playwright.config.ts', '.storybook/**/*.{ts,tsx}'],
+    files: ['tests/**/*.{ts,tsx}', 'scripts/**/*.ts', 'vite.config.ts', 'playwright.config.ts', '.storybook/**/*.{ts,tsx}'],
     languageOptions: { globals: { ...globals.node, ...globals.browser } },
   },
 );

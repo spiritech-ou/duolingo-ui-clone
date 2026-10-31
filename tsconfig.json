@@ -17,10 +17,12 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "noEmit": true,
-    "paths": { "@/*": ["./src/*"] }
+    "allowImportingTsExtensions": true,
+    "paths": { "@/*": ["./src/*"], "@scripts/*": ["./scripts/*"] }
   },
   "include": [
     "src",
+    "scripts",
     "tests",
     ".storybook",
     "vite.config.ts",
