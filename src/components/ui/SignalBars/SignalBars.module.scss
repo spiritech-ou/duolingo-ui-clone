@@ -1,0 +1,33 @@
+.root {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: var(--space-1);
+  block-size: 1.5rem;
+}
+
+.bar {
+  inline-size: 0.375rem;
+  border-radius: var(--radius-sm);
+  background-color: var(--color-border);
+
+  // Rising heights: 25%, 50%, 75%, 100%.
+  &:nth-child(1) {
+    block-size: 25%;
+  }
+
+  &:nth-child(2) {
+    block-size: 50%;
+  }
+
+  &:nth-child(3) {
+    block-size: 75%;
+  }
+
+  &:nth-child(4) {
+    block-size: 100%;
+  }
+}
+
+.isFilled {
+  background-color: var(--color-primary);
+}
