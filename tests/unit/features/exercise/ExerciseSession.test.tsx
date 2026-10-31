@@ -1,4 +1,4 @@
-import { render, screen } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Exercise } from '@/api/schemas/lesson';
@@ -50,6 +50,9 @@ function setup(options: { mode?: SessionMode; count?: number } = {}) {
 }
 
 const hearts = () => selectProfile(USER.id)(useProfileStore.getState()).hearts;
+const hasSeenIntro = () =>
+  selectProfile(USER.id)(useProfileStore.getState()).hasSeenHeartsIntro;
+const markIntroSeen = () => useProfileStore.getState().markHeartsIntroSeen(USER.id);
 const card = (word: string) => screen.getByRole('radio', { name: new RegExp(word) });
 const bar = () => screen.getByRole('progressbar');
 
@@ -59,6 +62,8 @@ describe('ExerciseSession', () => {
     useSessionStore.getState().reset();
     useProfileStore.getState().reset();
     useSessionStore.getState().setSession({ token: 't', user: USER });
+    // The first-mistake modal has its own describe below; everywhere else it was seen already.
+    markIntroSeen();
   });
 
   it('starts idle: tag, question focused, SKIP enabled, CHECK disabled, nothing announced', () => {
@@ -250,5 +255,139 @@ describe('ExerciseSession', () => {
     expect(document.querySelector('[data-dialog="exit"]')).not.toBeNull();
     expect(onQuit).not.toHaveBeenCalled();
     expect(screen.getAllByRole('radio')).toHaveLength(3);
+  });
+});
+
+describe('ExerciseSession first-mistake modal', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    useSessionStore.getState().reset();
+    useProfileStore.getState().reset();
+    useSessionStore.getState().setSession({ token: 't', user: USER });
+  });
+
+  const wrongAnswer = async (user: ReturnType<typeof userEvent.setup>) => {
+    await user.click(card('kohv'));
+    await user.click(screen.getByRole('button', { name: 'Check' }));
+  };
+  const dialog = () => screen.getByRole('dialog', { name: 'Each mistake costs 1 heart!' });
+  const noDialog = () => expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+
+  it('opens on the first wrong answer with the loss, the copy and KEEP GOING focused, panel behind', async () => {
+    const { user } = setup();
+    await wrongAnswer(user);
+
+    const modal = dialog();
+    expect(modal).toHaveAccessibleDescription('Stay sharp and focused to keep your hearts. You got this!');
+    expect(within(modal).getByRole('img', { name: '4 hearts left' })).toBeInTheDocument();
+    expect(within(modal).getByRole('button', { name: 'Keep going' })).toHaveFocus();
+    // The Wrong panel is behind it, and the page behind is inert.
+    expect(screen.getByText('Correct solution:')).toBeInTheDocument();
+    expect(screen.getByRole('status')).toHaveTextContent('Incorrect. Correct solution: tee. 4 hearts left.');
+    expect(document.querySelector('[inert] [role="radiogroup"]')).not.toBeNull();
+    expect(hasSeenIntro()).toBe(false);
+  });
+
+  it('a skip counts as the first mistake and opens it too', async () => {
+    const { user } = setup();
+    await user.click(screen.getByRole('button', { name: 'Skip' }));
+    expect(dialog()).toBeInTheDocument();
+    expect(hearts()).toBe(4);
+  });
+
+  it('KEEP GOING saves the flag, closes it and leaves focus on CONTINUE', async () => {
+    const { user } = setup();
+    await wrongAnswer(user);
+    await user.click(within(dialog()).getByRole('button', { name: 'Keep going' }));
+
+    noDialog();
+    expect(hasSeenIntro()).toBe(true);
+    expect(screen.getByRole('button', { name: 'Continue' })).toHaveFocus();
+  });
+
+  it('Escape dismisses it like the button', async () => {
+    const { user } = setup();
+    await wrongAnswer(user);
+    await user.keyboard('{Escape}');
+
+    noDialog();
+    expect(hasSeenIntro()).toBe(true);
+    expect(screen.getByRole('button', { name: 'Continue' })).toHaveFocus();
+  });
+
+  it('Enter dismisses it without pressing CONTINUE, even when held down', async () => {
+    const { user } = setup();
+    await wrongAnswer(user);
+    await user.keyboard('{Enter>3}');
+
+    noDialog();
+    expect(hasSeenIntro()).toBe(true);
+    expect(screen.getByRole('button', { name: 'Continue' })).toHaveFocus();
+    // Still on the Wrong panel of the same exercise: the key did not also continue.
+    expect(screen.getByText('Correct solution:')).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: /“tea”/ })).toBeInTheDocument();
+    await user.keyboard('{/Enter}');
+    expect(screen.getByText('Correct solution:')).toBeInTheDocument();
+  });
+
+  it('Enter dismisses it when focus is on the dialog panel rather than the button', async () => {
+    const { user } = setup();
+    await wrongAnswer(user);
+    dialog().focus();
+    await user.keyboard('{Enter}');
+
+    noDialog();
+    expect(hasSeenIntro()).toBe(true);
+    expect(screen.getByRole('button', { name: 'Continue' })).toHaveFocus();
+    expect(screen.getByText('Correct solution:')).toBeInTheDocument();
+  });
+
+  it('after a skip the dismissal still ends on CONTINUE', async () => {
+    const { user } = setup();
+    await user.click(screen.getByRole('button', { name: 'Skip' }));
+    await user.keyboard('{Escape}');
+    expect(screen.getByRole('button', { name: 'Continue' })).toHaveFocus();
+  });
+
+  it('is shown once: a later mistake after dismissal does not reopen it', async () => {
+    const { user } = setup();
+    await wrongAnswer(user);
+    await user.keyboard('{Escape}');
+    await user.click(screen.getByRole('button', { name: 'Continue' }));
+    await user.click(card('vesi'));
+    await user.click(screen.getByRole('button', { name: 'Check' }));
+    noDialog();
+    expect(hearts()).toBe(3);
+  });
+
+  it('is not shown to a user who has seen it', async () => {
+    markIntroSeen();
+    const { user } = setup();
+    await wrongAnswer(user);
+    noDialog();
+    expect(screen.getByRole('button', { name: 'Continue' })).toHaveFocus();
+  });
+
+  it('is shown per user: another user has not seen it yet', async () => {
+    markIntroSeen();
+    useSessionStore.getState().setSession({ token: 't2', user: { ...USER, id: 'u2' } });
+    const { user } = setup();
+    await wrongAnswer(user);
+    expect(dialog()).toBeInTheDocument();
+  });
+
+  it('is never shown in practice, and the flag stays unset', async () => {
+    const { user } = setup({ mode: 'practice' });
+    await wrongAnswer(user);
+    noDialog();
+    expect(hasSeenIntro()).toBe(false);
+    expect(screen.getByRole('button', { name: 'Continue' })).toHaveFocus();
+  });
+
+  it('does not open for a correct answer', async () => {
+    const { user } = setup();
+    await user.click(card('tee'));
+    await user.click(screen.getByRole('button', { name: 'Check' }));
+    noDialog();
   });
 });

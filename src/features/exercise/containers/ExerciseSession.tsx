@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Exercise } from '@/api/schemas/lesson';
 import { ExerciseFooter } from '@/components/ui/ExerciseFooter';
 import type { ExerciseFooterHandle } from '@/components/ui/ExerciseFooter';
@@ -26,6 +26,7 @@ import {
   getSkippedAnnouncement,
 } from '../logic/sessionCopy';
 import type { SessionAction, SessionMode, SessionState } from '../logic/sessionTypes';
+import { FirstMistakeModal } from './FirstMistakeModal';
 import styles from './ExerciseSession.module.scss';
 
 /** Profile key used while nobody is signed in (the route guard arrives later); reads the defaults. */
@@ -96,6 +97,7 @@ export function ExerciseSession({
   const userId = useSessionStore((store) => store.session?.user.id ?? NO_USER_ID);
   const profile = useProfileStore(selectProfile(userId));
   const loseHeart = useProfileStore((store) => store.loseHeart);
+  const markHeartsIntroSeen = useProfileStore((store) => store.markHeartsIntroSeen);
 
   // The session starts from the profile's hearts and from now (the first exercise appearing). Every
   // loss is saved the moment it happens, so the reducer's hearts and the profile's stay equal.
@@ -112,11 +114,30 @@ export function ExerciseSession({
   const headingRef = useRef<HTMLHeadingElement>(null);
   const footerRef = useRef<ExerciseFooterHandle>(null);
 
+  // Set when CONTINUE should take focus once nothing modal is open (after CHECK or SKIP, or after
+  // the first-mistake modal closes, because the Dialog gives focus back to its own opener first).
+  const wantsContinueFocus = useRef(false);
+  // True from an Enter press that dismissed the modal until Enter is released, so holding it
+  // cannot repeat onto CONTINUE (which now has focus).
+  const enterHeld = useRef(false);
+
+  const dismissFirstMistake = useCallback((): void => {
+    markHeartsIntroSeen(userId);
+    wantsContinueFocus.current = true;
+    setOpenDialog((current) => (current === 'firstMistake' ? null : current));
+  }, [markHeartsIntroSeen, userId]);
+
   function dispatch(action: SessionAction): void {
     const next = sessionReducer(session, action);
     if (next === session) return;
     // A heart is lost on the transition into wrong/skipped, and saved at once.
-    if (next.heartsLost === 1 && next.phase !== session.phase) loseHeart(userId);
+    const lostHeart = next.heartsLost === 1 && next.phase !== session.phase;
+    if (lostHeart) {
+      loseHeart(userId);
+      // The first mistake ever (a skip counts) explains hearts once; lessons only.
+      if (!profile.hasSeenHeartsIntro) setOpenDialog('firstMistake');
+    }
+    if (isFeedback(next.phase) && next.phase !== session.phase) wantsContinueFocus.current = true;
     setRun({ session: next, turn: action.type === 'continue' ? turn + 1 : turn });
     if (action.type !== 'continue') return;
     if (next.phase === 'lessonOver') {
@@ -156,11 +177,47 @@ export function ExerciseSession({
     headingRef.current?.focus();
   }, [turn]);
 
-  // After CHECK or SKIP the panel has committed; only then can focus move to CONTINUE.
+  // After CHECK or SKIP the panel has committed; only then can focus move to CONTINUE. While the
+  // first-mistake modal is open it keeps focus; closing it ends here, after the Dialog has
+  // restored focus to its opener (that opener may be gone or stale).
   const phase = session.phase;
   useEffect(() => {
-    if (isFeedback(phase)) footerRef.current?.focusContinue();
-  }, [phase]);
+    if (!wantsContinueFocus.current || openDialog !== null || !isFeedback(phase)) return;
+    wantsContinueFocus.current = false;
+    footerRef.current?.focusContinue();
+  }, [phase, openDialog]);
+
+  // Enter dismisses the first-mistake modal like its button, and nothing else happens: a press on
+  // the button itself is left to the button's own click, any other focus (the panel) is handled
+  // here, and repeats of a press that dismissed it are swallowed.
+  const isFirstMistakeOpen = openDialog === 'firstMistake';
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent): void => {
+      if (event.key !== 'Enter' || event.isComposing) return;
+      if (event.repeat) {
+        if (enterHeld.current) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+        return;
+      }
+      if (!isFirstMistakeOpen) return;
+      enterHeld.current = true;
+      if (event.target instanceof HTMLButtonElement) return;
+      event.preventDefault();
+      event.stopPropagation();
+      dismissFirstMistake();
+    };
+    const handleKeyUp = (event: KeyboardEvent): void => {
+      if (event.key === 'Enter') enterHeld.current = false;
+    };
+    document.addEventListener('keydown', handleKeyDown, true);
+    document.addEventListener('keyup', handleKeyUp, true);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown, true);
+      document.removeEventListener('keyup', handleKeyUp, true);
+    };
+  }, [isFirstMistakeOpen, dismissFirstMistake]);
 
   // End screens belong to the routes; the callbacks above already told them.
   if (!exercise || phase === 'lessonOver' || phase === 'practiceComplete' || phase === 'outOfHearts') {
@@ -197,8 +254,8 @@ export function ExerciseSession({
           onContinue={handleContinue}
         />
       }
-      // Marks the open dialog until the dialog tasks render real ones.
-      data-dialog={openDialog ?? undefined}
+      // Marks the exit dialog until its task renders the real one.
+      data-dialog={openDialog === 'exit' ? 'exit' : undefined}
     >
       <div className={styles['stack']}>
         <ExercisePrompt ref={headingRef} english={exercise.english} isNewWord={exercise.isNewWord} />
@@ -216,6 +273,9 @@ export function ExerciseSession({
           onSelect={handleSelect}
         />
       </div>
+      {isFirstMistakeOpen ? (
+        <FirstMistakeModal hearts={session.hearts} onDismiss={dismissFirstMistake} />
+      ) : null}
     </FocusedLayout>
   );
 }
