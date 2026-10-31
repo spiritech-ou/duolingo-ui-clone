@@ -38,6 +38,8 @@ export interface RequestOptions<T> {
   method?: 'GET' | 'POST';
   body?: unknown;
   signal?: AbortSignal;
+  /** Replaces the `VITE_API_BASE_URL` prefix, for static assets served outside `/api` (pass `''`). */
+  baseUrl?: string;
 }
 
 async function readJson(response: Response): Promise<unknown> {
@@ -56,7 +58,7 @@ async function readJson(response: Response): Promise<unknown> {
  */
 export async function request<T>(
   path: string,
-  { schema, method = 'GET', body, signal }: RequestOptions<T>,
+  { schema, method = 'GET', body, signal, baseUrl = env.VITE_API_BASE_URL }: RequestOptions<T>,
 ): Promise<T> {
   const controller = new AbortController();
   let timedOut = false;
@@ -71,7 +73,7 @@ export async function request<T>(
   try {
     let response: Response;
     try {
-      response = await fetch(`${env.VITE_API_BASE_URL}${path}`, {
+      response = await fetch(`${baseUrl}${path}`, {
         method,
         signal: controller.signal,
         ...(body === undefined
