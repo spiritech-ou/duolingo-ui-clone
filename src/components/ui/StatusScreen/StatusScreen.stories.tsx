@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent } from 'storybook/test';
 import { Button } from '@/components/ui/Button';
+import { LessonStats } from '@/components/ui/LessonStats';
 import { StatusScreen } from './StatusScreen';
 import type { StatusScreenProps } from './StatusScreen';
 
@@ -205,6 +206,122 @@ export const FocusTargets: Story = {
     // Tab continues to the second action.
     await userEvent.tab();
     await expect(canvas.getByRole('button', { name: 'Back to path' })).toHaveFocus();
+  },
+};
+
+const columnArgs = {
+  variant: 'error',
+  mood: 'sad',
+  title: "We couldn't load this lesson",
+  message: 'You seem to be offline, or the connection is slow. Check it and try again.',
+  actions: (
+    <>
+      <Button>Try again</Button>
+      <Button variant="secondary">Back to path</Button>
+    </>
+  ),
+} satisfies StatusScreenProps;
+
+function measure(canvasElement: HTMLElement) {
+  const root = canvasElement.firstElementChild as HTMLElement;
+  const rect = (el: Element | null) =>
+    el ? el.getBoundingClientRect() : new DOMRect();
+  const buttons = Array.from(root.querySelectorAll('button'));
+  // The mascot's mood tilts the image, which distorts its bounding box: measure its wrapper.
+  const mascotBox = root.querySelector('img')?.parentElement ?? null;
+  return {
+    root: rect(root),
+    mascot: rect(mascotBox),
+    heading: rect(root.querySelector('h1')),
+    message: rect(root.querySelector('p')),
+    buttons: buttons.map((b) => rect(b)),
+    isWide: window.matchMedia('(min-width: 48rem)').matches,
+  };
+}
+
+export const ColumnDesktop: Story = {
+  args: columnArgs,
+  // Tablet (768px) is the narrowest width where the md rules (48rem) apply.
+  globals: { viewport: { value: 'tablet', isRotated: false } },
+  play: async ({ canvasElement }) => {
+    const m = measure(canvasElement);
+    await expect(m.isWide).toBe(true);
+    // One 480px column, 120px mascot, 240px buttons, 12px between them.
+    await expect(m.root.width).toBe(480);
+    await expect(m.mascot.width).toBe(120);
+    await expect(m.buttons[0]?.width).toBe(240);
+    await expect(m.buttons[1]?.width).toBe(240);
+    await expect((m.buttons[1]?.top ?? 0) - (m.buttons[0]?.bottom ?? 0)).toBe(12);
+    // Block starts 96px below the top of its container; not vertically centred.
+    await expect(getComputedStyle(canvasElement.firstElementChild as Element).paddingTop).toBe(
+      '96px',
+    );
+    // 24px between the mascot and the headline group, 16px headline to message.
+    await expect(m.heading.top - m.mascot.bottom).toBe(24);
+    await expect(m.message.top - m.heading.bottom).toBe(16);
+    // Everything is centred on the column axis.
+    const axis = m.root.left + m.root.width / 2;
+    await expect(m.mascot.left + m.mascot.width / 2).toBeCloseTo(axis, 0);
+    await expect(m.buttons[0] ? m.buttons[0].left + m.buttons[0].width / 2 : 0).toBeCloseTo(axis, 0);
+  },
+};
+
+export const ColumnMobile: Story = {
+  args: columnArgs,
+  globals: { viewport: { value: 'mobile2', isRotated: false } },
+  play: async ({ canvasElement }) => {
+    const m = measure(canvasElement);
+    await expect(m.isWide).toBe(false);
+    // Column fills the whole width available to it (below the 480px maximum).
+    await expect(m.root.width).toBeCloseTo(canvasElement.getBoundingClientRect().width, 0);
+    await expect(m.root.width).toBeLessThan(480);
+    // 16px gutters inside it; mascot 96px; top offset 48px.
+    await expect(m.mascot.width).toBe(96);
+    await expect(getComputedStyle(canvasElement.firstElementChild as Element).paddingTop).toBe(
+      '48px',
+    );
+    // Buttons fill the column between the gutters.
+    for (const button of m.buttons) {
+      await expect(button.width).toBeCloseTo(m.root.width - 32, 0);
+    }
+    // The headline wraps to at most two lines.
+    const lineHeight = parseFloat(
+      getComputedStyle(canvasElement.querySelector('h1') as Element).lineHeight,
+    );
+    await expect(m.heading.height).toBeLessThanOrEqual(lineHeight * 2 + 1);
+  },
+};
+
+export const EndScreenMascot: Story = {
+  args: {
+    variant: 'info',
+    mood: 'celebrating',
+    mascotSize: 160,
+    title: 'Lesson complete!',
+    children: (
+      <LessonStats
+        items={[
+          { label: 'XP', value: '+10' },
+          { label: 'Accuracy', value: '80%' },
+          { label: 'Time', value: '2:14' },
+        ]}
+      />
+    ),
+    actions: <Button>Continue</Button>,
+  },
+  globals: { viewport: { value: 'tablet', isRotated: false } },
+  play: async ({ canvasElement }) => {
+    const m = measure(canvasElement);
+    await expect(m.isWide).toBe(true);
+    // The size prop wins over the responsive default.
+    await expect(m.mascot.width).toBe(160);
+    // The stats row fills the 480px column.
+    const list = canvasElement.querySelector('ul') as HTMLElement;
+    const cells = Array.from(list.querySelectorAll('li')).map((li) => li.getBoundingClientRect());
+    await expect(list.getBoundingClientRect().width).toBe(480);
+    await expect(cells).toHaveLength(3);
+    await expect(cells[0]?.width).toBeCloseTo(cells[1]?.width ?? 0, 0);
+    await expect(cells[1]?.width).toBeCloseTo(cells[2]?.width ?? 0, 0);
   },
 };
 

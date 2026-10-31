@@ -28,6 +28,30 @@ export const Default: Story = {
   },
 };
 
+export const EqualCellsFillColumn: Story = {
+  decorators: [
+    (Story) => (
+      <div style={{ width: '30rem' }}>
+        <Story />
+      </div>
+    ),
+  ],
+  play: async ({ canvas }) => {
+    const list = canvas.getByRole('list');
+    const cells = canvas.getAllByRole('listitem').map((li) => li.getBoundingClientRect());
+    const listWidth = list.getBoundingClientRect().width;
+    await expect(listWidth).toBe(480);
+    // Three equal cells and two 12px gaps fill the row.
+    const first = cells[0]?.width ?? 0;
+    await expect(cells[1]?.width).toBeCloseTo(first, 0);
+    await expect(cells[2]?.width).toBeCloseTo(first, 0);
+    await expect(first * 3 + 24).toBeCloseTo(listWidth, 0);
+    // One row: all cells share the same top.
+    await expect(cells[1]?.top).toBe(cells[0]?.top);
+    await expect(cells[2]?.top).toBe(cells[0]?.top);
+  },
+};
+
 export const Narrow: Story = {
   // Storybook's built-in small phone viewport (320px wide).
   globals: { viewport: { value: 'mobile1', isRotated: false } },

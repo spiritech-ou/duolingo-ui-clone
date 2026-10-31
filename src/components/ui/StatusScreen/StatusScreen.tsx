@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import type { ComponentPropsWithoutRef, ReactNode, Ref, RefObject } from 'react';
+import type { ComponentPropsWithoutRef, CSSProperties, ReactNode, Ref, RefObject } from 'react';
 import clsx from 'clsx';
 import { Mascot } from '@/components/ui/Mascot';
 import type { MascotProps } from '@/components/ui/Mascot';
@@ -20,6 +20,8 @@ export interface StatusScreenProps
   title: string;
   /** Line under the headline. */
   message?: string;
+  /** Mascot size in px, fixed on every width (end screens pass 160). Omitted: 120 on desktop and tablet, 96 on mobile. */
+  mascotSize?: number;
   /** Heading level of the title; a full-screen state is the page's h1. */
   headingLevel?: 1 | 2 | 3;
   /** Extra content between the text and the actions, for example stats. */
@@ -51,6 +53,7 @@ export function StatusScreen({
   headingLevel = 1,
   children,
   actions,
+  mascotSize,
   titleRef,
   firstActionRef,
   className,
@@ -82,7 +85,17 @@ export function StatusScreen({
       aria-busy={isLoading ? 'true' : undefined}
     >
       {/* Decorative: the text carries the message. */}
-      <Mascot mood={mood} size={128} isBobbing={isLoading} />
+      <div
+        className={clsx(styles['mascot'], mascotSize === undefined && styles['mascotDefault'])}
+        style={
+          mascotSize === undefined
+            ? undefined
+            : // CSSProperties has no index signature for custom properties.
+              ({ '--mascot-size': `${mascotSize / 16}rem` } as CSSProperties)
+        }
+      >
+        <Mascot mood={mood} size={mascotSize ?? 120} isBobbing={isLoading} />
+      </div>
       <div
         className={styles['text']}
         role={isError ? 'alert' : 'status'}

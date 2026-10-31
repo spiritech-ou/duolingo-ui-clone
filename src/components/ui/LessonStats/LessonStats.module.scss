@@ -1,8 +1,13 @@
 @use '@/styles/mixins' as *;
 
 .root {
-  display: flex;
+  // One row of equal cells filling the column.
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
   gap: var(--space-3);
+  box-sizing: border-box;
+  width: 100%;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -10,7 +15,6 @@
 
 .item {
   display: flex;
-  flex: 1 1 0;
   flex-direction: column;
   align-items: center;
   gap: var(--space-1);

@@ -1,25 +1,54 @@
 @use '@/styles/mixins' as *;
 
+// One centred column, 480px max. Not vertically centred: the block starts
+// 48px (mobile) or 96px (md and up) below the top, so it does not jump when
+// the message wraps.
 .root {
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--space-5);
   align-items: center;
-  justify-content: center;
   box-sizing: border-box;
   width: 100%;
-  max-width: 28rem;
+  max-width: 30rem;
   min-height: 100%;
-  padding: var(--space-6) var(--space-5);
+  padding: var(--space-7) var(--space-4) var(--space-6);
   margin-inline: auto;
   text-align: center;
+
+  @include bp(md) {
+    padding-block-start: calc(var(--space-8) + var(--space-6));
+    padding-inline: 0;
+  }
+}
+
+.mascot {
+  flex: none;
+  width: var(--mascot-size);
+  height: var(--mascot-size);
+
+  > img {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+}
+
+// Default size: 96px on mobile, 120px from md up.
+.mascotDefault {
+  --mascot-size: 6rem;
+
+  @include bp(md) {
+    --mascot-size: 7.5rem;
+  }
 }
 
 .text {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-4);
   align-items: center;
+  max-width: 100%;
 }
 
 .title {
@@ -28,6 +57,7 @@
   font-weight: var(--font-weight-bold);
   line-height: var(--line-height-tight);
   color: var(--color-text);
+  text-wrap: balance;
   overflow-wrap: anywhere;
 
   &:focus-visible {
@@ -47,9 +77,19 @@
   width: 100%;
 }
 
+// Buttons fill the column on mobile and are 240px wide from md up.
 .actions {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  align-items: center;
   width: 100%;
+
+  > * {
+    width: 100%;
+
+    @include bp(md) {
+      max-width: 15rem;
+    }
+  }
 }
