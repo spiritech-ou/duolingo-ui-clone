@@ -45,7 +45,7 @@ describe('lesson route', () => {
     useProfileStore.getState().markHeartsIntroSeen(USER.id);
   });
 
-  it('shows the loading screen and the document title', () => {
+  it('shows the loading screen and the document title', async () => {
     server.use(
       http.get('*/api/lessons/:lessonId', async () => {
         await delay(30);
@@ -56,6 +56,8 @@ describe('lesson route', () => {
     expect(screen.getByRole('heading', { name: 'Getting your lesson ready…' })).toBeInTheDocument();
     expect(screen.getByRole('main')).toBeInTheDocument();
     expect(document.title).toBe('Lesson | Spiritech');
+    // Let the request settle: an in-flight request must not outlive its test (it would leak into the next).
+    await screen.findByRole('heading', { name: 'This lesson has no exercises yet' });
   });
 
   it('opens the lesson once it loads', async () => {
@@ -86,7 +88,8 @@ describe('lesson route', () => {
     const { user } = renderAt('/lesson/nope');
     expect(await screen.findByRole('heading', { name: "We couldn't find this lesson" })).toBeInTheDocument();
     const back = screen.getByRole('button', { name: 'Back to path' });
-    expect(back).toHaveFocus();
+    // Focus moves in an effect that may run a tick after the heading is found.
+    await waitFor(() => expect(back).toHaveFocus());
     expect(screen.queryByRole('button', { name: 'Try again' })).not.toBeInTheDocument();
     await user.click(back);
     expect(screen.getByText('At /learn')).toBeInTheDocument();
@@ -96,7 +99,7 @@ describe('lesson route', () => {
     server.use(lessonEmptyHandler);
     renderAt(lessonPath);
     const title = await screen.findByRole('heading', { name: 'This lesson has no exercises yet' });
-    expect(title).toHaveFocus();
+    await waitFor(() => expect(title).toHaveFocus());
     expect(screen.getByRole('button', { name: 'Back to path' })).toBeInTheDocument();
   });
 
@@ -105,7 +108,7 @@ describe('lesson route', () => {
     const { user } = renderAt(lessonPath);
     expect(await screen.findByRole('heading', { name: "We couldn't load this lesson" })).toBeInTheDocument();
     expect(screen.getByText(OTHER_FAILURE_MESSAGE)).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Try again' })).toHaveFocus();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Try again' })).toHaveFocus());
     expect(screen.getByRole('button', { name: 'Back to path' })).toBeInTheDocument();
 
     server.resetHandlers();
@@ -189,7 +192,7 @@ describe('practice route', () => {
     server.use(practiceErrorHandler);
     renderAt('/practice');
     expect(await screen.findByRole('heading', { name: "We couldn't load this practice" })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Try again' })).toHaveFocus();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Try again' })).toHaveFocus());
   });
 
   it('an empty set says so', async () => {

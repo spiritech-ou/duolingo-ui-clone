@@ -99,7 +99,7 @@ describe('flame colour on the exercise surfaces', () => {
   describe('state screens of the lesson route', () => {
     const lessonPath = `/lesson/${lesson.id}`;
 
-    it('loading is the blue flame', () => {
+    it('loading is the blue flame', async () => {
       server.use(
         http.get('*/api/lessons/:lessonId', async () => {
           await delay(30);
@@ -108,6 +108,8 @@ describe('flame colour on the exercise surfaces', () => {
       );
       renderRoutes(lessonPath);
       expect(flames()).toEqual([{ src: blueFlame, size: 120, alt: '' }]);
+      // Let the request settle: an in-flight request must not outlive its test (it would leak into the next).
+      await screen.findByRole('heading', { name: 'This lesson has no exercises yet' });
     });
 
     it('a load error is the red flame, and Try again returns to the blue one', async () => {
@@ -123,6 +125,9 @@ describe('flame colour on the exercise surfaces', () => {
         }),
       );
       await click(user, 'Try again');
+      expect(flames().map((flame) => flame.src)).toEqual([blueFlame]);
+      // Let the retry settle (an empty lesson, also blue) so no request outlives the test.
+      await screen.findByRole('heading', { name: 'This lesson has no exercises yet' });
       expect(flames().map((flame) => flame.src)).toEqual([blueFlame]);
     });
 
