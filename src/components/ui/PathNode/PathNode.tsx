@@ -1,4 +1,4 @@
-import type { ComponentPropsWithoutRef, CSSProperties } from 'react';
+import type { ComponentPropsWithoutRef, CSSProperties, Ref } from 'react';
 import clsx from 'clsx';
 import { Icon } from '@/components/ui/Icon';
 import styles from './PathNode.module.scss';
@@ -17,6 +17,8 @@ export interface PathNodeProps
   offset?: number;
   /** Shown inside an available node. Without it an available node shows a book icon. */
   lessonNumber?: number | undefined;
+  /** The button element, so a container can scroll to it or focus it. */
+  ref?: Ref<HTMLButtonElement> | undefined;
 }
 
 export function PathNode({
@@ -24,6 +26,7 @@ export function PathNode({
   label,
   offset = 0,
   lessonNumber,
+  ref,
   className,
   style,
   ...rest
@@ -34,6 +37,7 @@ export function PathNode({
   return (
     <button
       {...rest}
+      ref={ref}
       type="button"
       disabled={false}
       className={clsx(styles['root'], styles[status], className)}
