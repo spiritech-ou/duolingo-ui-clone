@@ -1,4 +1,4 @@
-import { createBrowserRouter, Link, Outlet, useRouteError } from 'react-router';
+import { createBrowserRouter, Link, Outlet, useRouteError, type RouteObject } from 'react-router';
 import { Button } from '@/components/ui/Button';
 import { Mascot } from '@/components/ui/Mascot';
 import { useThemeStore } from '@/store/useThemeStore';
@@ -14,7 +14,7 @@ function Layout() {
       <header className={styles['header']}>
         <Link to="/" className={styles['brand']}>
           <Mascot size={32} />
-          <span>Duolingo UI Clone</span>
+          <span>Spiritech</span>
         </Link>
         <Button variant="secondary" size="sm" onClick={() => setChoice(next)}>
           Switch to {next} theme
@@ -63,31 +63,35 @@ function RouteError() {
   );
 }
 
-export const router = createBrowserRouter([
-  {
-    path: '/',
-    element: <Layout />,
-    errorElement: <RouteError />,
-    children: [
-      { index: true, element: <Home /> },
-      {
-        path: 'learn',
-        lazy: async () => {
-          const { LearnPage } = await import('@/features/learn');
-          return { Component: LearnPage };
-        },
+// Header group: wrapped by Layout (flame mark, product name, theme toggle, <main>).
+// Only /login, /learn, the placeholder Home and the not-found route belong here.
+const headerGroup: RouteObject = {
+  element: <Layout />,
+  errorElement: <RouteError />,
+  children: [
+    { path: '/', element: <Home /> }, // placeholder; replaced by the redirect to /learn with the guard task
+    {
+      path: '/login',
+      lazy: async () => {
+        const { LoginPage } = await import('@/features/auth');
+        return { Component: LoginPage };
       },
-      {
-        path: 'login',
-        lazy: async () => {
-          const { LoginPage } = await import('@/features/auth');
-          return { Component: LoginPage };
-        },
+    },
+    {
+      path: '/learn',
+      lazy: async () => {
+        const { LearnPage } = await import('@/features/learn');
+        return { Component: LearnPage };
       },
-      { path: '*', element: <NotFound /> },
-    ],
-  },
-  // Focused flow: a sibling of the header layout (no app header, OQ-34); FocusedLayout owns <main>.
+    },
+    { path: '*', element: <NotFound /> },
+  ],
+};
+
+// Bare group: focused full-screen routes with no app header (OQ-34). Each page renders
+// FocusedLayout, which owns <main>, so these must stay outside Layout.
+// Later: /lesson/:lessonId and /practice are added here.
+const bareGroup: RouteObject[] = [
   {
     path: '/onboarding/level',
     errorElement: <RouteError />,
@@ -104,4 +108,6 @@ export const router = createBrowserRouter([
       return { Component: OnboardingStartPage };
     },
   },
-]);
+];
+
+export const router = createBrowserRouter([headerGroup, ...bareGroup]);
