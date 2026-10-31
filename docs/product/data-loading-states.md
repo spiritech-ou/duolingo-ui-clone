@@ -41,7 +41,7 @@ Mock scenarios (OQ-35): so every state above can be reached without breaking the
 The mascot on loading screens bobs gently; skeleton shapes shimmer. Reduced motion: no bob and no shimmer, a static placeholder. No sound.
 
 ## Data needed
-Endpoints and shapes are defined in `learning-path.md` (`GET /api/course`), `exercise-session.md` (`GET /api/lessons/:lessonId`, `GET /api/practice`) and `login.md` (`POST /api/auth/login`). Common error body for every endpoint: `{ "code": string, "message": string }`. Client-only: the fetch status of each request as a discriminated union (`idle`, `loading`, `success`, `error`) in the data layer; the cached course.
+Endpoints and shapes are defined in `learning-path.md` (`GET /api/course`), `exercise-session.md` (`GET /api/lessons/:lessonId`, `GET /api/practice`) and `login.md` (`POST /api/auth/login`). Common error body for every endpoint: `{ "code": string, "message": string }`. The course is English to Estonian and its words come from the fixed dataset in `vocabulary-dataset.md`. The browser's voice list is not a request and has no loading or error state of its own: its "checking", "no voice" and "unsupported" states are in `exercise-session.md` (Audio states). Client-only: the fetch status of each request as a discriminated union (`idle`, `loading`, `success`, `error`) in the data layer; the cached course.
 
 ## Accessibility notes
 - Loading: the region has `aria-busy="true"` and a polite `role="status"` text; skeleton shapes are `aria-hidden`.

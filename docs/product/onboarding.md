@@ -3,7 +3,7 @@
 Decisions marked (OQ-nn) are listed in `open-questions.md`. Layout reference: `reference/03-onboarding-level.png`, `04-onboarding-level-selected.png`, `05-onboarding-start-choice.png` (layout and behaviour only; the owl is replaced by the Spiritech flame mascot).
 
 ## Purpose
-Ask a new user how much French they know, then choose which lesson the learning path highlights as the recommended start. Every lesson stays open; the answer never locks or completes anything. Shown once, right after the first login.
+Ask a new user how much Estonian they know, then choose which lesson the learning path highlights as the recommended start. Every lesson stays open; the answer never locks or completes anything. Shown once, right after the first login.
 
 ## Entry points and routes
 - `/onboarding/level` (step 1): reached from login or any guarded route while onboarding is incomplete.
@@ -14,9 +14,9 @@ Ask a new user how much French they know, then choose which lesson the learning 
 ## States
 | State | Trigger | What the user sees | What the user can do | Exit |
 |---|---|---|---|---|
-| Step 1, nothing chosen | Arrive on `/onboarding/level` | Mascot with the bubble "How much French do you know?", five level options (each with a four-bar signal icon, see Copy), a disabled "CONTINUE" | Choose an option | Choose |
+| Step 1, nothing chosen | Arrive on `/onboarding/level` | Mascot with the bubble "How much Estonian do you know?", five level options (each with a four-bar signal icon, see Copy), a disabled "CONTINUE" | Choose an option | Choose |
 | Step 1, level chosen | Option selected | Chosen option highlighted (primary outline and text); the bubble changes to that level's reaction; "CONTINUE" enabled | Choose a different option (highlight and bubble follow), press CONTINUE | CONTINUE |
-| Step 1 done, lowest level | CONTINUE with "I'm new to French" | Profile saved: completed, `startUnitIndex` 0 | Nothing | Redirect to `/learn` (OQ-10) |
+| Step 1 done, lowest level | CONTINUE with "I'm new to Estonian" | Profile saved: completed, `startUnitIndex` 0 | Nothing | Redirect to `/learn` (OQ-10) |
 | Step 1 done, other level | CONTINUE with levels 2 to 5 | Level saved as a draft in the profile | Nothing | Go to `/onboarding/start` |
 | Step 2, nothing chosen | Arrive on `/onboarding/start` | Mascot with the bubble "Now let's find the best place to start!", two option cards, a disabled "CONTINUE", a "Back" control | Choose a card, go back | Choose, Back |
 | Step 2, choice made | Card selected | Card highlighted; "CONTINUE" enabled | Switch card, CONTINUE, Back | CONTINUE, Back |
@@ -31,11 +31,11 @@ Recommended start (decided in step 2, OQ-11 as amended by OQ-15):
 - "Find my level": `startUnitIndex` = chosen level index (level 2 gives 1, level 5 gives 4); the path recommends the first lesson of that unit. There is no placement test. No lesson is marked completed, hidden or locked by this choice: the user can still open any lesson. If the course has fewer units than the index, the path uses the last unit.
 
 ## Copy
-Step 1 bubble: "How much French do you know?"
+Step 1 bubble: "How much Estonian do you know?" (the reference screenshots say French; this product teaches Estonian, OQ-13, OQ-43)
 
 | # | Option | Signal bars | Bubble after choosing |
 |---|---|---|---|
-| 1 | "I'm new to French" | 0 of 4 | "Okay, we'll start fresh!" |
+| 1 | "I'm new to Estonian" | 0 of 4 | "Okay, we'll start fresh!" |
 | 2 | "I know some common words" | 1 of 4 | "Nice, you already have a head start!" |
 | 3 | "I can have basic conversations" | 2 of 4 | "Great, you can already chat a bit!" |
 | 4 | "I can talk about various topics" | 3 of 4 | "Impressive, you're quite far along!" |
@@ -45,7 +45,7 @@ Only the first bubble line comes from the reference; lines 2 to 5 are invented (
 
 Step 2:
 - Bubble: "Now let's find the best place to start!"
-- Card 1: "Start from scratch", description "Take the easiest lesson of the French course".
+- Card 1: "Start from scratch", description "Take the easiest lesson of the Estonian course".
 - Card 2: "Find my level", description "Let the flame recommend where you should start learning".
 - Buttons: "CONTINUE", "Back".
 - The signal-bar icons are decorative (`aria-hidden`); the option text carries the meaning.

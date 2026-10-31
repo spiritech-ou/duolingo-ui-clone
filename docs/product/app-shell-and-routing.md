@@ -52,9 +52,9 @@ None specific to routing. Screen changes are instant; no route transition animat
 ## Data needed
 Client-only. The session and the learner profile are the only state this file touches.
 - `session`: `{ token: string, user: { id: string, email: string, displayName: string } } | null`, persisted in `localStorage` (OQ-07). Written by login, cleared by log out.
-- `profile` (per user id, persisted in `localStorage`, OQ-08): `{ onboarding: { completed: boolean, level: 0-4 | null, startChoice: 'scratch' | 'find-level' | null }, startUnitIndex: number, completedLessonIds: string[], hearts: number, hasSeenHeartsIntro: boolean, placementNoteDismissed: boolean }`.
+- `profile` (per user id, persisted in `localStorage`, OQ-08): `{ onboarding: { completed: boolean, level: 0-4 | null, startChoice: 'scratch' | 'find-level' | null }, startUnitIndex: number, completedLessonIds: string[], hearts: number, hasSeenHeartsIntro: boolean, placementNoteDismissed: boolean, noVoiceNoteDismissed: boolean }`.
 - `startUnitIndex` only decides which lesson the path highlights as recommended (see `learning-path.md`); it never completes, hides or blocks any lesson.
-- Defaults for a new profile: `completed: false`, `level: null`, `startChoice: null`, `startUnitIndex: 0`, `completedLessonIds: []`, `hearts: 5`, `hasSeenHeartsIntro: false`, `placementNoteDismissed: false`.
+- Defaults for a new profile: `completed: false`, `level: null`, `startChoice: null`, `startUnitIndex: 0`, `completedLessonIds: []`, `hearts: 5`, `hasSeenHeartsIntro: false`, `placementNoteDismissed: false`, `noVoiceNoteDismissed: false`.
 - No endpoint is called by routing itself. If a stored session or profile fails zod parsing it is discarded and the user is sent to `/login`.
 
 ## Accessibility notes

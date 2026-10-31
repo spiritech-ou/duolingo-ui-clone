@@ -3,7 +3,7 @@
 Decisions marked (OQ-nn) are listed in `open-questions.md`. Layout reference: `reference/09-learning-path-tree-reference.png` (zigzag column of nodes; layout only, it is a different product, and its locked nodes are not used).
 
 ## Purpose
-Show the French course as a tree of units and lessons so the user can pick any lesson to study, see which are done, see which one is recommended next, and see their hearts.
+Show the English to Estonian course as a tree of units and lessons so the user can pick any lesson to study, see which are done, see which one is recommended next, and see their hearts.
 
 ## Entry points and routes
 Route: `/learn`. Arrived at after login or onboarding, from the lesson-over and out-of-hearts screens, from "Back to path" on lesson load errors, and from `/`. Leaving: a node opens `/lesson/:lessonId`; "Log out" goes to `/login`.
@@ -26,7 +26,7 @@ Completed and recommended each have their own distinct style; available nodes lo
 | Ready, first arrival after "Find my level" | Onboarding finished with `find-level` and `placementNoteDismissed` false | A note above the first unit: "We recommend starting at Unit N based on your answer." with a "Got it" button | Dismiss it | Dismiss (stored, not shown again) |
 | Node opened | Press any node (completed, recommended or available) | Navigates to `/lesson/:lessonId` | Nothing | Lesson route |
 | No hearts | `hearts` is 0 | Counter shows 0 in a muted style with the label "No hearts left"; nodes still open normally (the lesson route handles it, see `exercise-session.md`) | Open nodes, which lead to the out-of-hearts screen | Earn a heart by practice |
-| Course finished | Every lesson completed, so no recommended node | The last unit followed by a closing card "You finished the French course!" with the mascot; all nodes show completed and stay replayable | Replay any lesson, log out | Replay (OQ-18) |
+| Course finished | Every lesson completed, so no recommended node | The last unit followed by a closing card "You finished the Estonian course!" with the mascot; all nodes show completed and stay replayable | Replay any lesson, log out | Replay (OQ-18) |
 | Empty | Course returns no units, or units with no lessons | Mascot and the text "No lessons yet" with "Check back soon." and a "Reload" button | Reload | Reload refetches |
 | Load error | Request fails, times out (10 s) or data fails validation | Mascot, heading and message from "Copy", a "Try again" button | Try again, log out | Retry succeeds (Loading then Ready), or leave |
 | Retrying | "Try again" pressed | Same layout as Loading | Log out | Data arrives or fails |
@@ -41,7 +41,7 @@ Layout of the zigzag: node `k` (0-based within its unit) sits at a horizontal of
 - Unit banner: "Unit 1", then the unit title and description from the API.
 - Recommended node bubble: "START". Node accessible names: "Lesson 3, Greetings, completed", "Lesson 4, Food, recommended, start", "Lesson 5, Drinks".
 - Placement note: "We recommend starting at Unit 3 based on your answer." with button "Got it".
-- Finished card: "You finished the French course!" with "Replay any lesson to keep your words fresh."
+- Finished card: "You finished the Estonian course!" with "Replay any lesson to keep your words fresh."
 - Empty: "No lessons yet", "Check back soon.", button "Reload".
 - Load error, network or timeout: "We couldn't load your lessons", "You seem to be offline, or the connection is slow. Check it and try again."; any other failure: "We couldn't load your lessons", "Something went wrong on our side. Try again in a moment."; button "Try again".
 
@@ -50,8 +50,9 @@ The recommended node pulses gently while idle; after returning from a completed 
 
 ## Data needed
 - `GET /api/course`
-  - 200: `{ "id": "fr", "title": "French", "fromLanguage": "English", "units": [ { "id": string, "title": string, "description": string, "lessons": [ { "id": string, "title": string } ] } ] }`.
-  - The order of `units` and of `lessons` is the course order. The mock returns 6 units of 4 lessons (24 lessons, OQ-14).
+  - 200: `{ "id": "et", "title": "Estonian", "fromLanguage": "English", "units": [ { "id": string, "title": string, "description": string, "lessons": [ { "id": string, "title": string } ] } ] }`.
+  - The order of `units` and of `lessons` is the course order. The mock returns 6 units of 4 lessons (24 lessons, OQ-14), built from the fixed vocabulary dataset described in `vocabulary-dataset.md`.
+  - Unit and lesson titles and descriptions are English (the app's interface language). An Estonian word inside a title is wrapped with `lang="et"` and keeps its spelling.
   - Errors: network failure, timeout, 5xx `{ "code": "server_error", "message": string }`; a body that fails the zod schema counts as an error.
 - Client-only (from the profile in `app-shell-and-routing.md`): `completedLessonIds`, `startUnitIndex`, `hearts`, `placementNoteDismissed`. The cached course is kept in the data layer for the session.
 
