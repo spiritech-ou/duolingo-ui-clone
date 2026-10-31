@@ -89,4 +89,12 @@ export const router = createBrowserRouter([
       return { Component: OnboardingLevelPage };
     },
   },
+  {
+    path: '/onboarding/start',
+    errorElement: <RouteError />,
+    lazy: async () => {
+      const { OnboardingStartPage } = await import('@/features/onboarding');
+      return { Component: OnboardingStartPage };
+    },
+  },
 ]);
