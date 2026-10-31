@@ -1,0 +1,18 @@
+@use '@/styles/mixins' as *;
+
+// Narrow screens: stacked. From sm up: three cards in a row.
+.root {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-3);
+  inline-size: 100%;
+
+  @include bp(sm) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--space-4);
+  }
+}
+
+.hint {
+  @include visually-hidden;
+}
