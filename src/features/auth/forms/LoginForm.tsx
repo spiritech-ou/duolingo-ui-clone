@@ -116,7 +116,11 @@ export function LoginForm({ onSubmit, defaultValues }: LoginFormProps) {
             readOnly={isBusy}
             {...(errors.password?.message ? { error: errors.password.message } : {})}
             endAdornment={
-              <Button variant="secondary" size="sm" onClick={() => setIsInertMessageShown(true)}>
+              <Button
+                variant="secondary"
+                size="sm"
+                className={styles['forgot']}
+                onClick={() => setIsInertMessageShown(true)}>
                 Forgot?
               </Button>
             }
@@ -132,7 +136,9 @@ export function LoginForm({ onSubmit, defaultValues }: LoginFormProps) {
         >
           LOG IN
         </Button>
-        <Divider label="OR" />
+        <div className={styles['divider']}>
+          <Divider label="OR" />
+        </div>
         <div className={styles['social']}>
           {SOCIAL_LABELS.map((label) => (
             <Button
@@ -147,9 +153,11 @@ export function LoginForm({ onSubmit, defaultValues }: LoginFormProps) {
           ))}
         </div>
         {isInertMessageShown ? (
-          <Notice variant="info" role="status">
-            {INERT_MESSAGE}
-          </Notice>
+          <div className={styles['message']}>
+            <Notice variant="info" role="status">
+              {INERT_MESSAGE}
+            </Notice>
+          </div>
         ) : null}
       </form>
     </div>
