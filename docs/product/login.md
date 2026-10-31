@@ -41,6 +41,19 @@ Validation rules (zod, `react-hook-form`, mode `onTouched`: validate on first bl
 - Banners: "Incorrect email or password.", "We couldn't log you in. Check your connection and try again."
 - Not shown (OQ-05): "Sign up" button, close button, terms and reCAPTCHA lines.
 
+## Layout
+Measured from `reference/01-login.png` (capture 2000 px wide; all widths below are in that capture's pixels, approximate; the proportions are what matter, see OQ-44 for the capture scale).
+
+Container rule: one narrow form column, **about 500px wide (25% of the 2000px capture), centred horizontally** (column left edge 741, right edge 1240, page centre 1000). The column is a fixed maximum, never a percentage of the window: `max-width` about 500px, `width: 100%`, `margin-inline: auto`. The flame mascot, the "Log in" heading, both fields, the LOG IN button, the OR divider, the three social buttons and the inert message all sit inside this column, are centred on it and are never wider than it. The built app currently stretches the form across the full desktop width; that is a defect against this spec.
+
+Vertical rhythm (top to bottom, reference values, mapped to the spacing scale at build time): the mascot and heading block starts about 250px below the top of the viewport (reference heading baseline at y 277 of 1325); heading to first field about 56px; field height about 62px; gap between the two fields about 18px; password field to LOG IN about 32px; LOG IN height about 66px; LOG IN to the OR divider about 40px; OR divider to the first social button about 40px; social buttons about 64px high with about 22px between them. The block is not vertically centred: it keeps a fixed top offset and the page scrolls when the content is taller than the window. The banner (401 or failed) sits above the fields, inside the column, with the same width as the fields.
+
+- Desktop (1280 and wider): column stays about 500px and centred; side space grows with the window. The app header stretches full width above it (flame mark left, theme toggle right).
+- Tablet (about 768 to 1279): identical column, still about 500px and centred; side margins at least 24px.
+- Mobile (about 390): the column fills the width minus 16px gutters on each side (about 358px); it never goes below that or overflows horizontally. Heading, fields and buttons keep their heights (tap targets at least 44px). The top offset shrinks to about 32px. The "Forgot?" link stays inside the password field at its right edge; if the field is too narrow the placeholder truncates, never the link.
+
+Stretches versus fixed: field, button and divider widths follow the column (100% of it). Heights, the column maximum width, the mascot size and the text sizes stay fixed. The page background and app header are the only full-width elements.
+
 ## Motion and sound
 Field outline and message appear with a short fade (`--duration-*`, fast). Banner appears without motion. Reduced motion: no fade. No sound.
 

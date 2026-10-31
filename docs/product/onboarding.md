@@ -50,6 +50,24 @@ Step 2:
 - Buttons: "CONTINUE", "Back".
 - The signal-bar icons are decorative (`aria-hidden`); the option text carries the meaning.
 
+## Layout
+Measured from `reference/03-onboarding-level.png`, `04-onboarding-level-selected.png` and `05-onboarding-start-choice.png` (captures about 2000 px wide; widths in capture pixels, approximate; see OQ-44). Both steps share one structure: a full-screen view (no app header, OQ-34) with three parts: a top area, a centred content column and a bottom action bar.
+
+- Content column: **about 640px wide, centred horizontally** (options span 676 to 1318 on step 1 and 681 to 1319 on step 2; page centre 1000). Option cards fill the column and never exceed it. `max-width` about 640px, `width: 100%`, `margin-inline: auto`.
+- Mascot and bubble row: sits above the options and hangs to the left of the column, starting about 330px left of the column's left edge (mascot about 110px wide at x 345 to 458; bubble from x 495 to 895, about 400px wide, height about 68px, step 2 bubble about 450px). On desktop the row is therefore wider than the column (about 975px) and its left edge is not the column's edge. The bubble text wraps inside the bubble.
+- Options: step 1, five rows about 80px high with about 24px between them (signal icon left, text after it, row fills the column). Step 2, two cards about 175px high with about 22px between them (icon left about 80px square, title and description to its right).
+- Vertical: mascot row top about 130 to 145px below the top of the viewport; first option about 40px below the bubble; options end well above the action bar, leaving free space (the group is top-aligned, not vertically centred).
+- Action bar: a full-width strip separated from the content by a 1-2px divider at about 85% of the viewport height (y 1117 of 1313). "CONTINUE" is right-aligned in the strip about 30px from the right edge, about 216px wide and 60px high, vertically centred in the strip. It stays at the bottom of the viewport (sticky) while content scrolls. "Back" (step 2) sits at the left of the strip, aligned to the same left margin.
+- Close "X" in the reference (top left, about 40px from the edges) is not built (OQ-12).
+
+Desktop (1280 and wider): as above; the column stays about 640px and centred, the action bar and divider stretch full width, the CONTINUE button stays fixed width at the right edge.
+
+Tablet (about 768 to 1279): the column stays about 640px when it fits, else fills the width minus 24px gutters; the mascot row no longer hangs left: mascot and bubble sit on one line at the column's left edge (mascot about 96px).
+
+Mobile (about 390): column fills the width minus 16px gutters (about 358px). The mascot and bubble stack: the mascot above (about 80px) with the bubble below it, full column width; the bubble tail points up to the mascot. Option rows keep at least 64px height and 12-16px gaps; text wraps to two lines. The action bar is pinned to the bottom; "CONTINUE" fills the bar's width minus the gutters (full-width button, 56px high); on step 2 "Back" stacks above it as a text-style button.
+
+Stretches versus fixed: option cards and the bubble follow the column; icons, mascot, button heights and the column maximum are fixed; the divider and bar background span the full window.
+
 ## Motion and sound
 Bubble text swaps with a short fade; the mascot does a small bounce when the bubble changes. Option highlight transitions with `--duration-*`. Reduced motion: no bounce, no fade, instant swap. No sound.
 

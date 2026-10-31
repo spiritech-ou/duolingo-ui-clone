@@ -45,6 +45,22 @@ Layout of the zigzag: node `k` (0-based within its unit) sits at a horizontal of
 - Empty: "No lessons yet", "Check back soon.", button "Reload".
 - Load error, network or timeout: "We couldn't load your lessons", "You seem to be offline, or the connection is slow. Check it and try again."; any other failure: "We couldn't load your lessons", "Something went wrong on our side. Try again in a moment."; button "Try again".
 
+## Layout
+The only reference is `reference/09-learning-path-tree-reference.png`, a phone screenshot of another product (about 290px wide frame), so only its proportions are used; no desktop path reference exists (OQ-44).
+
+Measured from the reference (phone frame): the node column is a single centred column; a node is about 65px wide; a zigzag step is about 46px (about 0.7 of a node width); the whole winding stays within about 5 node widths of the column; node vertical pitch about 65 to 70px (nodes about 1 node-height apart, with a small overlap of their footprint); the unit banner is a full-column-width strip about 45px high above the first node, with about 15px of space around it.
+
+Container rule (derived): **a centred column about 640px wide max** (same as the onboarding column, so the app has one consistent mid-width column), `width: 100%`, `margin-inline: auto`. Unit banners fill the column. The node zigzag is centred on the column's centre line and does not use the column's full width: the widest offset (2 steps) stays within about 2 node widths of the centre line, so the winding occupies about 320px inside the 640px column. The top bar (hearts counter left, "Log out" right) fills the column width and sticks to the top of the viewport while the path scrolls.
+
+- Sizes (derived from the 0.7 proportion): node about 72px diameter on desktop and tablet; zigzag step about 50px; vertical pitch about 96px between node centres; unit banner about 80px high, with 32px between a unit's last node and the next banner; mascot closing card fills the column.
+- Desktop (1280 and wider): column about 640px, centred; page background stretches; no side panels (no leaderboard or quests, out of scope).
+- Tablet (about 768 to 1279): identical column and sizes; side margins at least 24px.
+- Mobile (about 390): column fills the width minus 16px gutters (about 358px). Node about 64px; zigzag step shrinks to about 40px so the 2-step offsets (about 80px each side of centre) leave the nodes fully inside the column; vertical pitch about 88px. Unit banner about 72px high with the description wrapping to two lines; "START" bubble sits above the recommended node and is clamped inside the column so it never causes horizontal scroll. The top bar keeps hearts and "Log out" on one row.
+- State screens on the path (Empty, Load error, Retrying, Loading): the mascot, heading, message and button are centred in a column about 480px max, with about 96px of space above on desktop and tablet and 48px on mobile; the loading skeleton uses the same column and node pitch as the real path so nothing jumps when data arrives.
+- Placement note and finished card: fill the column width; the note sits above the first unit with 16px below it.
+
+Stretches versus fixed: banners, the note, cards and the top bar follow the column; node size, step size, pitch and the column maximum are fixed per breakpoint; the page background spans the full window.
+
 ## Motion and sound
 The recommended node pulses gently while idle; after returning from a completed lesson a newly recommended node scales in once. Hearts counter pops when its value changes. Reduced motion: no pulse, no scale, no pop; the state is shown by style only. No sound.
 

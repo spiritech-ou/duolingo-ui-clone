@@ -37,6 +37,19 @@ Mock scenarios (OQ-35): so every state above can be reached without breaking the
 - Loading: "Loading your lessons" (visually hidden, path skeleton), "Getting your lesson ready…", "Getting your practice ready…".
 - Headlines and empty copy are as in the table above.
 
+## Layout
+No reference screenshot shows a loading, error or empty state (OQ-44), so these values are derived from the references' single-column screens: the login column (about 500px) and the onboarding mascot-and-text pattern.
+
+Container rule for every state screen: **one centred column, about 480px wide max**, `width: 100%`, `margin-inline: auto`; the mascot (about 120px) is centred at the top, then the headline, the message and the button(s), all centred text. Vertical gap about 24px between mascot, headline, message and buttons (16px between the headline and message). The block starts about 96px below the top of the content area on desktop and tablet and about 48px on mobile; it is not vertically centred, so it does not jump when the message wraps.
+
+- Desktop (1280 and wider) and tablet: column about 480px, centred; buttons about 240px wide each, stacked with 12px between them when there are two ("Try again" above "Back to path"); the page background stretches.
+- Mobile (about 390): column fills the width minus 16px gutters (about 358px); buttons fill the column width; headline wraps to at most two lines; mascot about 96px; top offset about 48px.
+- Full-screen loading and error views for `/lesson/:lessonId` and `/practice` have no app header (OQ-34); the close button stays at the top-left, about 24px from the edges, and does not move the centred column.
+- On `/learn` the state screen sits below the top bar and inside the page column; the skeleton reproduces one unit banner plus five nodes at the same size and pitch as in `learning-path.md`, so the Ready state replaces it without layout shift.
+- Login's submit states are in `login.md` Layout: the busy button keeps its width and height (the spinner replaces nothing but the label's position), so the form does not move.
+
+Stretches versus fixed: the text and buttons follow the column (buttons fill it on mobile only); the column maximum, mascot size and heights are fixed.
+
 ## Motion and sound
 The mascot on loading screens bobs gently; skeleton shapes shimmer. Reduced motion: no bob and no shimmer, a static placeholder. No sound.
 

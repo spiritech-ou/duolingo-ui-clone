@@ -78,7 +78,17 @@ Language change (course is English to Estonian, per the updated brief): rows tou
 | OQ-32 | Approved | 10 s timeout, no automatic retry, two failure messages (connectivity, other), course cached with silent refresh, loading shown instantly. |
 | OQ-35 | Approved | The mock layer has a hidden `localStorage` key `mockScenario` (`ok`, `slow`, `timeout`, `error`, `empty`, `notfound`) so every loading, error, empty and not-found state can be reached. |
 
+## Layout: what the references could not settle
+
+Layout sections were added to every screen spec after the fact. Values come from the reference captures where they show the screen; the rest is derived and needs a decision or a reference.
+
+| ID | Status | Question |
+|---|---|---|
+| OQ-44 | **Open (new)** | Layout values not derivable from the references: (1) **Capture scale.** The captures are about 2000px wide; whether that is a 1000px window at 2x or a 2000px window at 1x is unknown. The specs quote capture pixels (login column about 500px, onboarding column about 640px, exercise question area about 790px) and treat them as CSS pixels at a 1280 or wider desktop; if the captures are 2x, every width halves and the 500px login column becomes about 250px, which looks too narrow, so 1x is assumed. (2) **Tablet and mobile (about 390).** No reference exists for any screen at those widths; all tablet and mobile behaviour is derived (gutters 24px and 16px, stacking, full-width buttons, stacked cards). (3) **Learning path on desktop.** Screenshot 09 is a phone-sized capture of another product; the 640px path column, the 72px node size and the 50px step are derived from its proportions and from the onboarding column. Its zigzag only moves one step either side of the centre, while the spec's pattern goes two steps (`0, 1, 2, 1, 0, -1, -2, -1`): keep the two-step pattern, or reduce it to one step? (4) **App header.** No capture shows the shell's header (height about 64px is a guess). (5) **Loading, error, empty, not-found, lesson over, practice complete, out of hearts.** No captures exist; these use a centred column about 480px and mascot sizes by analogy. (6) **Mascot size.** The Spiritech flame has no reference size; sizes of 96 to 160px follow the owl in the onboarding captures (about 110px). (7) **Exercise on tablet and mobile.** Whether three cards stay in a row or stack on a 390px screen is a judgement (stacked chosen); Duolingo's real mobile layout was not captured. Please supply captures at about 768 and 390 for login, onboarding and an exercise, or approve the derived values. |
+
 ## Still pending for the human
+
+- Open: OQ-44 (layout values the references did not show, above).
 
 - Open: OQ-40 (recommended-node rule, from the previous round), OQ-41 (no-voice behaviour), OQ-42 (vocabulary dataset and review flag), OQ-43 (Estonian text handling).
 - Review by an Estonian speaker of the 120 words is a hard dependency for trusting the vocabulary (see `vocabulary-dataset.md`).

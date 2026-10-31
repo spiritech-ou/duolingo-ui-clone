@@ -46,6 +46,28 @@ Header rule: the app header (flame mark, product name, theme toggle) shows only 
 - Route error: "Something went wrong", "Back to home".
 - Log out button: "Log out".
 
+## Layout
+No screenshot shows the shell itself (the references are Duolingo screens with their own chrome), so these values are derived from the screens it hosts and from the reference proportions (see OQ-44); the "Page not found" and "Something went wrong" screens are not in the references at all.
+
+Shell rule: the shell is a full-width page (background, header, bottom action areas stretch to the window) holding a **single centred column per screen**; no screen content spans the whole window. Column maximum widths by screen:
+
+| Screen | Column max width | Source |
+|---|---|---|
+| `/login` | about 500px | `01-login.png` |
+| `/onboarding/*` | about 640px (mascot row hangs left of it on desktop) | `03` to `05` |
+| `/learn` | about 640px (derived, see `learning-path.md`) | derived |
+| `/lesson/:lessonId`, `/practice` | top bar about 1320px, question and cards about 790px | `06` to `08` |
+| Not found, route error, state screens | about 480px, content centred | derived |
+
+- App header (shown only on `/login` and `/learn`, OQ-34): full width, a content row of the same horizontal extent as the widest column in use, with 24px side padding on desktop and tablet and 16px on mobile; flame mark and product name left, theme toggle (and "Log out" on `/learn`) right; height about 64px (derived). It does not scale the column; it only spans the window.
+- Desktop (1280 and wider): shell stretches; every column stays at its own maximum and is centred; extra width becomes side margin.
+- Tablet (about 768 to 1279): same columns; side margins at least 24px; no screen switches layout except the hanging mascot row on onboarding (see `onboarding.md`).
+- Mobile (about 390): every column fills the width minus 16px gutters (about 358px); header content row 16px padding; the header's text collapses before it wraps: product name hidden below about 480px, the flame mark and controls remain.
+- "Page not found" and "Something went wrong": centred column about 480px, heading, message, "Back to home" link below it; top offset about 96px on desktop and tablet, 48px on mobile (derived); the link is a button-height target (at least 44px). The route-error message wraps and never overflows the column.
+- The document never scrolls horizontally at any width from 320 up.
+
+Stretches versus fixed: background, header and bottom bars stretch; columns, cards and form controls cap at their maximum; heights and tap targets stay fixed.
+
 ## Motion and sound
 None specific to routing. Screen changes are instant; no route transition animation. Reduced-motion: no change needed.
 
