@@ -42,3 +42,65 @@ jobs:
       - run: npm run test
       - run: npm run test:storybook
       - run: npm run build
+
+  storybook:
+    name: storybook
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run build-storybook
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: storybook-static
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+  chromatic:
+    name: chromatic
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+    steps:
+      - name: Check for Chromatic token
+        id: token
+        run: |
+          if [ -n "$CHROMATIC_PROJECT_TOKEN" ]; then
+            echo "present=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "CHROMATIC_PROJECT_TOKEN is not set, skipping Chromatic."
+            echo "present=false" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@v4
+        if: steps.token.outputs.present == 'true'
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        if: steps.token.outputs.present == 'true'
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+        if: steps.token.outputs.present == 'true'
+      - uses: chromaui/action@v11
+        if: steps.token.outputs.present == 'true'
+        with:
+          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
