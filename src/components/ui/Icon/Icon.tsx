@@ -26,6 +26,13 @@ const glyphs = {
       <circle cx="12" cy="16.5" r="1" fill="currentColor" stroke="none" />
     </>
   ),
+  info: (
+    <>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 11v5.5" />
+      <circle cx="12" cy="7.5" r="1" fill="currentColor" stroke="none" />
+    </>
+  ),
   book: (
     <>
       <path d="M12 6.5C10.5 5 8 4.5 4.5 4.5v13c3.5 0 6 .5 7.5 2 1.5-1.5 4-2 7.5-2v-13C16 4.5 13.5 5 12 6.5z" />
