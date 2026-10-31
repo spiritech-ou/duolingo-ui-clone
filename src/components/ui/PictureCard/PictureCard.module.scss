@@ -1,0 +1,152 @@
+@use '@/styles/mixins' as *;
+
+.root {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  align-items: center;
+  inline-size: 100%;
+  padding: var(--space-4);
+  color: var(--color-text);
+  cursor: pointer;
+  background-color: var(--color-surface);
+  border: 0.125rem solid var(--color-border);
+  border-radius: var(--radius-lg);
+  transition:
+    background-color var(--duration-normal) var(--easing-standard),
+    border-color var(--duration-normal) var(--easing-standard),
+    color var(--duration-normal) var(--easing-standard),
+    transform var(--duration-normal) var(--easing-standard);
+
+  &:hover {
+    background-color: var(--color-primary-soft);
+  }
+
+  &:has(.input:focus-visible) {
+    @include focus-ring;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+.input {
+  @include visually-hidden;
+}
+
+.picture {
+  font-size: 4rem;
+  line-height: 1;
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
+  align-items: center;
+  justify-content: center;
+  inline-size: 100%;
+  min-inline-size: 0;
+}
+
+.keyHint {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-muted);
+  border: 0.125rem solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+// The Estonian word is shown exactly as given: no text-transform, app font token.
+.word {
+  min-inline-size: 0;
+  overflow-wrap: break-word;
+  font-family: var(--font-family-base);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+  text-transform: none;
+}
+
+.status {
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.selected {
+  color: var(--color-primary);
+  background-color: var(--color-primary-soft);
+  border-color: var(--color-primary);
+  transform: scale(1.03);
+
+  .keyHint {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transform: none;
+  }
+}
+
+.correct {
+  color: var(--color-success);
+  border-color: var(--color-success);
+
+  .keyHint {
+    color: var(--color-success);
+    border-color: var(--color-success);
+  }
+}
+
+.wrong {
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+  animation: shake calc(var(--duration-slow) * 1.5) ease-in-out 1;
+
+  .keyHint {
+    color: var(--color-danger);
+    border-color: var(--color-danger);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
+}
+
+.isLocked {
+  cursor: default;
+
+  &:hover {
+    background-color: var(--color-surface);
+  }
+}
+
+.srOnly {
+  @include visually-hidden;
+}
+
+@keyframes shake {
+  20% {
+    transform: translateX(-4px);
+  }
+
+  40% {
+    transform: translateX(4px);
+  }
+
+  60% {
+    transform: translateX(-3px);
+  }
+
+  80% {
+    transform: translateX(2px);
+  }
+}
