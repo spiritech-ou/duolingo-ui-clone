@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Duolingo UI Clone</title>
+    <script>
+      // Applies the stored theme (default: dark) before first paint. Mirrors useThemeStore.
+      (function () {
+        var choice = 'dark';
+        try {
+          var raw = window.localStorage.getItem('theme');
+          var stored = raw ? JSON.parse(raw).state.choice : null;
+          if (stored === 'light' || stored === 'dark' || stored === 'system') choice = stored;
+        } catch (e) {
+          /* storage unavailable: keep the default */
+        }
+        if (choice === 'system') {
+          choice = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        }
+        document.documentElement.dataset.theme = choice;
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

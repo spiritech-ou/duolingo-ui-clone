@@ -1,0 +1,99 @@
+// Raw scales. Components never use these directly: they use the semantic
+// custom properties generated in _themes.scss.
+
+// Spiritech flame blue, derived from design/brand.md.
+$palette: (
+  'blue-50': #eaf4fc,
+  'blue-100': #cfe6f7,
+  'blue-300': #7cc2f0,
+  'blue-400': #5bb0ea,
+  'blue-500': #2f8dcc,
+  'blue-600': #1f6aa5,
+  'blue-700': #185a8f,
+  'blue-800': #254a85,
+  'ink-950': #070d19,
+  'ink-900': #0b1220,
+  'ink-850': #131c2e,
+  'ink-800': #1b2740,
+  'ink-600': #5d6f8a,
+  'ink-500': #7b8ca5,
+  'ink-400': #a3b1c6,
+  'ink-100': #f1f5fb,
+  'ink-75': #f3f6fb,
+  'ink-700': #4a5a72,
+  'ink-1000': #0f1b2d,
+  'white': #ffffff,
+  'teal-400': #2dd4bf,
+  'teal-700': #0f766e,
+  'red-400': #ff7a7a,
+  'red-700': #c0262d,
+  'amber-400': #fbbf24,
+  'amber-700': #92580a,
+  'violet-400': #a78bfa,
+  'violet-700': #6d4bd0,
+);
+
+// 4px base.
+$spacing: (
+  1: 0.25rem,
+  2: 0.5rem,
+  3: 0.75rem,
+  4: 1rem,
+  5: 1.5rem,
+  6: 2rem,
+  7: 3rem,
+  8: 4rem,
+);
+
+$radii: (
+  'sm': 0.25rem,
+  'md': 0.5rem,
+  'lg': 1rem,
+  'xl': 1.5rem,
+);
+
+$font-sizes: (
+  'xs': 0.75rem,
+  'sm': 0.875rem,
+  'md': 1rem,
+  'lg': 1.25rem,
+  'xl': 1.5rem,
+  '2xl': 2rem,
+);
+
+$font-weights: (
+  'regular': 400,
+  'medium': 500,
+  'bold': 700,
+);
+
+$line-heights: (
+  'tight': 1.2,
+  'normal': 1.5,
+);
+
+$z-index: (
+  'base': 0,
+  'raised': 10,
+  'overlay': 100,
+  'modal': 200,
+  'toast': 300,
+);
+
+$durations: (
+  'fast': 100ms,
+  'normal': 200ms,
+  'slow': 400ms,
+);
+
+$easings: (
+  'standard': cubic-bezier(0.2, 0, 0, 1),
+  'emphasized': cubic-bezier(0.3, 0, 0, 1.2),
+);
+
+$breakpoints: (
+  'sm': 30rem,
+  'md': 48rem,
+  'lg': 64rem,
+  'xl': 80rem,
+);

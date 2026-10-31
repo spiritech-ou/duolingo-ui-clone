@@ -1,0 +1,47 @@
+/// <reference types="vitest/config" />
+import { fileURLToPath } from 'node:url';
+import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
+import react from '@vitejs/plugin-react';
+import { playwright } from '@vitest/browser-playwright';
+import { defineConfig } from 'vite';
+
+const srcDir = fileURLToPath(new URL('./src', import.meta.url));
+const storybookDir = fileURLToPath(new URL('./.storybook', import.meta.url));
+
+export default defineConfig({
+  plugins: [react()],
+  resolve: {
+    alias: { '@': srcDir },
+  },
+  css: {
+    preprocessorOptions: {
+      scss: { loadPaths: [srcDir] },
+    },
+  },
+  test: {
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: 'unit',
+          environment: 'jsdom',
+          setupFiles: ['tests/setup.ts'],
+          include: ['tests/unit/**/*.test.{ts,tsx}'],
+        },
+      },
+      {
+        extends: true,
+        plugins: [storybookTest({ configDir: storybookDir })],
+        test: {
+          name: 'storybook',
+          browser: {
+            enabled: true,
+            headless: true,
+            provider: playwright({}),
+            instances: [{ browser: 'chromium' }],
+          },
+        },
+      },
+    ],
+  },
+});

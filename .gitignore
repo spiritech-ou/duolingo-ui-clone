@@ -1,0 +1,11 @@
+node_modules
+dist
+storybook-static
+test-results
+playwright-report
+.env*
+!.env.example
+mcp/.env
+.playwright-mcp/
+.DS_Store
+*.log

@@ -1,0 +1,101 @@
+@use 'sass:map';
+@use 'variables' as v;
+
+@function p($name) {
+  @return map.get(v.$palette, $name);
+}
+
+// Both themes define exactly the same set of semantic color tokens.
+$dark: (
+  'bg': p('ink-900'),
+  'surface': p('ink-850'),
+  'text': p('ink-100'),
+  'text-muted': p('ink-400'),
+  'primary': p('blue-400'),
+  'primary-hover': p('blue-300'),
+  'on-primary': p('ink-950'),
+  'primary-soft': p('ink-800'),
+  'success': p('teal-400'),
+  'danger': p('red-400'),
+  'warning': p('amber-400'),
+  'info': p('violet-400'),
+  'border': p('ink-600'),
+);
+
+$light: (
+  'bg': p('white'),
+  'surface': p('ink-75'),
+  'text': p('ink-1000'),
+  'text-muted': p('ink-700'),
+  'primary': p('blue-600'),
+  'primary-hover': p('blue-700'),
+  'on-primary': p('white'),
+  'primary-soft': p('blue-50'),
+  'success': p('teal-700'),
+  'danger': p('red-700'),
+  'warning': p('amber-700'),
+  'info': p('violet-700'),
+  'border': p('ink-500'),
+);
+
+@mixin emit-colors($colors) {
+  @each $name, $value in $colors {
+    --color-#{$name}: #{$value};
+  }
+}
+
+:root {
+  @each $step, $value in v.$spacing {
+    --space-#{$step}: #{$value};
+  }
+
+  @each $name, $value in v.$radii {
+    --radius-#{$name}: #{$value};
+  }
+
+  @each $name, $value in v.$font-sizes {
+    --font-size-#{$name}: #{$value};
+  }
+
+  @each $name, $value in v.$font-weights {
+    --font-weight-#{$name}: #{$value};
+  }
+
+  @each $name, $value in v.$line-heights {
+    --line-height-#{$name}: #{$value};
+  }
+
+  @each $name, $value in v.$z-index {
+    --z-#{$name}: #{$value};
+  }
+
+  @each $name, $value in v.$durations {
+    --duration-#{$name}: #{$value};
+  }
+
+  @each $name, $value in v.$easings {
+    --easing-#{$name}: #{$value};
+  }
+
+  --font-family-base: system-ui, -apple-system, 'Segoe UI', roboto, sans-serif;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  @include emit-colors($dark);
+
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 50%);
+  --shadow-md: 0 4px 12px rgb(0 0 0 / 55%);
+  --shadow-lg: 0 12px 32px rgb(0 0 0 / 60%);
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+
+  @include emit-colors($light);
+
+  --shadow-sm: 0 1px 2px rgb(15 27 45 / 12%);
+  --shadow-md: 0 4px 12px rgb(15 27 45 / 14%);
+  --shadow-lg: 0 12px 32px rgb(15 27 45 / 18%);
+}
