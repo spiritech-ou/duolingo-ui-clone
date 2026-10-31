@@ -1,13 +1,15 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { delay, http, HttpResponse } from 'msw';
 import { createMemoryRouter, RouterProvider, useLocation } from 'react-router';
 import { beforeEach, describe, expect, it } from 'vitest';
 import type { Course } from '@/api/schemas/course';
 import { LearnPage } from '@/features/learn';
+import { peekDeparture, rememberDeparture, resetArrivalMemory } from '@/features/learn/logic/arrivalMemory';
 import { getLoadErrorMessage } from '@/features/learn/logic/learningPath';
 import { generateCourse } from '@/mocks/data/generators';
 import { courseErrorHandler } from '@/mocks/handlers/course';
+import { serverErrorResponse } from '@/mocks/scenario';
 import { server } from '@/mocks/server';
 import { useCourseStore } from '@/store/useCourseStore';
 import { useProfileStore } from '@/store/useProfileStore';
@@ -48,6 +50,7 @@ describe('LearnPage', () => {
   beforeEach(() => {
     localStorage.clear();
     document.title = '';
+    resetArrivalMemory();
     useCourseStore.getState().reset();
     useSessionStore.getState().reset();
     useProfileStore.getState().reset();
@@ -102,9 +105,19 @@ describe('LearnPage', () => {
 
   it('keeps the cached path and shows no error when the silent refresh fails', async () => {
     useCourseStore.getState().setCourse(course);
-    server.use(courseErrorHandler);
+    let answered = false;
+    server.use(
+      http.get('*/api/course', () => {
+        answered = true;
+        return serverErrorResponse();
+      }),
+    );
     renderLearn();
-    await delay(150);
+    await waitFor(() => expect(answered).toBe(true));
+    // Let the failed response travel through the client and the hook (macrotasks, not wall-clock time).
+    for (let tick = 0; tick < 10; tick += 1) {
+      await act(() => new Promise<void>((resolve) => setTimeout(resolve, 0)));
+    }
     expect(screen.getByRole('navigation', { name: 'Learning path' })).toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
@@ -113,7 +126,8 @@ describe('LearnPage', () => {
     server.use(respondWith(emptyCourse));
     renderLearn();
 
-    expect(await screen.findByRole('heading', { name: 'No lessons yet' })).toHaveFocus();
+    const heading = await screen.findByRole('heading', { name: 'No lessons yet' });
+    await waitFor(() => expect(heading).toHaveFocus());
     expect(screen.getByText('Check back soon.')).toBeInTheDocument();
 
     // The next response has lessons; a cached empty course must not mask the loading state.
@@ -137,7 +151,7 @@ describe('LearnPage', () => {
     const alert = await screen.findByRole('alert');
     expect(within(alert).getByRole('heading', { name: "We couldn't load your lessons" })).toBeInTheDocument();
     expect(alert).toHaveTextContent('Something went wrong on our side. Try again in a moment.');
-    expect(screen.getByRole('button', { name: 'Try again' })).toHaveFocus();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Try again' })).toHaveFocus());
     expect(screen.getByRole('button', { name: 'Log out' })).toBeInTheDocument();
   });
 
@@ -178,6 +192,22 @@ describe('LearnPage', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Log out' }));
     expect(useSessionStore.getState().session).toBeNull();
     expect(useCourseStore.getState().course).toBeNull();
+  });
+
+  it('log out forgets where the user left the path', async () => {
+    server.use(respondWith(course));
+    renderLearn();
+    await screen.findByRole('navigation', { name: 'Learning path' });
+    rememberDeparture({
+      userId: USER.id,
+      lessonId: first.id,
+      completedLessonIds: [],
+      recommendedLessonId: first.id,
+    });
+    expect(peekDeparture(USER.id)).not.toBeNull();
+
+    await userEvent.click(screen.getByRole('button', { name: 'Log out' }));
+    expect(peekDeparture(USER.id)).toBeNull();
   });
 
   it('opens /lesson/:lessonId when a node is pressed, completed or not', async () => {

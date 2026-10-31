@@ -61,16 +61,27 @@ describe('LearnPage arrival', () => {
     renderLearn();
     const node = await screen.findByRole('button', { name: nodeName(2, second.title, ', recommended, start') });
 
+    // The arrival runs in a passive effect, which can land just after the node is in the DOM.
+    await waitFor(() => expect(node).toHaveFocus());
     expect(scrollIntoView).toHaveBeenCalledWith({ block: 'center', behavior: 'instant' });
     expect(scrolledElement()).toBe(node);
-    expect(node).toHaveFocus();
   });
 
   it('does not scroll again when the cached course is refreshed in place', async () => {
+    const firstUnit = course.units[0];
+    if (!firstUnit) throw new Error('fixture needs a unit');
+    const refreshed = {
+      ...course,
+      units: course.units.map((unit) => (unit === firstUnit ? { ...unit, title: 'Refreshed unit' } : unit)),
+    };
     useCourseStore.getState().setCourse(course);
+    server.use(http.get('*/api/course', () => HttpResponse.json(refreshed)));
     renderLearn();
     await screen.findByRole('navigation', { name: 'Learning path' });
-    await new Promise((resolve) => setTimeout(resolve, 80));
+    await waitFor(() => expect(scrollIntoView).toHaveBeenCalledTimes(1));
+
+    // Wait for the refresh to land in place (the new title shows); only then is "no second scroll" meaningful.
+    expect(await screen.findByText('Refreshed unit')).toBeInTheDocument();
     expect(scrollIntoView).toHaveBeenCalledTimes(1);
   });
 
@@ -78,8 +89,8 @@ describe('LearnPage arrival', () => {
     for (const lesson of allLessons) useProfileStore.getState().markLessonCompleted(USER.id, lesson.id);
     renderLearn();
     const node = await screen.findByRole('button', { name: nodeName(1, first.title, ', completed') });
+    await waitFor(() => expect(node).toHaveFocus());
     expect(scrolledElement()).toBe(node);
-    expect(node).toHaveFocus();
   });
 
   it('with every lesson completed, keeps the lesson just left in view on return', async () => {
@@ -100,8 +111,8 @@ describe('LearnPage arrival', () => {
     const node = await screen.findByRole('button', {
       name: nodeName(allLessons.length, last.title, ', completed'),
     });
+    await waitFor(() => expect(node).toHaveFocus());
     expect(scrolledElement()).toBe(node);
-    expect(node).toHaveFocus();
     expect(node.className).not.toMatch(/arrival/);
   });
 
@@ -115,8 +126,8 @@ describe('LearnPage arrival', () => {
 
     const node = await screen.findByRole('button', { name: nodeName(2, second.title, ', recommended, start') });
     expect(node.className).toMatch(/arrival/);
+    await waitFor(() => expect(node).toHaveFocus());
     expect(scrolledElement()).toBe(node);
-    expect(node).toHaveFocus();
   });
 
   it('does not celebrate when returning without completing the lesson', async () => {
@@ -165,7 +176,7 @@ describe('LearnPage placement note', () => {
 
     expect(screen.queryByRole('button', { name: 'Got it' })).not.toBeInTheDocument();
     expect(useProfileStore.getState().profiles[USER.id]?.placementNoteDismissed).toBe(true);
-    expect(document.activeElement).not.toBe(document.body);
+    await waitFor(() => expect(document.activeElement).not.toBe(document.body));
     expect(screen.getByRole('navigation', { name: 'Learning path' })).toContainElement(
       document.activeElement as HTMLElement,
     );

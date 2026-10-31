@@ -1,15 +1,25 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
-import { afterAll, afterEach, beforeAll } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach } from 'vitest';
 import { server } from '@/mocks/server';
 
+// jsdom does not implement scrolling. Every test starts with a no-op (a test that asserts on scrolling
+// replaces it with a spy in its own beforeEach) and the original, whatever it was, is put back after.
+const originalScrollIntoView = Element.prototype.scrollIntoView as
+  | typeof Element.prototype.scrollIntoView
+  | undefined;
+
 beforeAll(() => {
-  // jsdom does not implement scrolling; tests that assert on it replace this with a spy.
-  Element.prototype.scrollIntoView = () => undefined;
   server.listen({ onUnhandledFrame: 'error' });
 });
 
+beforeEach(() => {
+  Element.prototype.scrollIntoView = () => undefined;
+});
+
 afterEach(() => {
+  if (originalScrollIntoView) Element.prototype.scrollIntoView = originalScrollIntoView;
+  else Reflect.deleteProperty(Element.prototype, 'scrollIntoView');
   cleanup();
   server.resetHandlers();
 });
