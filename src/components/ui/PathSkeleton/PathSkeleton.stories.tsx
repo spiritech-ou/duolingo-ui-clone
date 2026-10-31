@@ -1,5 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect } from 'storybook/test';
+import type { within } from 'storybook/test';
+import { UnitSection } from '@/components/ui/UnitSection';
+import type { UnitLesson } from '@/components/ui/UnitSection';
 import { PathSkeleton } from './PathSkeleton';
 
 const meta = {
@@ -52,6 +55,95 @@ export const Default: Story = {
     if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
       await expect(getComputedStyle(nodes[0] as HTMLElement).animationName).not.toBe('none');
     }
+  },
+};
+
+const VIEWPORTS = {
+  wide: { name: 'Wide 1280', styles: { width: '1280px', height: '800px' }, type: 'desktop' },
+  phone: { name: 'Phone 390', styles: { width: '390px', height: '844px' }, type: 'mobile' },
+} as const;
+
+const onPress = () => undefined;
+const fiveLessons: UnitLesson[] = Array.from({ length: 5 }, (_, i) => ({
+  id: `s${i + 1}`,
+  label: `Lesson ${i + 1}, Topic ${i + 1}`,
+  status: 'available',
+  onPress,
+}));
+
+/** Shows the skeleton and a real unit in the same column, to compare their geometry. */
+function SkeletonAndUnit() {
+  return (
+    <>
+      <PathSkeleton />
+      <UnitSection
+        unitNumber={1}
+        title="Food and drink"
+        description="Name what you eat and drink every day."
+        lessons={fiveLessons}
+      />
+    </>
+  );
+}
+
+/** Top (relative to its section) and size of the banner and of each node, in layout px. */
+function geometry(section: HTMLElement, banner: HTMLElement, nodes: HTMLElement[]) {
+  const top = section.getBoundingClientRect().top;
+  const place = (el: HTMLElement) => ({
+    top: Math.round(el.getBoundingClientRect().top - top),
+    width: el.offsetWidth,
+    height: el.offsetHeight,
+  });
+  return {
+    section: { width: section.offsetWidth, height: section.offsetHeight },
+    banner: place(banner),
+    nodes: nodes.map(place),
+  };
+}
+
+async function expectSkeletonMatchesUnit(
+  canvas: ReturnType<typeof within>,
+  expected: { node: number; pitch: number; banner: number },
+) {
+  const skeleton = canvas.getByRole('status').parentElement as HTMLElement;
+  const unit = canvas.getByRole('group');
+  const skeletonShapes = Array.from(skeleton.querySelectorAll<HTMLElement>('[aria-hidden="true"]'));
+  const skeletonBanner = skeletonShapes[0] as HTMLElement;
+  const skeletonNodes = Array.from(skeleton.querySelectorAll<HTMLElement>('[style*="--path-node-offset"]'));
+  const unitBanner = canvas.getByRole('heading', { level: 2 }).parentElement as HTMLElement;
+  const unitNodes = canvas.getAllByRole('button');
+
+  const s = geometry(skeleton, skeletonBanner, skeletonNodes);
+  const u = geometry(unit, unitBanner, unitNodes);
+
+  // Exactly the real sizes, so the ready state replaces the skeleton without a shift.
+  await expect(s.banner.height).toBe(expected.banner);
+  await expect(s.nodes.map((n) => n.height)).toEqual(Array(5).fill(expected.node));
+  await expect(s.nodes.map((n) => n.width)).toEqual(Array(5).fill(expected.node));
+  await expect(s.nodes[1] && s.nodes[0] ? s.nodes[1].top - s.nodes[0].top : 0).toBe(expected.pitch);
+  await expect(s).toEqual(u);
+  // Same horizontal winding too.
+  const xs = (els: HTMLElement[]) => els.map((el) => Math.round(el.getBoundingClientRect().x));
+  await expect(xs(skeletonNodes)).toEqual(xs(unitNodes));
+}
+
+export const MatchesUnitWide: Story = {
+  parameters: { layout: 'fullscreen', viewport: { options: VIEWPORTS } },
+  globals: { viewport: { value: 'wide', isRotated: false } },
+  render: () => <SkeletonAndUnit />,
+  play: async ({ canvas }) => {
+    await expect(window.innerWidth).toBeGreaterThanOrEqual(1280);
+    await expectSkeletonMatchesUnit(canvas, { node: 72, pitch: 96, banner: 80 });
+  },
+};
+
+export const MatchesUnitPhone: Story = {
+  parameters: { layout: 'fullscreen', viewport: { options: VIEWPORTS } },
+  globals: { viewport: { value: 'phone', isRotated: false } },
+  render: () => <SkeletonAndUnit />,
+  play: async ({ canvas }) => {
+    await expect(window.innerWidth).toBe(390);
+    await expectSkeletonMatchesUnit(canvas, { node: 64, pitch: 88, banner: 72 });
   },
 };
 

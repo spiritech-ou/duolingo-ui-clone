@@ -4,8 +4,7 @@
   gap: var(--space-3);
   align-items: center;
   box-sizing: border-box;
-  width: 100%;
-  max-width: 28rem;
+  width: 100%; // fills the column the page places it in
   padding: var(--space-6) var(--space-5);
   text-align: center;
   background-color: var(--color-primary-soft);

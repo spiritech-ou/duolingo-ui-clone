@@ -90,10 +90,9 @@ export const Recommended: Story = {
     await expect(node).toHaveAttribute('aria-current', 'step');
     await expect(node).toHaveTextContent('START');
     await expect(node.querySelector('svg')).not.toBeNull();
-    // Bigger than the other states: shape as well as colour.
-    await expect(node.getBoundingClientRect().width).toBeGreaterThan(
-      parseFloat(getComputedStyle(document.documentElement).fontSize) * 5,
-    );
+    // Same size as the other states (the path pitch stays constant); the ring, the play icon and
+    // the bubble set it apart, not colour alone.
+    await expect(getComputedStyle(node).boxShadow).not.toBe('none');
     // Pulses while idle (no pointer over it yet).
     await expect(getComputedStyle(node).animationName).toContain('pulse');
 
@@ -196,6 +195,60 @@ export const OffsetIsRounded: Story = {
   play: async ({ canvas }) => {
     const node = canvas.getByRole('button', { name: 'Lesson 5, Drinks' });
     await expect(node.style.getPropertyValue('--path-node-offset')).toBe('2');
+  },
+};
+
+const VIEWPORTS = {
+  wide: { name: 'Wide 1280', styles: { width: '1280px', height: '800px' }, type: 'desktop' },
+  phone: { name: 'Phone 390', styles: { width: '390px', height: '844px' }, type: 'mobile' },
+} as const;
+
+const rem = () => parseFloat(getComputedStyle(document.documentElement).fontSize);
+
+/** Layout size in px, not affected by `translate` or the pulse's `scale`. */
+function layoutSize(node: HTMLElement) {
+  return { width: node.offsetWidth, height: node.offsetHeight };
+}
+
+export const SizesWide: Story = {
+  parameters: { viewport: { options: VIEWPORTS } },
+  globals: { viewport: { value: 'wide', isRotated: false } },
+  args: { status: 'available', offset: 2 },
+  play: async ({ canvas }) => {
+    await expect(window.innerWidth).toBeGreaterThanOrEqual(1280);
+    const node = canvas.getByRole('button', { name: 'Lesson 5, Drinks' });
+    // Tablet and desktop: 72px node, 50px zigzag step.
+    await expect(layoutSize(node)).toEqual({ width: 72, height: 72 });
+    await expect(getComputedStyle(node).getPropertyValue('--path-node-step').trim()).toBe('3.125rem');
+    await expect(shiftOf(node)).toBeCloseTo(2 * 3.125 * rem(), 1);
+    await expect(shiftOf(node)).toBeCloseTo(100, 1);
+  },
+};
+
+export const SizesPhone: Story = {
+  parameters: { viewport: { options: VIEWPORTS } },
+  globals: { viewport: { value: 'phone', isRotated: false } },
+  args: { status: 'available', offset: 2 },
+  play: async ({ canvas, canvasElement }) => {
+    await expect(window.innerWidth).toBe(390);
+    const node = canvas.getByRole('button', { name: 'Lesson 5, Drinks' });
+    // Mobile: 64px node, 40px zigzag step, so two steps stay at 80px from the centre line.
+    await expect(layoutSize(node)).toEqual({ width: 64, height: 64 });
+    await expect(shiftOf(node)).toBeCloseTo(80, 1);
+    // The widest offset keeps the node fully inside the screen.
+    const box = node.getBoundingClientRect();
+    await expect(box.left).toBeGreaterThanOrEqual(0);
+    await expect(box.right).toBeLessThanOrEqual(canvasElement.clientWidth);
+  },
+};
+
+export const RecommendedSameSize: Story = {
+  parameters: { viewport: { options: VIEWPORTS } },
+  globals: { viewport: { value: 'phone', isRotated: false } },
+  args: { status: 'recommended', label: 'Lesson 4, Food, recommended, start' },
+  play: async ({ canvas }) => {
+    const node = canvas.getByRole('button', { name: 'Lesson 4, Food, recommended, start' });
+    await expect(layoutSize(node)).toEqual({ width: 64, height: 64 });
   },
 };
 

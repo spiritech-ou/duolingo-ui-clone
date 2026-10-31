@@ -39,7 +39,8 @@ const meta = {
   },
   decorators: [
     (Story) => (
-      <div style={{ width: 'min(100vw, 26rem)', padding: '3rem 1rem 2rem' }}>
+      // A column like the page's: 640px at most, 16px gutters on a phone.
+      <div style={{ width: 'min(100vw, 40rem)', padding: '3rem 1rem 2rem' }}>
         <Story />
       </div>
     ),
@@ -167,12 +168,160 @@ export const NarrowViewport: Story = {
     }
     // Nothing makes the page scroll sideways.
     await expect(canvasElement.scrollWidth).toBeLessThanOrEqual(canvasElement.clientWidth);
-    // On a narrow screen the steps shrink.
+    // On a narrow screen the steps shrink to 40px.
     if (window.innerWidth < 480) {
       await expect(stepOf(nodes[0] as HTMLElement)).toBe(
-        1.25 * parseFloat(getComputedStyle(document.documentElement).fontSize),
+        2.5 * parseFloat(getComputedStyle(document.documentElement).fontSize),
       );
     }
+  },
+};
+
+const VIEWPORTS = {
+  wide: { name: 'Wide 1280', styles: { width: '1280px', height: '800px' }, type: 'desktop' },
+  phone: { name: 'Phone 390', styles: { width: '390px', height: '844px' }, type: 'mobile' },
+} as const;
+
+const sizing = {
+  parameters: { layout: 'fullscreen', viewport: { options: VIEWPORTS } },
+} as const;
+
+// A description long enough to wrap to two lines on a phone, as the longest course ones do.
+const longDescription = 'Talk about your home, clothes, school things and getting around.';
+
+/** Layout size in px, not affected by `translate` or the pulse's `scale`. */
+function sizeOf(el: HTMLElement) {
+  return { width: el.offsetWidth, height: el.offsetHeight };
+}
+
+/** Distance between the centres of two vertically stacked nodes, from layout (no `translate`). */
+function pitchBetween(a: HTMLElement, b: HTMLElement): number {
+  return b.offsetTop + b.offsetHeight / 2 - (a.offsetTop + a.offsetHeight / 2);
+}
+
+export const SizesWide: Story = {
+  ...sizing,
+  globals: { viewport: { value: 'wide', isRotated: false } },
+  args: { description: longDescription, lessons: nine },
+  play: async ({ canvas }) => {
+    await expect(window.innerWidth).toBeGreaterThanOrEqual(1280);
+    const group = canvas.getByRole('group');
+    const banner = canvas.getByRole('heading', { level: 2 }).parentElement as HTMLElement;
+    const nodes = canvas.getAllByRole('button');
+
+    // The banner fills the column and is 80px high, its description on one line.
+    await expect(banner.offsetWidth).toBe(group.offsetWidth);
+    await expect(banner.offsetHeight).toBe(80);
+    const description = canvas.getByText(longDescription);
+    const lineHeight = parseFloat(getComputedStyle(description).lineHeight);
+    await expect(description.getBoundingClientRect().height).toBeLessThanOrEqual(lineHeight + 1);
+
+    // 72px nodes, 96px between the centres of neighbours.
+    for (const node of nodes) {
+      await expect(sizeOf(node)).toEqual({ width: 72, height: 72 });
+    }
+    for (let i = 1; i < nodes.length; i += 1) {
+      await expect(pitchBetween(nodes[i - 1] as HTMLElement, nodes[i] as HTMLElement)).toBe(96);
+    }
+
+    // The winding stays within about 2 node widths (144px) of the centre line.
+    const centre = group.getBoundingClientRect().left + group.offsetWidth / 2;
+    for (const node of nodes) {
+      const box = node.getBoundingClientRect();
+      const reach = Math.max(Math.abs(box.left - centre), Math.abs(box.right - centre));
+      await expect(reach).toBeLessThanOrEqual(144);
+    }
+    // 50px step: the second node is one step right of the first.
+    await expect(
+      (nodes[1] as HTMLElement).getBoundingClientRect().x - (nodes[0] as HTMLElement).getBoundingClientRect().x,
+    ).toBeCloseTo(50, 0);
+  },
+};
+
+export const SizesPhone: Story = {
+  ...sizing,
+  globals: { viewport: { value: 'phone', isRotated: false } },
+  args: { description: longDescription, lessons: nine },
+  play: async ({ canvas, canvasElement }) => {
+    await expect(window.innerWidth).toBe(390);
+    const group = canvas.getByRole('group');
+    const banner = canvas.getByRole('heading', { level: 2 }).parentElement as HTMLElement;
+    const nodes = canvas.getAllByRole('button');
+
+    // The column is the width minus 16px gutters; the banner fills it.
+    await expect(group.offsetWidth).toBe(358);
+    await expect(banner.offsetWidth).toBe(358);
+    // 72px high with the description on two lines.
+    await expect(banner.offsetHeight).toBe(72);
+    const description = canvas.getByText(longDescription);
+    const lineHeight = parseFloat(getComputedStyle(description).lineHeight);
+    await expect(Math.round(description.getBoundingClientRect().height / lineHeight)).toBe(2);
+
+    // 64px nodes, 88px between the centres of neighbours.
+    for (const node of nodes) {
+      await expect(sizeOf(node)).toEqual({ width: 64, height: 64 });
+    }
+    for (let i = 1; i < nodes.length; i += 1) {
+      await expect(pitchBetween(nodes[i - 1] as HTMLElement, nodes[i] as HTMLElement)).toBe(88);
+    }
+
+    // 40px step: two steps are 80px from the centre line, fully inside the column.
+    const bounds = group.getBoundingClientRect();
+    const centre = bounds.left + bounds.width / 2;
+    for (const node of nodes) {
+      const box = node.getBoundingClientRect();
+      await expect(box.left).toBeGreaterThanOrEqual(bounds.left);
+      await expect(box.right).toBeLessThanOrEqual(bounds.right);
+      await expect(Math.max(Math.abs(box.left - centre), Math.abs(box.right - centre))).toBeLessThanOrEqual(112);
+    }
+    // No horizontal scroll.
+    await expect(canvasElement.scrollWidth).toBeLessThanOrEqual(canvasElement.clientWidth);
+    await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+  },
+};
+
+export const GapToNextUnit: Story = {
+  ...sizing,
+  globals: { viewport: { value: 'wide', isRotated: false } },
+  render: (args) => (
+    <>
+      <UnitSection {...args} />
+      <UnitSection {...args} unitNumber={2} title="Animals" lessons={four} />
+    </>
+  ),
+  play: async ({ canvas }) => {
+    const groups = canvas.getAllByRole('group');
+    const lastNode = Array.from(groups[0]?.querySelectorAll<HTMLElement>('button') ?? []).at(-1);
+    const nextBanner = groups[1]?.querySelector<HTMLElement>('h2')?.parentElement;
+    // 32px from the last node of a unit to the next unit's banner.
+    const gap =
+      (nextBanner?.getBoundingClientRect().top ?? 0) - (lastNode?.getBoundingClientRect().bottom ?? 0);
+    await expect(gap).toBe(32);
+  },
+};
+
+export const BubbleStaysInColumn: Story = {
+  ...sizing,
+  globals: { viewport: { value: 'phone', isRotated: false } },
+  decorators: [
+    (Story) => (
+      // Narrower than a real column on purpose: the offset recommended node's bubble would stick
+      // out without the clamp.
+      <div style={{ width: '12rem' }}>
+        <Story />
+      </div>
+    ),
+  ],
+  play: async ({ canvas }) => {
+    const list = canvas.getByRole('list');
+    const bubble = canvas.getByText('START');
+    const listBox = list.getBoundingClientRect();
+    const bubbleBox = bubble.getBoundingClientRect();
+    await expect(bubbleBox.left).toBeGreaterThanOrEqual(listBox.left);
+    await expect(bubbleBox.right).toBeLessThanOrEqual(listBox.right);
+    // It still sits above its node.
+    const node = canvas.getByRole('button', { name: /recommended/ });
+    await expect(bubbleBox.bottom).toBeLessThanOrEqual(node.getBoundingClientRect().top + 1);
   },
 };
 

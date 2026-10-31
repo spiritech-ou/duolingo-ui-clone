@@ -1,0 +1,22 @@
+@use '@/styles/mixins' as *;
+
+// The one source of the learning-path sizes (docs/product/learning-path.md, Layout), shared by
+// PathNode, UnitSection and PathSkeleton so the skeleton and the real path never drift apart.
+// From 480px (tablet, desktop): node 72px, step 50px, pitch 96px, banner 80px.
+// Below 480px (mobile, 390): node 64px, step 40px, pitch 88px, banner 72px.
+// The pitch is the distance between two node centres. Both gaps come out at 24px, so the gap
+// between nodes is the same on every width.
+@mixin path-metrics {
+  --path-node-size: 4rem;
+  --path-node-step: 2.5rem;
+  --path-node-pitch: 5.5rem;
+  --path-banner-height: 4.5rem;
+  --path-node-gap: calc(var(--path-node-pitch) - var(--path-node-size));
+
+  @include bp(sm) {
+    --path-node-size: 4.5rem;
+    --path-node-step: 3.125rem;
+    --path-node-pitch: 6rem;
+    --path-banner-height: 5rem;
+  }
+}

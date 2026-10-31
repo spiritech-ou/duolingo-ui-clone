@@ -30,6 +30,23 @@ export const Default: Story = {
   },
 };
 
+/** The card follows the column the page places it in: no width of its own. */
+export const FillsColumn: Story = {
+  decorators: [
+    (Story) => (
+      <div style={{ width: '40rem' }} data-testid="column">
+        <Story />
+      </div>
+    ),
+  ],
+  play: async ({ canvas }) => {
+    const column = canvas.getByTestId('column');
+    const card = canvas.getByRole('region');
+    await expect(column.offsetWidth).toBe(640);
+    await expect(card.offsetWidth).toBe(640);
+  },
+};
+
 export const Narrow: Story = {
   decorators: [
     (Story) => (

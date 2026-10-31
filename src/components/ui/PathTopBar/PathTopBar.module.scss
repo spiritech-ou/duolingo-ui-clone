@@ -1,5 +1,7 @@
-// Stays at the top of the viewport while the path scrolls beneath it.
+// Fills the column the page places it in, and stays at the top of the viewport while the path
+// scrolls beneath it.
 .root {
+  width: 100%;
   position: sticky;
   top: 0;
   z-index: var(--z-raised);

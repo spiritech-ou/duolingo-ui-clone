@@ -42,6 +42,28 @@ export const LogOut: Story = {
   },
 };
 
+/** The bar follows the column the page places it in: hearts left, "Log out" right, one row. */
+export const FillsColumn: Story = {
+  decorators: [
+    (Story) => (
+      <div style={{ width: '40rem' }} data-testid="column">
+        <Story />
+      </div>
+    ),
+  ],
+  play: async ({ canvas }) => {
+    const column = canvas.getByTestId('column');
+    const bar = canvas.getByRole('banner');
+    await expect(column.offsetWidth).toBe(640);
+    await expect(bar.offsetWidth).toBe(640);
+    const hearts = canvas.getByRole('img', { name: '5 hearts left' }).getBoundingClientRect();
+    const logOut = canvas.getByRole('button', { name: 'Log out' }).getBoundingClientRect();
+    await expect(hearts.left).toBeLessThan(logOut.left);
+    // One row: both are vertically within the bar.
+    await expect(Math.abs(hearts.top + hearts.height / 2 - (logOut.top + logOut.height / 2))).toBeLessThan(4);
+  },
+};
+
 export const RestPropsKeepContent: Story = {
   // Forced past the types on purpose: rest props must not replace the bar's content.
   render: (args) => <PathTopBar {...args} {...({ children: 'Wrong' } as object)} />,

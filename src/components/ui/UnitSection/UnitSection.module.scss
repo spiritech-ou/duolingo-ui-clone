@@ -1,47 +1,84 @@
+@use '@/styles/mixins' as *;
+@use '@/components/ui/PathNode/metrics' as *;
+
+// Fills the column it is placed in; the page sets the column. Sizes come from _metrics.scss.
 .root {
+  @include path-metrics;
+
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
   width: 100%;
+
+  // 32px between this unit's last node and the next unit's banner.
+  padding-block-end: var(--space-6);
 }
 
+// A fixed height for the usual content (a title line and a description of one line, or two lines
+// on mobile); longer text grows the banner instead of being clipped.
 .banner {
-  padding: var(--space-4) var(--space-5);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: var(--path-banner-height);
+  padding: var(--space-2) var(--space-4);
   color: var(--color-on-primary);
   background-color: var(--color-primary);
   border-radius: var(--radius-lg);
+
+  @include bp(sm) {
+    padding: var(--space-3) var(--space-5);
+  }
 }
 
+// "UNIT 1" and the title share a line.
 .heading {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-2);
+  align-items: baseline;
   margin: 0;
-  font-size: var(--font-size-xl);
+  font-size: var(--font-size-lg);
   font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+
+  @include bp(sm) {
+    font-size: var(--font-size-xl);
+  }
 }
 
 .unitNumber {
-  display: block;
-  font-size: var(--font-size-sm);
+  font-size: var(--font-size-xs);
   letter-spacing: 0.04em;
   text-transform: uppercase;
   opacity: 0.85;
 }
 
 .title {
-  display: block;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .description {
-  margin: var(--space-1) 0 0;
-  font-size: var(--font-size-md);
+  margin: 0;
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-tight);
+
+  @include bp(sm) {
+    margin-top: var(--space-1);
+    font-size: var(--font-size-sm);
+  }
 }
 
+// `container-type` lets the START bubble clamp itself to this list's width.
 .list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--path-node-gap);
   padding: 0;
   margin: 0;
   list-style: none;
+  container-type: inline-size;
 }
 
 .item {
@@ -51,5 +88,5 @@
 
 // Room above for the node's "START" bubble, so it never covers the node before.
 .recommended {
-  margin-top: var(--space-8);
+  margin-top: var(--space-5);
 }

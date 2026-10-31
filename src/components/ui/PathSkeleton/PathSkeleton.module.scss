@@ -1,11 +1,17 @@
 @use '@/styles/mixins' as *;
+@use '@/components/ui/PathNode/metrics' as *;
 
-// Mirrors UnitSection: same gaps, banner radius and node zigzag.
+// Mirrors one UnitSection with five plain nodes: the same metrics (_metrics.scss), gaps, banner
+// radius and zigzag, so the ready state replaces it without moving anything. The one difference
+// a real unit can add is the room above its recommended node for the START bubble.
 .root {
+  @include path-metrics;
+
   display: flex;
   flex-direction: column;
   gap: var(--space-6);
   width: 100%;
+  padding-block-end: var(--space-6);
 }
 
 .status {
@@ -18,14 +24,14 @@
 }
 
 .banner {
-  height: 6rem;
+  height: var(--path-banner-height);
   border-radius: var(--radius-lg);
 }
 
 .list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-5);
+  gap: var(--path-node-gap);
 }
 
 .item {
@@ -34,17 +40,11 @@
 }
 
 .node {
-  --path-node-step: 1.25rem;
-
   flex-shrink: 0;
-  width: 4.5rem;
-  height: 4.5rem;
+  width: var(--path-node-size);
+  height: var(--path-node-size);
   border-radius: 50%;
   translate: calc(var(--path-node-offset, 0) * var(--path-node-step)) 0;
-
-  @include bp(sm) {
-    --path-node-step: 2.5rem;
-  }
 }
 
 @keyframes shimmer {
