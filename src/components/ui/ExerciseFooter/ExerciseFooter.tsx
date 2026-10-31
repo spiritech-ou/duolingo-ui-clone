@@ -3,6 +3,7 @@ import type { ComponentPropsWithoutRef, Ref } from 'react';
 import clsx from 'clsx';
 import { Button } from '@/components/ui/Button';
 import { Icon } from '@/components/ui/Icon';
+import { Mascot } from '@/components/ui/Mascot';
 import styles from './ExerciseFooter.module.scss';
 
 export type ExerciseFooterStatus = 'idle' | 'selected' | 'correct' | 'wrong' | 'skipped';
@@ -73,7 +74,17 @@ export function ExerciseFooter({
               <Icon name={isCorrect ? 'check' : 'close'} size={48} className={styles['icon']} />
             </span>
             <div className={styles['body']}>
-              <p className={styles['title']}>{isCorrect ? praise : 'Correct solution:'}</p>
+              {isCorrect ? (
+                <p className={styles['title']}>{praise}</p>
+              ) : (
+                <div className={styles['titleRow']}>
+                  {/* Decorative red flame (alt=""): no name, no announcement, no focus stop. */}
+                  <span className={styles['flame']}>
+                    <Mascot size={32} mood="sad" />
+                  </span>
+                  <p className={styles['title']}>Correct solution:</p>
+                </div>
+              )}
               {word ? (
                 <p className={styles['word']} lang="et">
                   {word}

@@ -182,10 +182,45 @@ const measurePanelNarrow: NonNullable<Story['play']> = async ({ canvasElement })
   expect(panel.height).toBeLessThan(260);
 };
 
+function getFlame(canvasElement: HTMLElement): HTMLImageElement | null {
+  return canvasElement.querySelector<HTMLImageElement>('img[data-mood]');
+}
+
+// The small red flame: present, red artwork, decorative, 32px, 8px left of the title, centred on it.
+const expectFlame: NonNullable<Story['play']> = async ({ canvasElement }) => {
+  const canvas = within(canvasElement);
+  const flame = getFlame(canvasElement);
+  if (!flame) throw new Error('red flame not found');
+  await expect(flame).toHaveAttribute('data-mood', 'sad');
+  await expect(flame.src).toContain('flame-red');
+  await expect(flame).toHaveAttribute('alt', '');
+  // Decorative: not in the accessibility tree, the announcement and the buttons are unchanged.
+  await expect(canvas.queryByRole('img')).toBeNull();
+  await expect(canvas.getAllByRole('button')).toHaveLength(1);
+  const title = canvas.getByText('Correct solution:');
+  // The flame's pose is tilted by a CSS transform, so measure its layout box (the wrapper).
+  const slot = flame.parentElement;
+  if (!slot) throw new Error('flame slot not found');
+  const f = box(slot);
+  const t = box(title);
+  expect(flame.offsetWidth).toBe(32);
+  expect(flame.offsetHeight).toBe(32);
+  expectAbout(f.width, 32);
+  expectAbout(f.height, 32);
+  expectAbout(t.left - f.right, 8);
+  expectAbout((f.top + f.bottom) / 2, (t.top + t.bottom) / 2);
+};
+
+const expectNoFlame: NonNullable<Story['play']> = async ({ canvasElement }) => {
+  await expect(getFlame(canvasElement)).toBeNull();
+  await expect(canvasElement.querySelector('img')).toBeNull();
+};
+
 export const IdleWide: Story = {
   globals: wide,
   play: async (context) => {
     await measureActionsWide(context);
+    await expectNoFlame(context);
   },
 };
 
@@ -194,6 +229,7 @@ export const SelectedWide: Story = {
   args: { status: 'selected' },
   play: async (context) => {
     await measureActionsWide(context);
+    await expectNoFlame(context);
     await expect(within(context.canvasElement).getByRole('button', { name: 'Check' })).toBeEnabled();
   },
 };
@@ -218,6 +254,7 @@ export const CorrectWide: Story = {
   args: { status: 'correct', word: 'tee' },
   play: async (context) => {
     await measurePanelWide(context);
+    await expectNoFlame(context);
   },
 };
 
@@ -226,6 +263,7 @@ export const WrongWide: Story = {
   args: { status: 'wrong', word: 'tee' },
   play: async (context) => {
     await measurePanelWide(context);
+    await expectFlame(context);
   },
 };
 
@@ -234,6 +272,7 @@ export const SkippedWide: Story = {
   args: { status: 'skipped', word: 'tee' },
   play: async (context) => {
     await measurePanelWide(context);
+    await expectFlame(context);
   },
 };
 
@@ -242,6 +281,7 @@ export const CorrectNarrow: Story = {
   args: { status: 'correct', word: 'tee' },
   play: async (context) => {
     await measurePanelNarrow(context);
+    await expectNoFlame(context);
   },
 };
 
@@ -250,6 +290,7 @@ export const WrongNarrow: Story = {
   args: { status: 'wrong', word: 'tee' },
   play: async (context) => {
     await measurePanelNarrow(context);
+    await expectFlame(context);
   },
 };
 
@@ -258,6 +299,7 @@ export const SkippedNarrow: Story = {
   args: { status: 'skipped', word: 'tee' },
   play: async (context) => {
     await measurePanelNarrow(context);
+    await expectFlame(context);
   },
 };
 
