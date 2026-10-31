@@ -1,0 +1,111 @@
+@use '@/styles/mixins' as *;
+
+.root {
+  @include pressable;
+
+  // One step of the zigzag. Narrow screens use a small step, so the widest
+  // offset (two steps each side) still fits.
+  --path-node-step: 1.25rem;
+
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 4.5rem;
+  height: 4.5rem;
+  padding: 0;
+  font-size: var(--font-size-xl);
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+  border: 0.25rem solid transparent;
+  border-radius: 50%;
+
+  // `translate` carries the offset, so the pulse (`scale`) and the pressed
+  // state (`transform`) never fight over the same property.
+  translate: calc(var(--path-node-offset, 0) * var(--path-node-step)) 0;
+
+  @include bp(sm) {
+    --path-node-step: 2.5rem;
+  }
+}
+
+// Completed: solid disc with a check mark.
+.completed {
+  color: var(--color-on-primary);
+  background-color: var(--color-success);
+}
+
+// Recommended: larger, ringed, with a play icon and a bubble.
+.recommended {
+  width: 5.5rem;
+  height: 5.5rem;
+  color: var(--color-on-primary);
+  background-color: var(--color-primary);
+  border-color: var(--color-primary-soft);
+  box-shadow: 0 0 0 0.25rem var(--color-primary);
+  animation: pulse 1.6s ease-in-out infinite;
+
+  &:hover,
+  &:active {
+    animation: none;
+  }
+}
+
+// Available: neutral outlined disc.
+.available {
+  color: var(--color-text);
+  background-color: var(--color-surface);
+  border-color: var(--color-border);
+
+  &:hover {
+    background-color: var(--color-primary-soft);
+  }
+}
+
+.number {
+  line-height: 1;
+}
+
+.bubble {
+  position: absolute;
+  bottom: calc(100% + var(--space-3));
+  left: 50%;
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  letter-spacing: 0.04em;
+  color: var(--color-primary);
+  pointer-events: none;
+  background-color: var(--color-bg);
+  border: 0.125rem solid var(--color-border);
+  border-radius: var(--radius-lg);
+  translate: -50% 0;
+
+  // Little tail pointing at the node.
+  &::after {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    width: 0.5rem;
+    height: 0.5rem;
+    content: '';
+    background-color: var(--color-bg);
+    border-right: 0.125rem solid var(--color-border);
+    border-bottom: 0.125rem solid var(--color-border);
+    translate: -50% -50%;
+    rotate: 45deg;
+  }
+}
+
+@keyframes pulse {
+  50% {
+    scale: 1.06;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .recommended {
+    animation: none;
+  }
+}
