@@ -1,0 +1,96 @@
+@use '@/styles/mixins' as *;
+
+.root {
+  box-sizing: border-box;
+  width: 100%;
+  overflow: hidden;
+  background-color: var(--color-bg);
+  border-block-start: 0.125rem solid var(--color-border);
+}
+
+.announcer {
+  @include visually-hidden;
+}
+
+.actions {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-5);
+}
+
+.panel {
+  --panel-accent: var(--color-success);
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  align-items: stretch;
+  padding: var(--space-4) var(--space-5);
+  color: var(--color-text);
+  background-color: color-mix(in srgb, var(--panel-accent) 14%, var(--color-bg));
+  border-block-start: 0.375rem solid var(--panel-accent);
+  animation: slide-up var(--duration-slow) var(--easing-standard) both;
+
+  @include bp(md) {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.correct {
+  --panel-accent: var(--color-success);
+}
+
+.wrong {
+  --panel-accent: var(--color-danger);
+}
+
+.icon {
+  flex-shrink: 0;
+  color: var(--panel-accent);
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+// Text stays the plain text colour (contrast against the tinted panel is well above 4.5:1);
+// the accent border, the icon and the wording carry the state, never colour alone.
+.title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+  line-height: var(--line-height-tight);
+}
+
+.word {
+  margin: 0;
+  font-size: var(--font-size-md);
+  line-height: var(--line-height-normal);
+  overflow-wrap: anywhere;
+}
+
+.continue {
+  @include bp(md) {
+    min-width: 12rem;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel {
+    animation: none;
+  }
+}
