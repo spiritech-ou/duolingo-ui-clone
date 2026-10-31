@@ -118,6 +118,7 @@ export function LearnPage() {
     resetArrivalMemory();
     clearSession();
     resetCourse();
+    void navigate('/login', { replace: true });
   };
 
   // Empty -> Loading on Reload. A cached empty course would keep `useCourse` in `success`, so the

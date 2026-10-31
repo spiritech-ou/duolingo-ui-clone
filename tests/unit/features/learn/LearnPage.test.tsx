@@ -31,6 +31,7 @@ function renderLearn() {
     [
       { path: '/learn', element: <LearnPage /> },
       { path: '/lesson/:lessonId', element: <LessonStub /> },
+      { path: '/login', element: <LessonStub /> },
     ],
     { initialEntries: ['/learn'] },
   );
@@ -192,6 +193,7 @@ describe('LearnPage', () => {
     await userEvent.click(screen.getByRole('button', { name: 'Log out' }));
     expect(useSessionStore.getState().session).toBeNull();
     expect(useCourseStore.getState().course).toBeNull();
+    expect(await screen.findByText('At /login')).toBeInTheDocument();
   });
 
   it('log out forgets where the user left the path', async () => {

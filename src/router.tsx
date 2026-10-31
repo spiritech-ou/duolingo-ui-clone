@@ -77,6 +77,13 @@ export const router = createBrowserRouter([
           return { Component: LearnPage };
         },
       },
+      {
+        path: 'login',
+        lazy: async () => {
+          const { LoginPage } = await import('@/features/auth');
+          return { Component: LoginPage };
+        },
+      },
       { path: '*', element: <NotFound /> },
     ],
   },
