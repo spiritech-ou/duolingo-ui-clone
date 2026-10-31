@@ -16,7 +16,7 @@ export interface ExerciseTopBarProps extends Omit<ComponentPropsWithoutRef<'head
   maxHearts?: number;
   /** Called when the close button is pressed. */
   onClose: () => void;
-  /** Optional control after the hearts, for example the sound-unavailable icon. */
+  /** Optional control between the progress bar and the hearts, for example the sound-unavailable icon. */
   trailing?: ReactNode;
 }
 
@@ -36,12 +36,12 @@ export function ExerciseTopBar({
       <div className={styles['progress']}>
         <ProgressBar value={progress} max={total} />
       </div>
-      {maxHearts === undefined ? (
-        <HeartsCounter value={hearts} />
-      ) : (
-        <HeartsCounter value={hearts} max={maxHearts} />
-      )}
       {trailing ? <div className={styles['trailing']}>{trailing}</div> : null}
+      {maxHearts === undefined ? (
+        <HeartsCounter value={hearts} className={styles['hearts'] ?? ''} />
+      ) : (
+        <HeartsCounter value={hearts} max={maxHearts} className={styles['hearts'] ?? ''} />
+      )}
     </header>
   );
 }

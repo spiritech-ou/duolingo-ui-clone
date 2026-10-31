@@ -2,7 +2,9 @@
   position: relative;
   overflow: hidden;
   width: 100%;
-  height: 0.75rem;
+
+  // 22px, the bar height measured in the exercise reference.
+  height: 1.375rem;
   border-radius: var(--radius-lg);
   background-color: var(--color-primary-soft);
   box-shadow: inset 0 0 0 1px var(--color-border);

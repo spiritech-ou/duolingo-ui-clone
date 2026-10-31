@@ -56,6 +56,15 @@ export const Full: Story = {
   },
 };
 
+export const Dimensions: Story = {
+  play: async ({ canvas }) => {
+    const bar = canvas.getByRole('progressbar', { name: 'Lesson progress' });
+    // 22px high with fully rounded ends (radius at least half the height).
+    await expect(bar.getBoundingClientRect().height).toBeCloseTo(22, 0);
+    await expect(parseFloat(getComputedStyle(bar).borderTopLeftRadius)).toBeGreaterThanOrEqual(11);
+  },
+};
+
 export const CustomLabel: Story = {
   args: { label: 'Practice progress' },
   play: async ({ canvas }) => {
