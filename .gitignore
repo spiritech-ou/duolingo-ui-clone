@@ -9,3 +9,5 @@ mcp/.env
 .playwright-mcp/
 .DS_Store
 *.log
+# Vercel CLI link and build output (`vercel link`, `vercel pull`, `vercel build`); holds orgId and projectId, written per machine
+/.vercel/
