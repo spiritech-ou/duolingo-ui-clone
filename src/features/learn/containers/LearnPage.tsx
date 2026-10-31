@@ -133,42 +133,46 @@ export function LearnPage() {
       <PathTopBar hearts={profile.hearts} onLogOut={handleLogOut} />
       {view === 'loading' && <PathSkeleton />}
       {view === 'error' && state.status === 'error' && (
-        <StatusScreen
-          key="error"
-          variant="error"
-          mood="sad"
-          title={LOAD_ERROR_TITLE}
-          message={getLoadErrorMessage(state.error.kind)}
-          className={styles['state']}
-          titleRef={titleRef}
-          firstActionRef={firstActionRef}
-          actions={<Button onClick={retry}>Try again</Button>}
-        />
+        <div className={styles['state']}>
+          <StatusScreen
+            key="error"
+            variant="error"
+            mood="sad"
+            title={LOAD_ERROR_TITLE}
+            message={getLoadErrorMessage(state.error.kind)}
+            titleRef={titleRef}
+            firstActionRef={firstActionRef}
+            actions={<Button onClick={retry}>Try again</Button>}
+          />
+        </div>
       )}
       {view === 'empty' && (
-        <StatusScreen
-          key="empty"
-          variant="empty"
-          title="No lessons yet"
-          message="Check back soon."
-          className={styles['state']}
-          titleRef={titleRef}
-          firstActionRef={firstActionRef}
-          actions={<Button onClick={handleReload}>Reload</Button>}
-        />
+        <div className={styles['state']}>
+          <StatusScreen
+            key="empty"
+            variant="empty"
+            title="No lessons yet"
+            message="Check back soon."
+            titleRef={titleRef}
+            firstActionRef={firstActionRef}
+            actions={<Button onClick={handleReload}>Reload</Button>}
+          />
+        </div>
       )}
       {view === 'ready' && course && nodeStates && (
         <>
           <h1 className={styles['heading']}>Learning path</h1>
           {showPlacementNote && (
-            <Notice
-              variant="info"
-              role="status"
-              actionLabel="Got it"
-              onAction={handleDismissNote}
-            >
-              {noteText}
-            </Notice>
+            <div className={styles['note']}>
+              <Notice
+                variant="info"
+                role="status"
+                actionLabel="Got it"
+                onAction={handleDismissNote}
+              >
+                {noteText}
+              </Notice>
+            </div>
           )}
           <nav ref={navRef} aria-label="Learning path">
             <ul className={styles['units']}>

@@ -1,13 +1,17 @@
 @use '@/styles/mixins' as *;
 
-// The page wrapper is the sticky top bar's containing block: it spans the whole path, and no
-// ancestor clips overflow, so the bar stays at the top of the viewport while the path scrolls.
+// The one centred column of the path (learning-path.md, Layout): 640px max, 100% wide, centred.
+// The side gutters (16px on mobile, wider than 24px by 768px on tablet, where the column is
+// centred in the window) come from the header layout's <main>. The top bar, the placement note,
+// the path, the skeleton and the finished card all fill this column.
+// The wrapper is the sticky top bar's containing block: it spans the whole path, and no ancestor
+// clips overflow, so the bar stays at the top of the viewport while the path scrolls.
 .page {
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
   width: 100%;
-  max-width: 36rem;
+  max-width: 40rem;
   margin-inline: auto;
 }
 
@@ -15,17 +19,33 @@
   @include visually-hidden;
 }
 
+// Placement note: 16px below it. The page gap is 24px, so the wrapper pulls the next block up by 8px.
+.note {
+  margin-block-end: calc(var(--space-4) - var(--space-5));
+}
+
+// Units sit flush: each UnitSection ends with 32px of its own, which is the space between a
+// unit's last node and the next banner.
 .units {
   display: flex;
   flex-direction: column;
-  gap: var(--space-8);
   padding: 0;
   margin: 0;
   list-style: none;
 }
 
+// State screens (empty, load error): StatusScreen is the 480px column with its own 48px / 96px
+// top offset and 16px mobile gutters (data-loading-states.md, Layout). Inside this page they sit
+// below the top bar, and two values double up with the page: the 24px page gap above and, on
+// mobile, the 16px gutter of <main>. The negative margins cancel them, so the mascot starts 96px
+// (48px on mobile) below the top bar and the column is 358px wide at 390.
 .state {
-  padding-block: var(--space-6);
+  margin-block-start: calc(-1 * var(--space-5));
+  margin-inline: calc(-1 * var(--space-4));
+
+  @include bp(md) {
+    margin-inline: 0;
+  }
 }
 
 // Newly recommended node after a completed lesson: one scale-in and a short ring highlight, then
