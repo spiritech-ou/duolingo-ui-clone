@@ -2,3 +2,78 @@
   flex-shrink: 0;
   object-fit: contain;
 }
+
+// Moods are static transforms plus a tone change on the one flame artwork, so
+// they stay visible when motion is turned off. Individual transform properties
+// (`rotate`, `translate`, `scale`) compose with the `transform` used by the
+// bob and bounce animations.
+.sad {
+  rotate: -8deg;
+  translate: 0 4%;
+  filter: saturate(0.55) brightness(0.8);
+  transform-origin: 50% 90%;
+}
+
+.celebrating {
+  translate: 0 -6%;
+  scale: 1.06;
+  animation: scale-in var(--duration-slow) var(--easing-emphasized) both;
+}
+
+.isBobbing {
+  animation: bob calc(var(--duration-slow) * 6) ease-in-out infinite;
+}
+
+.isBouncing {
+  animation: bounce calc(var(--duration-slow) * 1.5) var(--easing-emphasized) 1;
+}
+
+.celebrating.isBobbing {
+  animation:
+    scale-in var(--duration-slow) var(--easing-emphasized) both,
+    bob calc(var(--duration-slow) * 6) ease-in-out infinite;
+}
+
+.celebrating.isBouncing {
+  animation: bounce calc(var(--duration-slow) * 1.5) var(--easing-emphasized) 1;
+}
+
+.isBobbing.isBouncing {
+  animation:
+    bob calc(var(--duration-slow) * 6) ease-in-out infinite,
+    bounce calc(var(--duration-slow) * 1.5) var(--easing-emphasized) 1;
+}
+
+@keyframes bob {
+  50% {
+    transform: translateY(-4%);
+  }
+}
+
+@keyframes bounce {
+  30% {
+    transform: translateY(-18%) scale(1.04);
+  }
+
+  60% {
+    transform: translateY(0) scale(1.02, 0.96);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    scale: 0.4;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .celebrating,
+  .isBobbing,
+  .isBouncing,
+  .celebrating.isBobbing,
+  .celebrating.isBouncing,
+  .isBobbing.isBouncing {
+    animation: none;
+  }
+}
