@@ -3,6 +3,9 @@ import clsx from 'clsx';
 import { Mascot } from '@/components/ui/Mascot';
 import styles from './SpeechBubble.module.scss';
 
+/** Intrinsic size of the mascot image: the largest rendered size; the stylesheet scales it down. */
+const MASCOT_SIZE = 110;
+
 export type SpeechBubbleRole = 'status' | 'heading';
 export type SpeechBubbleHeadingLevel = 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -61,7 +64,10 @@ export function SpeechBubble({
       tabIndex={undefined}
     >
       {/* Decorative: the bubble text carries the meaning. */}
-      <Mascot size={96} {...(bounceKey !== undefined ? { bounceKey } : {})} />
+      {/* The wrapper sets the rendered size (96px, 110px on wide screens); the image fills it. */}
+      <span className={styles['mascot']}>
+        <Mascot size={MASCOT_SIZE} {...(bounceKey !== undefined ? { bounceKey } : {})} />
+      </span>
       {isHeading ? (
         // tabIndex -1 lets a container move focus here (for example on arrival) without
         // adding a tab stop.

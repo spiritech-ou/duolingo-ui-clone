@@ -8,12 +8,36 @@
   width: 100%;
 }
 
+// Mascot: 96px on tablet and mobile, 110px from the xl breakpoint (desktop).
+.mascot {
+  display: inline-flex;
+  flex-shrink: 0;
+  inline-size: 6rem;
+  block-size: 6rem;
+
+  @include bp(xl) {
+    inline-size: 6.875rem;
+    block-size: 6.875rem;
+  }
+
+  > img {
+    inline-size: 100%;
+    block-size: 100%;
+  }
+}
+
+// Bubble: sized by its text, at least 400px wide from the md breakpoint and 68px high,
+// and it shrinks and wraps its text instead of leaving the row on narrow screens.
 .bubble {
   position: relative;
+  display: flex;
+  flex: 0 1 auto;
+  align-items: center;
   box-sizing: border-box;
-  min-width: 0;
+  min-inline-size: 0;
+  min-block-size: 4.25rem;
   margin: 0;
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-3) var(--space-5);
   font-size: var(--font-size-lg);
   font-weight: var(--font-weight-regular);
   line-height: var(--line-height-normal);
@@ -22,6 +46,12 @@
   border: 0.125rem solid var(--color-border);
   border-radius: var(--radius-lg);
   overflow-wrap: anywhere;
+
+  // From the md breakpoint: larger text, so the step-2 prompt reaches about 450px.
+  @include bp(md) {
+    min-inline-size: 25rem;
+    font-size: var(--font-size-xl);
+  }
 
   // The tail points at the mascot: a rotated square sharing the bubble's border and fill.
   &::before {
@@ -44,6 +74,7 @@
 
 .text {
   display: inline-block;
+  min-inline-size: 0;
   animation: fade-in var(--duration-normal) var(--easing-standard) both;
 }
 

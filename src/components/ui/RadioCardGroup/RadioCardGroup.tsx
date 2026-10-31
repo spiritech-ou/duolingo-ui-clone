@@ -14,10 +14,17 @@ export interface RadioCardOption {
   icon?: ReactNode;
 }
 
+export type RadioCardGroupSize = 'md' | 'lg';
+
 export type RadioCardGroupProps = Omit<
   ComponentPropsWithoutRef<'div'>,
   'children' | 'role' | 'onChange' | 'aria-label' | 'aria-labelledby'
 > & {
+  /**
+   * `md`: compact rows (about 80px high, small icon beside the label), for a list of levels.
+   * `lg`: large cards (about 175px high, 80px icon with a title and description beside it).
+   */
+  size?: RadioCardGroupSize;
   /** Accessible name of the group. Give this or `aria-labelledby`. */
   label?: string;
   /** Id of the element that names the group (for example the bubble heading). */
@@ -35,6 +42,7 @@ export function RadioCardGroup({
   value,
   onChange,
   onActivate,
+  size = 'md',
   label,
   'aria-labelledby': labelledBy,
   className,
@@ -52,7 +60,7 @@ export function RadioCardGroup({
   return (
     <div
       {...rest}
-      className={clsx(styles['root'], className)}
+      className={clsx(styles['root'], styles[size], className)}
       // Set after the rest props so they can never override the group semantics.
       role="radiogroup"
       aria-label={label || undefined}

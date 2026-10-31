@@ -1,10 +1,21 @@
 @use '@/styles/mixins' as *;
 
+// Cards fill the column and never exceed it. Sizes (the `size` prop, mobile first):
+//   md  rows: 64px high and 12px apart, from the md breakpoint 80px high and 24px apart.
+//   lg  cards: 112px high with a 64px icon, from the md breakpoint 175px high with an 80px icon
+//       and 24px between cards.
 .root {
   display: flex;
   flex-direction: column;
   gap: var(--space-3);
+  box-sizing: border-box;
   inline-size: 100%;
+  max-inline-size: 100%;
+  min-inline-size: 0;
+
+  @include bp(md) {
+    gap: var(--space-5);
+  }
 }
 
 .card {
@@ -12,6 +23,9 @@
   display: flex;
   gap: var(--space-4);
   align-items: center;
+  box-sizing: border-box;
+  min-inline-size: 0;
+  max-inline-size: 100%;
   padding: var(--space-4);
   color: var(--color-text);
   cursor: pointer;
@@ -36,6 +50,24 @@
   }
 }
 
+.md .card {
+  min-block-size: 4rem;
+
+  @include bp(md) {
+    min-block-size: 5rem;
+  }
+}
+
+.lg .card {
+  min-block-size: 7rem;
+
+  @include bp(md) {
+    gap: var(--space-5);
+    min-block-size: 10.9375rem;
+    padding: var(--space-5);
+  }
+}
+
 .isSelected {
   color: var(--color-primary);
   background-color: var(--color-primary-soft);
@@ -51,12 +83,27 @@
   flex-shrink: 0;
 }
 
+// The large icon slot has a fixed square size; what is inside is centred and kept within it.
+.lg .icon {
+  align-items: center;
+  justify-content: center;
+  inline-size: 4rem;
+  block-size: 4rem;
+  overflow: hidden;
+
+  @include bp(md) {
+    inline-size: 5rem;
+    block-size: 5rem;
+  }
+}
+
 .text {
   display: flex;
   flex: 1;
   flex-direction: column;
   gap: var(--space-1);
   min-inline-size: 0;
+  overflow-wrap: anywhere;
 }
 
 .label {
@@ -64,9 +111,17 @@
   font-weight: var(--font-weight-bold);
 }
 
+.lg .label {
+  font-size: var(--font-size-lg);
+}
+
 .description {
   font-size: var(--font-size-sm);
   color: var(--color-text-muted);
+}
+
+.lg .description {
+  font-size: var(--font-size-md);
 }
 
 .check {

@@ -12,7 +12,7 @@ const meta = {
   },
   decorators: [
     (Story) => (
-      <div style={{ maxWidth: '36rem' }}>
+      <div style={{ maxWidth: '60rem' }}>
         <Story />
       </div>
     ),
@@ -166,6 +166,104 @@ export const LongText: Story = {
     const heading = canvas.getByRole('heading', { level: 1 });
     await expect(heading).toBeVisible();
     await expect(heading.scrollWidth).toBeLessThanOrEqual(heading.clientWidth);
+    await expect(canvasElement.scrollWidth).toBeLessThanOrEqual(canvasElement.clientWidth);
+  },
+};
+
+const VIEWPORTS = {
+  wide: { name: 'Wide 1280', styles: { width: '1280px', height: '800px' }, type: 'desktop' },
+  phone: { name: 'Phone 390', styles: { width: '390px', height: '844px' }, type: 'mobile' },
+} as const;
+
+const STEP_TWO_PROMPT = "Now let's find the best place to start!";
+
+/** Layout sizes in px of the mascot image and the bubble, and the row that holds them. */
+function measure(canvasElement: HTMLElement, bubble: HTMLElement) {
+  const img = canvasElement.querySelector('img');
+  const row = bubble.parentElement;
+  if (!img || !row) throw new Error('mascot or row missing');
+  return {
+    mascot: { width: img.offsetWidth, height: img.offsetHeight },
+    bubble: { width: bubble.offsetWidth, height: bubble.offsetHeight },
+    mascotBox: img.getBoundingClientRect(),
+    bubbleBox: bubble.getBoundingClientRect(),
+    row,
+  };
+}
+
+export const SizesWide: Story = {
+  parameters: { viewport: { options: VIEWPORTS } },
+  globals: { viewport: { value: 'wide', isRotated: false } },
+  args: { role: 'heading' },
+  play: async ({ canvas, canvasElement }) => {
+    await expect(window.innerWidth).toBeGreaterThanOrEqual(1280);
+    const m = measure(canvasElement, canvas.getByRole('heading', { level: 1 }));
+    // Desktop: mascot 110px, bubble about 400px wide (sized to the text, 400px at least) and 68px high.
+    await expect(m.mascot).toEqual({ width: 110, height: 110 });
+    await expect(m.bubble.width).toBeGreaterThanOrEqual(400);
+    await expect(m.bubble.width).toBeLessThanOrEqual(420);
+    await expect(m.bubble.height).toBeGreaterThanOrEqual(68);
+    await expect(m.bubble.height).toBeLessThanOrEqual(72);
+    // Beside the mascot, on one line, vertically centred on it.
+    await expect(m.bubbleBox.left).toBeGreaterThanOrEqual(m.mascotBox.right);
+    await expect(
+      Math.abs(m.bubbleBox.top + m.bubbleBox.height / 2 - (m.mascotBox.top + m.mascotBox.height / 2)),
+    ).toBeLessThanOrEqual(1);
+    await expect(m.row.scrollWidth).toBeLessThanOrEqual(m.row.clientWidth);
+  },
+};
+
+export const SizesWideStepTwoText: Story = {
+  ...SizesWide,
+  args: { role: 'heading', message: STEP_TWO_PROMPT },
+  play: async ({ canvas, canvasElement }) => {
+    const m = measure(canvasElement, canvas.getByRole('heading', { level: 1 }));
+    // The longer step-2 text widens the bubble to about 450px, still on one line of 68px.
+    await expect(m.mascot).toEqual({ width: 110, height: 110 });
+    await expect(m.bubble.width).toBeGreaterThanOrEqual(430);
+    await expect(m.bubble.width).toBeLessThanOrEqual(470);
+    await expect(m.bubble.height).toBeLessThanOrEqual(72);
+  },
+};
+
+export const SizesTablet: Story = {
+  parameters: {
+    viewport: {
+      options: {
+        tablet: { name: 'Tablet 768', styles: { width: '768px', height: '1024px' }, type: 'tablet' },
+      },
+    },
+  },
+  globals: { viewport: { value: 'tablet', isRotated: false } },
+  args: { role: 'heading' },
+  play: async ({ canvas, canvasElement }) => {
+    await expect(window.innerWidth).toBe(768);
+    const m = measure(canvasElement, canvas.getByRole('heading', { level: 1 }));
+    // Tablet: mascot 96px, bubble still at least 400px, side by side.
+    await expect(m.mascot).toEqual({ width: 96, height: 96 });
+    await expect(m.bubble.width).toBeGreaterThanOrEqual(400);
+    await expect(m.bubble.height).toBeLessThanOrEqual(72);
+    await expect(m.bubbleBox.left).toBeGreaterThanOrEqual(m.mascotBox.right);
+  },
+};
+
+export const SizesPhone: Story = {
+  parameters: { viewport: { options: VIEWPORTS } },
+  globals: { viewport: { value: 'phone', isRotated: false } },
+  args: { role: 'heading', message: STEP_TWO_PROMPT },
+  play: async ({ canvas, canvasElement }) => {
+    await expect(window.innerWidth).toBe(390);
+    const bubble = canvas.getByRole('heading', { level: 1 });
+    const m = measure(canvasElement, bubble);
+    // Mobile: mascot 96px, the bubble sits beside it on one row and shrinks to what is left of the
+    // screen; its text wraps to more lines inside it, so the bubble is taller than 68px.
+    await expect(m.mascot).toEqual({ width: 96, height: 96 });
+    await expect(m.bubble.height).toBeGreaterThanOrEqual(68);
+    await expect(m.bubbleBox.left).toBeGreaterThanOrEqual(m.mascotBox.right);
+    await expect(Math.abs(m.bubbleBox.top - m.mascotBox.top)).toBeLessThan(m.mascot.height);
+    await expect(m.bubbleBox.right).toBeLessThanOrEqual(window.innerWidth);
+    await expect(m.row.scrollWidth).toBeLessThanOrEqual(m.row.clientWidth);
+    await expect(bubble.scrollWidth).toBeLessThanOrEqual(bubble.clientWidth);
     await expect(canvasElement.scrollWidth).toBeLessThanOrEqual(canvasElement.clientWidth);
   },
 };
