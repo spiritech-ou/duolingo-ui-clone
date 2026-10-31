@@ -5,9 +5,11 @@ on:
     branches: [main]
   pull_request:
 
+# Newer pull request runs cancel older ones. Runs on main are never cancelled,
+# because they may be deploying to production.
 concurrency:
-  group: ci-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 permissions:
   contents: read
@@ -42,6 +44,27 @@ jobs:
       - run: npm run test
       - run: npm run test:storybook
       - run: npm run build
+      - name: Upload test artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: |
+            test-results/
+            playwright-report/
+          if-no-files-found: ignore
+          retention-days: 7
+
+  deploy:
+    name: deploy
+    # Vercel preview (same-repository pull requests) and production (main).
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    needs: check
+    permissions:
+      contents: read
+      pull-requests: write
+    uses: ./.github/workflows/deploy.yml
+    secrets: inherit
 
   storybook:
     name: storybook
@@ -66,6 +89,7 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
+      - uses: actions/configure-pages@v5
       - run: npm run build-storybook
       - uses: actions/upload-pages-artifact@v3
         with:
@@ -75,20 +99,24 @@ jobs:
 
   chromatic:
     name: chromatic
+    # Same-repository events only (forks have no secrets), after the check job.
+    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
+    needs: check
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    env:
-      CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
     steps:
       - name: Check for Chromatic token
         id: token
+        env:
+          CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
         run: |
           if [ -n "$CHROMATIC_PROJECT_TOKEN" ]; then
             echo "present=true" >> "$GITHUB_OUTPUT"
           else
-            echo "CHROMATIC_PROJECT_TOKEN is not set, skipping Chromatic."
             echo "present=false" >> "$GITHUB_OUTPUT"
+            echo "Skipped: CHROMATIC_PROJECT_TOKEN is not set, so the Chromatic visual review did not run (see README, Enable Chromatic)." >> "$GITHUB_STEP_SUMMARY"
           fi
+      # Chromatic finds baselines through git history, so it needs the full clone.
       - uses: actions/checkout@v4
         if: steps.token.outputs.present == 'true'
         with:
@@ -104,3 +132,10 @@ jobs:
         if: steps.token.outputs.present == 'true'
         with:
           projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+          buildScriptName: build-storybook
+          # The job stays green; the Chromatic status check on the pull request
+          # carries the review state until a reviewer accepts the changes.
+          exitZeroOnChanges: true
+          # Merged changes were reviewed on the pull request, so builds on main
+          # become the accepted baseline. Pull requests are never auto accepted.
+          autoAcceptChanges: main
