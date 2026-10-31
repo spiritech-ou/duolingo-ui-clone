@@ -1,0 +1,32 @@
+@use '@/styles/mixins' as *;
+
+// Layout only: places the StatusScreen column of the load, error and end screens inside
+// FocusedLayout (data-loading-states.md and exercise-session.md, Layout).
+// FocusedLayout's content region already adds 24px of top padding and the side gutter of its
+// own (16px on mobile), and StatusScreen includes the same offsets in its 96px/48px top and its
+// 16px mobile gutters. The negative margins cancel the doubled values, so the block starts 96px
+// (48px on mobile) below the top and the column fills the width minus one 16px gutter (358px at 390).
+.column {
+  margin-block-start: calc(-1 * var(--space-5));
+  margin-inline: calc(-1 * var(--space-4));
+
+  @include bp(md) {
+    margin-inline: 0;
+  }
+}
+
+// The loading screen's close button sits in FocusedLayout's header slot, about 24px from the
+// top-left corner of the window. The slot keeps the button's height on every load screen (it is
+// empty after loading), so the centred column does not move between loading, error and empty.
+// The header strip itself adds 12px above and 16px (mobile) or 24px (md and up) at the left.
+.headerSlot {
+  display: flex;
+  align-items: center;
+  min-height: 2.75rem;
+  margin-block-start: var(--space-3);
+  margin-inline-start: var(--space-2);
+
+  @include bp(md) {
+    margin-inline-start: 0;
+  }
+}

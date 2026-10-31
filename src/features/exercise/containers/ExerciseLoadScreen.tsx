@@ -6,6 +6,7 @@ import { IconButton } from '@/components/ui/IconButton';
 import { StatusScreen } from '@/components/ui/StatusScreen';
 import { getLoadScreenCopy, type LoadScreenKind } from '../logic/loadStates';
 import type { SessionMode } from '../logic/sessionTypes';
+import styles from './StateScreen.module.scss';
 
 export interface ExerciseLoadScreenProps {
   kind: LoadScreenKind;
@@ -39,35 +40,41 @@ export function ExerciseLoadScreen({ kind, mode, error, onRetry, onLeave }: Exer
   );
 
   return (
+    // 480px column. The header slot is rendered for every kind, empty after loading, with the
+    // same height, so the column keeps its place when the screen changes from loading to error.
     <FocusedLayout
+      headerMaxWidth="100%"
+      contentMaxWidth="30rem"
       header={
-        kind === 'loading' ? (
-          <IconButton icon="close" label="Close" onClick={onLeave} />
-        ) : undefined
+        <div className={styles['headerSlot']}>
+          {kind === 'loading' ? <IconButton icon="close" label="Close" onClick={onLeave} /> : null}
+        </div>
       }
     >
-      <StatusScreen
-        key={kind}
-        variant={kind === 'loading' ? 'loading' : kind === 'error' ? 'error' : 'empty'}
-        mood={kind === 'loading' ? 'default' : 'sad'}
-        title={copy.title}
-        {...(copy.message ? { message: copy.message } : {})}
-        titleRef={titleRef}
-        firstActionRef={firstActionRef}
-        {...(kind === 'loading'
-          ? {}
-          : {
-              actions:
-                kind === 'error' ? (
-                  <>
-                    <Button onClick={onRetry}>Try again</Button>
-                    {backButton}
-                  </>
-                ) : (
-                  backButton
-                ),
-            })}
-      />
+      <div className={styles['column']}>
+        <StatusScreen
+          key={kind}
+          variant={kind === 'loading' ? 'loading' : kind === 'error' ? 'error' : 'empty'}
+          mood={kind === 'loading' ? 'default' : 'sad'}
+          title={copy.title}
+          {...(copy.message ? { message: copy.message } : {})}
+          titleRef={titleRef}
+          firstActionRef={firstActionRef}
+          {...(kind === 'loading'
+            ? {}
+            : {
+                actions:
+                  kind === 'error' ? (
+                    <>
+                      <Button onClick={onRetry}>Try again</Button>
+                      {backButton}
+                    </>
+                  ) : (
+                    backButton
+                  ),
+              })}
+        />
+      </div>
     </FocusedLayout>
   );
 }

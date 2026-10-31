@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/Button';
 import { FocusedLayout } from '@/components/ui/FocusedLayout';
 import { StatusScreen } from '@/components/ui/StatusScreen';
+import styles from './StateScreen.module.scss';
 import { useEndScreenShortcut } from './useEndScreenShortcut';
 
 export interface OutOfHeartsScreenProps {
@@ -20,22 +21,25 @@ export function OutOfHeartsScreen({ onPractice, onQuit }: OutOfHeartsScreenProps
   useEndScreenShortcut('outOfHearts', onPractice);
 
   return (
-    <FocusedLayout>
-      <StatusScreen
-        variant="info"
-        mood="sad"
-        title="You're out of hearts"
-        message="Practice to earn a heart, or come back later."
-        titleRef={titleRef}
-        actions={
-          <>
-            <Button onClick={onPractice}>Practice to earn a heart</Button>
-            <Button variant="secondary" onClick={onQuit}>
-              Quit lesson
-            </Button>
-          </>
-        }
-      />
+    <FocusedLayout contentMaxWidth="30rem">
+      <div className={styles['column']}>
+        <StatusScreen
+          variant="info"
+          mascotSize={160}
+          mood="sad"
+          title="You're out of hearts"
+          message="Practice to earn a heart, or come back later."
+          titleRef={titleRef}
+          actions={
+            <>
+              <Button onClick={onPractice}>Practice to earn a heart</Button>
+              <Button variant="secondary" onClick={onQuit}>
+                Quit lesson
+              </Button>
+            </>
+          }
+        />
+      </div>
     </FocusedLayout>
   );
 }

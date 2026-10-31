@@ -5,6 +5,7 @@ import { LessonStats } from '@/components/ui/LessonStats';
 import { StatusScreen } from '@/components/ui/StatusScreen';
 import { formatElapsed } from '../logic/sessionStats';
 import type { LessonCompleteStats } from './ExerciseSession';
+import styles from './StateScreen.module.scss';
 import { useEndScreenShortcut } from './useEndScreenShortcut';
 
 export interface LessonOverScreenProps {
@@ -21,23 +22,26 @@ export function LessonOverScreen({ stats, onContinue }: LessonOverScreenProps) {
   useEndScreenShortcut('lessonOver', onContinue);
 
   return (
-    <FocusedLayout>
-      <StatusScreen
-        variant="info"
-        mood="celebrating"
-        title={stats.isPerfect ? 'Perfect lesson!' : 'Lesson complete!'}
-        titleRef={titleRef}
-        actions={<Button onClick={onContinue}>Continue</Button>}
-      >
-        <LessonStats
-          aria-label="Lesson results"
-          items={[
-            { label: 'XP', value: `+${stats.xp}` },
-            { label: 'Accuracy', value: `${stats.accuracy}%` },
-            { label: 'Time', value: formatElapsed(stats.elapsedMs) },
-          ]}
-        />
-      </StatusScreen>
+    <FocusedLayout contentMaxWidth="30rem">
+      <div className={styles['column']}>
+        <StatusScreen
+          variant="info"
+          mascotSize={160}
+          mood="celebrating"
+          title={stats.isPerfect ? 'Perfect lesson!' : 'Lesson complete!'}
+          titleRef={titleRef}
+          actions={<Button onClick={onContinue}>Continue</Button>}
+        >
+          <LessonStats
+            aria-label="Lesson results"
+            items={[
+              { label: 'XP', value: `+${stats.xp}` },
+              { label: 'Accuracy', value: `${stats.accuracy}%` },
+              { label: 'Time', value: formatElapsed(stats.elapsedMs) },
+            ]}
+          />
+        </StatusScreen>
+      </div>
     </FocusedLayout>
   );
 }

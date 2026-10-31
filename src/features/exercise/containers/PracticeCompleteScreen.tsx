@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/Button';
 import { FocusedLayout } from '@/components/ui/FocusedLayout';
 import { HeartsCounter } from '@/components/ui/HeartsCounter';
 import { StatusScreen } from '@/components/ui/StatusScreen';
+import styles from './StateScreen.module.scss';
 import { useEndScreenShortcut } from './useEndScreenShortcut';
 
 export interface PracticeCompleteScreenProps {
@@ -20,17 +21,20 @@ export function PracticeCompleteScreen({ hearts, onContinue }: PracticeCompleteS
   useEndScreenShortcut('practiceComplete', onContinue);
 
   return (
-    <FocusedLayout>
-      <StatusScreen
-        variant="info"
-        mood="celebrating"
-        title="Practice complete!"
-        message="+1 heart"
-        titleRef={titleRef}
-        actions={<Button onClick={onContinue}>Continue</Button>}
-      >
-        <HeartsCounter value={hearts} />
-      </StatusScreen>
+    <FocusedLayout contentMaxWidth="30rem">
+      <div className={styles['column']}>
+        <StatusScreen
+          variant="info"
+          mascotSize={160}
+          mood="celebrating"
+          title="Practice complete!"
+          message="+1 heart"
+          titleRef={titleRef}
+          actions={<Button onClick={onContinue}>Continue</Button>}
+        >
+          <HeartsCounter value={hearts} />
+        </StatusScreen>
+      </div>
     </FocusedLayout>
   );
 }
