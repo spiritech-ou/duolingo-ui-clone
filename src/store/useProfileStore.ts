@@ -80,7 +80,8 @@ const storage: PersistStorage<PersistedProfiles> | undefined = jsonStorage && {
   },
 };
 
-const clampHearts = (n: number): number => Math.min(MAX_HEARTS, Math.max(0, n));
+/** Keeps a heart count within 0 and MAX_HEARTS. */
+export const clampHearts = (n: number): number => Math.min(MAX_HEARTS, Math.max(0, n));
 
 export const useProfileStore = create<ProfileState>()(
   persist(

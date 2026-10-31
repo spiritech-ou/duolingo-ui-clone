@@ -36,6 +36,13 @@ const storage: PersistStorage<PersistedSession> | undefined = jsonStorage && {
   },
 };
 
+/** Current user id while signed out; never a real id. */
+export const NO_USER_ID = '';
+
+/** Narrow selector for the current user id: `useSessionStore(selectCurrentUserId)`. */
+export const selectCurrentUserId = (state: Pick<SessionState, 'session'>): string =>
+  state.session?.user.id ?? NO_USER_ID;
+
 export const useSessionStore = create<SessionState>()(
   persist(
     (set) => ({

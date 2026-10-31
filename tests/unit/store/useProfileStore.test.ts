@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest';
+import { MAX_HEARTS } from '@/api/schemas/profile';
 import {
+  clampHearts,
   DEFAULT_PROFILE,
   PROFILE_STORAGE_KEY,
   PROFILE_STORAGE_VERSION,
@@ -18,6 +20,16 @@ function stored(): { state: { profiles: Record<string, unknown> }; version: numb
   const raw = localStorage.getItem(PROFILE_STORAGE_KEY);
   return raw === null ? null : JSON.parse(raw);
 }
+
+describe('clampHearts', () => {
+  it('clamps to 0 and MAX_HEARTS and keeps in-range values', () => {
+    expect(clampHearts(-1)).toBe(0);
+    expect(clampHearts(0)).toBe(0);
+    expect(clampHearts(3)).toBe(3);
+    expect(clampHearts(MAX_HEARTS)).toBe(MAX_HEARTS);
+    expect(clampHearts(MAX_HEARTS + 1)).toBe(MAX_HEARTS);
+  });
+});
 
 describe('useProfileStore', () => {
   beforeEach(() => {

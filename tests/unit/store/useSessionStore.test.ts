@@ -1,5 +1,8 @@
+import { act, renderHook } from '@testing-library/react';
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
+  NO_USER_ID,
+  selectCurrentUserId,
   SESSION_STORAGE_KEY,
   SESSION_STORAGE_VERSION,
   useSessionStore,
@@ -75,6 +78,22 @@ describe('useSessionStore', () => {
     );
     await useSessionStore.persist.rehydrate();
     expect(useSessionStore.getState().session).toBeNull();
+  });
+
+  it('selectCurrentUserId reads the signed-in user id and NO_USER_ID when signed out', () => {
+    expect(NO_USER_ID).toBe('');
+    expect(selectCurrentUserId(useSessionStore.getState())).toBe(NO_USER_ID);
+    useSessionStore.getState().setSession(session);
+    expect(selectCurrentUserId(useSessionStore.getState())).toBe('u1');
+    useSessionStore.getState().clearSession();
+    expect(selectCurrentUserId(useSessionStore.getState())).toBe(NO_USER_ID);
+  });
+
+  it('selectCurrentUserId works as a hook selector', () => {
+    const { result } = renderHook(() => useSessionStore(selectCurrentUserId));
+    expect(result.current).toBe(NO_USER_ID);
+    act(() => useSessionStore.getState().setSession(session));
+    expect(result.current).toBe('u1');
   });
 
   it('discards unparseable stored JSON', async () => {
