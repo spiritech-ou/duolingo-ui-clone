@@ -1,19 +1,34 @@
 @use '@/styles/mixins' as *;
 
+// Below the md breakpoint (mobile) the mascot sits above the bubble, which fills the width;
+// from md (tablet and desktop) they share one row.
 .root {
   display: flex;
+  flex-direction: column;
   gap: var(--space-4);
-  align-items: center;
+  align-items: stretch;
   box-sizing: border-box;
   width: 100%;
+
+  @include bp(md) {
+    flex-direction: row;
+    align-items: center;
+  }
 }
 
-// Mascot: 96px on tablet and mobile, 110px from the xl breakpoint (desktop).
+// Mascot: 80px on mobile, 96px on tablet, 110px from the xl breakpoint (desktop).
 .mascot {
   display: inline-flex;
   flex-shrink: 0;
-  inline-size: 6rem;
-  block-size: 6rem;
+  align-self: flex-start;
+  inline-size: 5rem;
+  block-size: 5rem;
+
+  @include bp(md) {
+    align-self: auto;
+    inline-size: 6rem;
+    block-size: 6rem;
+  }
 
   @include bp(xl) {
     inline-size: 6.875rem;
@@ -54,17 +69,27 @@
   }
 
   // The tail points at the mascot: a rotated square sharing the bubble's border and fill.
+  // Mobile: on the top edge, under the centre of the 80px mascot, pointing up.
   &::before {
     position: absolute;
-    inset-block-start: 50%;
-    inset-inline-start: -0.5rem;
+    inset-block-start: -0.5rem;
+    inset-inline-start: 2rem;
     width: 0.75rem;
     height: 0.75rem;
     content: '';
     background-color: var(--color-surface);
-    border-block-end: 0.125rem solid var(--color-border);
+    border-block-start: 0.125rem solid var(--color-border);
     border-inline-start: 0.125rem solid var(--color-border);
-    transform: translateY(-50%) rotate(45deg);
+    transform: rotate(45deg);
+
+    // From md: on the left edge, pointing at the mascot beside the bubble.
+    @include bp(md) {
+      inset-block-start: 50%;
+      inset-inline-start: -0.5rem;
+      border-block-start: 0;
+      border-block-end: 0.125rem solid var(--color-border);
+      transform: translateY(-50%) rotate(45deg);
+    }
   }
 
   &:focus-visible {

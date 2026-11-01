@@ -247,24 +247,37 @@ export const SizesTablet: Story = {
   },
 };
 
+/** Mobile layout: mascot 80px above the bubble, which fills the row's width; nothing overflows. */
+async function expectStacked(canvasElement: HTMLElement, bubble: HTMLElement) {
+  await expect(window.innerWidth).toBe(390);
+  const m = measure(canvasElement, bubble);
+  await expect(m.mascot).toEqual({ width: 80, height: 80 });
+  // Bubble width equals the container (row) width, and the bubble is below the mascot.
+  await expect(Math.abs(m.bubble.width - m.row.getBoundingClientRect().width)).toBeLessThanOrEqual(1);
+  await expect(m.bubbleBox.top).toBeGreaterThanOrEqual(m.mascotBox.bottom);
+  await expect(m.bubble.height).toBeGreaterThanOrEqual(68);
+  await expect(m.bubbleBox.right).toBeLessThanOrEqual(window.innerWidth);
+  await expect(m.row.scrollWidth).toBeLessThanOrEqual(m.row.clientWidth);
+  await expect(bubble.scrollWidth).toBeLessThanOrEqual(bubble.clientWidth);
+  await expect(canvasElement.scrollWidth).toBeLessThanOrEqual(canvasElement.clientWidth);
+  await expect(document.documentElement.scrollWidth).toBeLessThanOrEqual(window.innerWidth);
+}
+
 export const SizesPhone: Story = {
   parameters: { viewport: { options: VIEWPORTS } },
   globals: { viewport: { value: 'phone', isRotated: false } },
   args: { role: 'heading', message: STEP_TWO_PROMPT },
   play: async ({ canvas, canvasElement }) => {
-    await expect(window.innerWidth).toBe(390);
-    const bubble = canvas.getByRole('heading', { level: 1 });
-    const m = measure(canvasElement, bubble);
-    // Mobile: mascot 96px, the bubble sits beside it on one row and shrinks to what is left of the
-    // screen; its text wraps to more lines inside it, so the bubble is taller than 68px.
-    await expect(m.mascot).toEqual({ width: 96, height: 96 });
-    await expect(m.bubble.height).toBeGreaterThanOrEqual(68);
-    await expect(m.bubbleBox.left).toBeGreaterThanOrEqual(m.mascotBox.right);
-    await expect(Math.abs(m.bubbleBox.top - m.mascotBox.top)).toBeLessThan(m.mascot.height);
-    await expect(m.bubbleBox.right).toBeLessThanOrEqual(window.innerWidth);
-    await expect(m.row.scrollWidth).toBeLessThanOrEqual(m.row.clientWidth);
-    await expect(bubble.scrollWidth).toBeLessThanOrEqual(bubble.clientWidth);
-    await expect(canvasElement.scrollWidth).toBeLessThanOrEqual(canvasElement.clientWidth);
+    await expectStacked(canvasElement, canvas.getByRole('heading', { level: 1 }));
+  },
+};
+
+export const SizesPhoneLevelReactions: Story = {
+  ...SizesPhone,
+  args: { message: 'Nice, you already have a head start!' },
+  play: async ({ canvas, canvasElement }) => {
+    // The longest onboarding level reaction, in the status role.
+    await expectStacked(canvasElement, canvas.getByRole('status'));
   },
 };
 
