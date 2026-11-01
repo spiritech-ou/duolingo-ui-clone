@@ -179,7 +179,7 @@ describe('flame colour on the exercise surfaces', () => {
     });
 
     it('practice complete is the blue flame at 160px', () => {
-      render(<PracticeCompleteScreen hearts={4} onContinue={vi.fn()} />);
+      render(<PracticeCompleteScreen hearts={4} gainedHeart onContinue={vi.fn()} />);
       expect(flames()).toEqual([{ src: blueFlame, size: 160, alt: '' }]);
     });
   });

@@ -77,6 +77,33 @@ describe('ExerciseRun completion fired twice', () => {
     expect(profile().hearts).toBe(3);
   });
 
+  it.each([0, 1, 4])('with %i hearts before: shows +1 heart and the counter one higher', async (before) => {
+    for (let i = 0; i < 5 - before; i += 1) useProfileStore.getState().loseHeart(USER.id);
+    expect(profile().hearts).toBe(before);
+    const continueButton = await renderRunAtContinue('practice');
+    act(() => {
+      continueButton.click();
+    });
+    expect(await screen.findByRole('heading', { name: 'Practice complete!' })).toBeInTheDocument();
+    expect(screen.getByText('+1 heart')).toBeInTheDocument();
+    const after = before + 1;
+    expect(screen.getByLabelText(after === 1 ? '1 heart left' : `${after} hearts left`)).toBeInTheDocument();
+    expect(profile().hearts).toBe(after);
+  });
+
+  it('with 5 hearts before: no +1 heart line, the counter reads 5, nothing changes', async () => {
+    expect(profile().hearts).toBe(5);
+    const continueButton = await renderRunAtContinue('practice');
+    act(() => {
+      continueButton.click();
+      continueButton.click();
+    });
+    expect(await screen.findByRole('heading', { name: 'Practice complete!' })).toBeInTheDocument();
+    expect(screen.queryByText(/\+1/)).not.toBeInTheDocument();
+    expect(screen.getByLabelText('5 hearts left')).toBeInTheDocument();
+    expect(profile().hearts).toBe(5);
+  });
+
   it('saves the lesson once', async () => {
     const continueButton = await renderRunAtContinue('lesson');
     act(() => {

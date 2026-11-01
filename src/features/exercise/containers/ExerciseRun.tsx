@@ -4,6 +4,7 @@ import type { Exercise } from '@/api/schemas/lesson';
 import type { SpeechAdapter } from '@/hooks/useSpeech';
 import { selectProfile, useProfileStore } from '@/store/useProfileStore';
 import { selectCurrentUserId, useSessionStore } from '@/store/useSessionStore';
+import { earnsPracticeHeart } from '../logic/practiceHeart';
 import type { SessionMode } from '../logic/sessionTypes';
 import { ExerciseSession } from './ExerciseSession';
 import type { LessonCompleteStats } from './ExerciseSession';
@@ -23,7 +24,7 @@ export interface ExerciseRunProps {
 
 type End =
   | { kind: 'lessonOver'; stats: LessonCompleteStats }
-  | { kind: 'practiceComplete' }
+  | { kind: 'practiceComplete'; gainedHeart: boolean }
   | { kind: 'outOfHearts' };
 
 /**
@@ -62,8 +63,10 @@ export function ExerciseRun({ mode, lessonId, exercises, speechAdapter }: Exerci
   };
   const handlePracticeComplete = (): void => {
     if (!claimEnd()) return;
-    gainHeart(userId);
-    setEnd({ kind: 'practiceComplete' });
+    // Hearts never change during practice, so the rendered value is the count before the gain.
+    const gainedHeart = earnsPracticeHeart(hearts);
+    if (gainedHeart) gainHeart(userId);
+    setEnd({ kind: 'practiceComplete', gainedHeart });
   };
   const handleOutOfHearts = (): void => {
     if (!claimEnd()) return;
@@ -74,7 +77,14 @@ export function ExerciseRun({ mode, lessonId, exercises, speechAdapter }: Exerci
     return <LessonOverScreen key="lessonOver" stats={end.stats} onContinue={goToPath} />;
   }
   if (end?.kind === 'practiceComplete') {
-    return <PracticeCompleteScreen key="practiceComplete" hearts={hearts} onContinue={goToPath} />;
+    return (
+      <PracticeCompleteScreen
+        key="practiceComplete"
+        hearts={hearts}
+        gainedHeart={end.gainedHeart}
+        onContinue={goToPath}
+      />
+    );
   }
   if (end?.kind === 'outOfHearts') {
     return <OutOfHeartsScreen key="outOfHearts" onPractice={goToPractice} onQuit={goToPath} />;

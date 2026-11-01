@@ -103,10 +103,18 @@ describe('end screens', () => {
     });
 
     it('practice complete shows +1 heart and the counter', () => {
-      render(<PracticeCompleteScreen hearts={4} onContinue={vi.fn()} />);
+      render(<PracticeCompleteScreen hearts={4} gainedHeart onContinue={vi.fn()} />);
       expect(screen.getByRole('heading', { name: 'Practice complete!' })).toHaveFocus();
       expect(screen.getByText('+1 heart')).toBeInTheDocument();
       expect(screen.getByLabelText('4 hearts left')).toBeInTheDocument();
+    });
+
+    it('practice complete at 5 hearts shows the counter and no +1 heart line', () => {
+      render(<PracticeCompleteScreen hearts={5} gainedHeart={false} onContinue={vi.fn()} />);
+      expect(screen.getByRole('heading', { name: 'Practice complete!' })).toHaveFocus();
+      expect(screen.queryByText(/\+1/)).not.toBeInTheDocument();
+      expect(screen.getByLabelText('5 hearts left')).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Continue' })).toBeInTheDocument();
     });
 
     it('out of hearts offers practice and quit', async () => {
@@ -138,7 +146,7 @@ describe('end screens', () => {
 
     it('ignores a held (repeating) Enter, modifiers and a focused button', () => {
       const onContinue = vi.fn();
-      render(<PracticeCompleteScreen hearts={5} onContinue={onContinue} />);
+      render(<PracticeCompleteScreen hearts={5} gainedHeart={false} onContinue={onContinue} />);
       fireEvent.keyDown(document.body, { key: 'Enter', repeat: true });
       fireEvent.keyDown(document.body, { key: 'Enter', ctrlKey: true });
       fireEvent.keyDown(screen.getByRole('button', { name: 'Continue' }), { key: 'Enter' });
