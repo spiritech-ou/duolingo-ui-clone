@@ -1,22 +1,25 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from '@/App';
+import { onNonJsonResponse } from '@/api/client';
+import { bootstrap } from '@/bootstrap';
 import { env } from '@/config/env';
 import '@/styles/main.scss';
-
-async function enableMocking(): Promise<void> {
-  if (!env.VITE_USE_MOCKS) return;
-  const { worker } = await import('@/mocks/browser');
-  await worker.start({ onUnhandledFrame: 'bypass' });
-}
 
 const container = document.getElementById('root');
 if (!container) throw new Error('Root element #root not found');
 
-void enableMocking().then(() => {
-  createRoot(container).render(
-    <StrictMode>
-      <App />
-    </StrictMode>,
-  );
+void bootstrap({
+  useMocks: env.VITE_USE_MOCKS,
+  loadWorker: async () => (await import('@/mocks/browser')).worker,
+  render: () => {
+    createRoot(container).render(
+      <StrictMode>
+        <App />
+      </StrictMode>,
+    );
+  },
+  onNonJsonResponse,
+  doc: document,
+  win: window,
 });
