@@ -77,7 +77,7 @@ The recommended node pulses gently while idle; after returning from a completed 
 - Nodes are real buttons, all enabled; the recommended one has `aria-current="step"`.
 - Focus order follows course order. On arrival focus goes to the recommended node (or the first node when none). The placement note uses `role="status"`.
 - State is shown by icon and shape as well as colour (check mark for completed, play for recommended, plain number or book for available).
-- Loading skeleton: container `aria-busy="true"` with a visually hidden "Loading your lessons" (`role="status"`). Error: `role="alert"`, focus moves to the "Try again" button.
+- Loading skeleton: container `aria-busy="true"` with a visually hidden "Loading your lessons" (`role="status"`). Error: `role="alert"`, focus moves to the "Try again" button. After "Try again" the skeleton shows again and focus moves to the skeleton region (OQ-57, `data-loading-states.md`); the first load has no focus move.
 - Arrow keys are not required; Tab and Enter/Space are enough.
 
 ## Out of scope

@@ -1,6 +1,6 @@
 # Data loading, error and empty states
 
-Decisions marked (OQ-nn) are listed in `open-questions.md`. This file fixes the shared rules and lists every screen that fetches data; the per-screen detail lives in `learning-path.md` and `exercise-session.md`, and this file must stay consistent with them.
+Decisions marked (OQ-nn) are listed in `open-questions.md` (focus after "Try again" is OQ-57). This file fixes the shared rules and lists every screen that fetches data; the per-screen detail lives in `learning-path.md` and `exercise-session.md`, and this file must stay consistent with them.
 
 ## Purpose
 Make every request-driven screen behave the same way while data is loading, when it fails, and when it returns nothing, so the user always knows what is happening and what they can do next.
@@ -73,6 +73,13 @@ Endpoints and shapes are defined in `learning-path.md` (`GET /api/course`), `exe
 - Loading: the region has `aria-busy="true"` and a polite `role="status"` text; skeleton shapes are `aria-hidden`.
 - Error and not found: `role="alert"`; focus moves to the main action button ("Try again", or "Back to path" when retrying makes no sense) so keyboard users land on it.
 - Empty: `role="status"`, focus stays on the heading.
+- Focus after "Try again" (OQ-57), on `/lesson/:lessonId`, `/practice` and `/learn`: pressing "Try again" on a load error removes the button that had focus and returns to Loading. Focus then moves to the loading status region, so it is not left on the page body (`document.body`):
+  - `/lesson/:lessonId` and `/practice`: the polite `role="status"` text of the Loading state ("Getting your lesson ready…" or "Getting your practice ready…").
+  - `/learn`: the skeleton region (the `aria-busy="true"` region whose polite `role="status"` text is "Loading your lessons").
+  - The target is made programmatically focusable (`tabIndex={-1}`) and is not a tab stop; Tab from it continues in DOM order. The focus move adds no announcement of its own beyond that status text.
+  - The focus move happens when the Loading state appears after the retry. The first load of a screen (route opened, or a cached course with a silent refresh) has no focus move: focus stays where the route change or the page load put it.
+  - If the retry fails again, the Error rule above applies (focus moves to "Try again", or "Back to path"). If it succeeds, the destination screen's own rule applies (a lesson moves focus to the question heading, see `exercise-session.md`).
+  - This covers "Try again" on a load error only. "Reload" on the `/learn` Empty state is not covered by this decision (OQ-59).
 - The mascot is decorative (`alt=""`) on every state screen, red or blue, because the text carries the message. The red flame changes no announcement, no `role="alert"` or `role="status"` text and no focus target: "Try again" (or "Back to path") still receives focus on Load error and Not found exactly as above. Failure is never signalled by the flame's colour alone; the headline and message say it.
 
 ## Out of scope
