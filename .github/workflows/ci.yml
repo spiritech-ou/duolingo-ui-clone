@@ -115,7 +115,7 @@ jobs:
         if: steps.token.outputs.present == 'true'
         env:
           CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
-        run: npx --yes chromatic@18.13.6 --build-script-name build-storybook --exit-zero-on-changes --auto-accept-changes main --allow-console-errors --output-file chromatic-build.json
+        run: npx --yes chromatic@18.13.6 --build-script-name build-storybook --exit-zero-on-changes --auto-accept-changes main --allow-console-errors --output-file chromatic-build.json --junit-report chromatic-junit.xml
       # The CLI has no step outputs (those belong to chromaui/action), so the build details come from
       # the file written by --output-file. Runs even when the Publish step failed on component errors,
       # because the build and its Storybook are published anyway. Only https URLs from the file are
@@ -143,3 +143,27 @@ jobs:
               *) echo "- Hosted Storybook: not reported by the Chromatic CLI (see the Publish to Chromatic step log)" ;;
             esac
           } >> "$GITHUB_STEP_SUMMARY"
+      # The JUnit report lists every story with its error, so a failing story is named in the run
+      # instead of only on the Chromatic page (which needs a login).
+      - name: List the stories Chromatic reported as failing
+        if: ${{ !cancelled() && steps.token.outputs.present == 'true' }}
+        run: |
+          if [ -f chromatic-junit.xml ]; then
+            {
+              echo "### Chromatic stories with errors"
+              echo
+              grep -B1 -A2 '<failure\|<error' chromatic-junit.xml | grep -o 'testcase [^>]*name="[^"]*"\|<failure[^>]*message="[^"]\{0,160\}\|<error[^>]*message="[^"]\{0,160\}' | head -n 80 || true
+            } >> "$GITHUB_STEP_SUMMARY"
+            grep -c '<failure\|<error' chromatic-junit.xml || true
+          else
+            echo "No JUnit report written by the Chromatic CLI." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Upload the Chromatic reports
+        if: ${{ !cancelled() && steps.token.outputs.present == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: chromatic-reports
+          path: |
+            chromatic-build.json
+            chromatic-junit.xml
+          if-no-files-found: ignore
