@@ -237,6 +237,9 @@ export const MessageFadesIn: Story = {
 export const ReducedMotion: Story = {
   args: { error: 'Invalid email address' },
   play: async ({ canvas }) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     // Media emulation needs the Vitest browser runner. Without it this story cannot assert
     // anything, so it fails loudly instead of passing without checking.
     const runner = await import('vitest/browser').catch(() => null);

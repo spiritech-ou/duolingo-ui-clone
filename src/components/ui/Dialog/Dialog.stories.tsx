@@ -40,6 +40,9 @@ const screen = () => within(document.body);
 
 export const ExitDialog: Story = {
   play: async ({ canvasElement }) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     const dialog = screen().getByRole('dialog', { name: 'Quit lesson?' });
     await expect(dialog).toHaveAttribute('aria-modal', 'true');
     await expect(dialog).toHaveAccessibleDescription("You'll lose your progress in this lesson.");
@@ -190,6 +193,9 @@ export const Closed: Story = {
 
 export const FocusIsTrapped: Story = {
   play: async () => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     const keepLearning = screen().getByRole('button', { name: 'KEEP LEARNING' });
     const quit = screen().getByRole('button', { name: 'QUIT' });
     await expect(keepLearning).toHaveFocus();
@@ -210,6 +216,9 @@ export const FocusIsTrapped: Story = {
 
 export const EscapeCallsOnClose: Story = {
   play: async ({ args }) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     await userEvent.keyboard('{Escape}');
     await expect(args.onClose).toHaveBeenCalledTimes(1);
   },
@@ -217,6 +226,9 @@ export const EscapeCallsOnClose: Story = {
 
 export const EscapeDoesNotReachPageShortcuts: Story = {
   play: async ({ args }) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     const pageListener = fn();
     window.addEventListener('keydown', pageListener);
     try {
@@ -265,6 +277,9 @@ export const ShiftTabFromThePanelItself: Story = {
 
 export const EscapeIgnoresKeyRepeat: Story = {
   play: async ({ args }) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     // user-event does not set `repeat`, so dispatch the auto-repeat events directly.
     const press = (repeat: boolean) =>
       document.activeElement?.dispatchEvent(
@@ -283,6 +298,9 @@ export const NoTabbableContent: Story = {
     <Dialog isOpen={args.isOpen} onClose={args.onClose} title={args.title} />
   ),
   play: async ({ args }) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     const dialog = screen().getByRole('dialog');
     await expect(dialog).toHaveFocus();
     await expect(dialog).toHaveAttribute('tabindex', '-1');
@@ -312,6 +330,9 @@ export const SkipsDisabledAndHiddenControls: Story = {
     ),
   },
   play: async () => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     await expect(screen().getByRole('button', { name: 'KEEP LEARNING' })).toHaveFocus();
     await userEvent.tab({ shift: true });
     await expect(screen().getByRole('button', { name: 'QUIT' })).toHaveFocus();
@@ -320,6 +341,9 @@ export const SkipsDisabledAndHiddenControls: Story = {
 
 export const StackedDialogs: Story = {
   play: async ({ args, mount, canvasElement }) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     const closeOuter = fn();
     const closeInner = fn();
     const stack = (outerOpen: boolean, innerOpen: boolean) => (
@@ -368,6 +392,9 @@ export const OpenerGone: Story = {
 /** Mounts the page three times (closed, open, closed) to show focus returns to the trigger. */
 export const FocusRestoredOnClose: Story = {
   play: async ({ args, mount, canvasElement }) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     // A trigger outside React, so re-mounting the story cannot replace it.
     const trigger = document.createElement('button');
     trigger.textContent = 'Open';

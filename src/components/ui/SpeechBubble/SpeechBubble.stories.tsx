@@ -120,6 +120,9 @@ export const ChangesMessage: Story = {
 export const ReducedMotion: Story = {
   render: RenderWithNextButton,
   play: async ({ canvas, canvasElement }) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     // Media emulation needs the Vitest browser runner. Without it this story cannot assert
     // anything, so it fails loudly instead of passing without checking.
     const runner = await import('vitest/browser').catch(() => null);
@@ -163,6 +166,9 @@ export const LongText: Story = {
     ),
   ],
   play: async ({ canvas, canvasElement }) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     const heading = canvas.getByRole('heading', { level: 1 });
     await expect(heading).toBeVisible();
     await expect(heading.scrollWidth).toBeLessThanOrEqual(heading.clientWidth);
@@ -196,6 +202,9 @@ export const SizesWide: Story = {
   globals: { viewport: { value: 'wide', isRotated: false } },
   args: { role: 'heading' },
   play: async ({ canvas, canvasElement }) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     await expect(window.innerWidth).toBeGreaterThanOrEqual(1280);
     const m = measure(canvasElement, canvas.getByRole('heading', { level: 1 }));
     // Desktop: mascot 110px, bubble about 400px wide (sized to the text, 400px at least) and 68px high.
@@ -217,6 +226,9 @@ export const SizesWideStepTwoText: Story = {
   ...SizesWide,
   args: { role: 'heading', message: STEP_TWO_PROMPT },
   play: async ({ canvas, canvasElement }) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     const m = measure(canvasElement, canvas.getByRole('heading', { level: 1 }));
     // The longer step-2 text widens the bubble to about 450px, still on one line of 68px.
     await expect(m.mascot).toEqual({ width: 110, height: 110 });

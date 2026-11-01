@@ -194,6 +194,9 @@ export const SadWithReducedMotion: Story = {
   args: { mood: 'sad', isBobbing: true, label: 'Sad flame' },
   render: RenderWithBounceButton,
   play: async ({ canvas, canvasElement }) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     const restore = await emulateReducedMotion();
     try {
       await userEvent.click(canvas.getByRole('button', { name: 'Bounce' }));
@@ -215,6 +218,9 @@ export const CelebratingWithReducedMotion: Story = {
   args: { mood: 'celebrating', isBobbing: true, label: 'Celebrating flame' },
   render: RenderWithBounceButton,
   play: async ({ canvas, canvasElement }) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     const restore = await emulateReducedMotion();
     try {
       await userEvent.click(canvas.getByRole('button', { name: 'Bounce' }));

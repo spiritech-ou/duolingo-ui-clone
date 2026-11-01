@@ -200,6 +200,9 @@ export const FocusTargets: Story = {
     firstActionRef: fn(),
   },
   play: async ({ canvas, args }) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     const heading = canvas.getByRole('heading', { level: 1 });
     await expect(heading).toHaveAttribute('tabindex', '-1');
     await expect(args.titleRef).toHaveBeenCalledWith(heading);
@@ -278,6 +281,9 @@ export const ColumnMobile: Story = {
   args: columnArgs,
   globals: { viewport: { value: 'mobile2', isRotated: false } },
   play: async ({ canvasElement }) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     const m = measure(canvasElement);
     await expect(m.isWide).toBe(false);
     // Column fills the whole width available to it (below the 480px maximum).
@@ -319,6 +325,9 @@ export const EndScreenMascot: Story = {
   },
   globals: { viewport: { value: 'tablet', isRotated: false } },
   play: async ({ canvasElement }) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     const m = measure(canvasElement);
     await expect(m.isWide).toBe(true);
     // The size prop wins over the responsive default.

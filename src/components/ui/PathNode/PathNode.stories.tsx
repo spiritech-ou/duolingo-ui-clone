@@ -230,6 +230,9 @@ export const SizesPhone: Story = {
   globals: { viewport: { value: 'phone', isRotated: false } },
   args: { status: 'available', offset: 2 },
   play: async ({ canvas, canvasElement }) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     await expect(window.innerWidth).toBe(390);
     const node = canvas.getByRole('button', { name: 'Lesson 5, Drinks' });
     // Mobile: 64px node, 40px zigzag step, so two steps stay at 80px from the centre line.
