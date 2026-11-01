@@ -57,45 +57,17 @@ jobs:
 
   deploy:
     name: deploy
-    # Vercel preview (same-repository pull requests) and production (main).
-    if: github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository
-    needs: check
-    permissions:
-      contents: read
-      pull-requests: write
-    uses: ./.github/workflows/deploy.yml
-    secrets: inherit
-
-  storybook:
-    name: storybook
+    # GitHub Pages deployment of the built app: main pushes only, after the check job.
+    # Pull requests do not deploy (no previews). Storybook is hosted by Chromatic.
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     needs: check
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
+    # A called workflow cannot hold more than its caller grants: these are the
+    # permissions of its deploy job (the top level of this file stays read only).
     permissions:
       contents: read
       pages: write
       id-token: write
-    concurrency:
-      group: pages
-      cancel-in-progress: false
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 24
-          cache: npm
-      - run: npm ci
-      - uses: actions/configure-pages@v5
-      - run: npm run build-storybook
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: storybook-static
-      - id: deployment
-        uses: actions/deploy-pages@v4
+    uses: ./.github/workflows/deploy.yml
 
   chromatic:
     name: chromatic

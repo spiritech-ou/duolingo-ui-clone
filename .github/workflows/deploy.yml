@@ -2,159 +2,64 @@ name: Deploy
 
 # Reusable workflow, called by the `deploy` job of ci.yml after the `check` job
 # passed, so nothing is deployed from a red tree and the checks are not
-# duplicated. Pull requests from this repository get a preview deployment; a
-# push to main gets a production deployment. Both skip with a notice when the
-# VERCEL_TOKEN secret is not set.
+# duplicated. A push to main builds the app and publishes it to GitHub Pages at
+# https://spiritech-ou.github.io/duolingo-ui-clone/. Pull requests do not deploy
+# (no preview, see README). No secret is used: Pages authenticates the deploy
+# job with the job's OIDC token.
 on:
   workflow_call:
-    secrets:
-      VERCEL_TOKEN:
-        required: false
-      VERCEL_ORG_ID:
-        required: false
-      VERCEL_PROJECT_ID:
-        required: false
 
 permissions:
   contents: read
 
 jobs:
-  preview:
-    name: preview
-    # Forks get no secrets, so only same-repository pull requests deploy.
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    permissions:
-      contents: read
-      pull-requests: write
-    concurrency:
-      group: vercel-preview-${{ github.ref }}
-      cancel-in-progress: true
-    env:
-      # The app has no backend: every deployment is built with MSW mocks on.
-      VITE_USE_MOCKS: 'true'
-    steps:
-      - name: Check for Vercel secrets
-        id: secrets
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: |
-          if [ -n "$VERCEL_TOKEN" ] && [ -n "$VERCEL_ORG_ID" ] && [ -n "$VERCEL_PROJECT_ID" ]; then
-            echo "present=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "present=false" >> "$GITHUB_OUTPUT"
-            echo "Skipped: VERCEL_TOKEN, VERCEL_ORG_ID and VERCEL_PROJECT_ID must all be set, so the preview deployment did not run (see README, Deploying to Vercel)." >> "$GITHUB_STEP_SUMMARY"
-          fi
-      - uses: actions/checkout@v4
-        if: steps.secrets.outputs.present == 'true'
-      - uses: actions/setup-node@v4
-        if: steps.secrets.outputs.present == 'true'
-        with:
-          node-version: 24
-          cache: npm
-      - name: Install dependencies
-        if: steps.secrets.outputs.present == 'true'
-        run: npm ci
-      - name: Pull Vercel settings
-        if: steps.secrets.outputs.present == 'true'
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: npx --yes vercel@65.9.0 pull --yes --environment=preview
-      - name: Build
-        if: steps.secrets.outputs.present == 'true'
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: npx --yes vercel@65.9.0 build
-      - name: Deploy
-        id: deploy
-        if: steps.secrets.outputs.present == 'true'
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: |
-          url=$(npx --yes vercel@65.9.0 deploy --prebuilt)
-          echo "url=$url" >> "$GITHUB_OUTPUT"
-          echo "Preview deployment: $url" >> "$GITHUB_STEP_SUMMARY"
-      - name: Comment the preview URL on the pull request
-        if: steps.secrets.outputs.present == 'true'
-        uses: marocchino/sticky-pull-request-comment@v2
-        with:
-          header: vercel-preview
-          message: |
-            Preview deployment: ${{ steps.deploy.outputs.url }}
-
-            Built from ${{ github.event.pull_request.head.sha }}. It runs on mock data (MSW), there is no backend.
-
-  production:
-    name: production
+  build:
+    name: build
+    # Same guard as the calling job, so the workflow stays safe if called from elsewhere.
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     permissions:
       contents: read
-    # A production deployment is never cancelled halfway by a newer run.
-    concurrency:
-      group: vercel-production
-      cancel-in-progress: false
-    environment:
-      name: production
-      url: ${{ steps.deploy.outputs.url }}
-    env:
-      VITE_USE_MOCKS: 'true'
+      # configure-pages reads the Pages site settings.
+      pages: read
     steps:
-      - name: Check for Vercel secrets
-        id: secrets
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: |
-          if [ -n "$VERCEL_TOKEN" ] && [ -n "$VERCEL_ORG_ID" ] && [ -n "$VERCEL_PROJECT_ID" ]; then
-            echo "present=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "present=false" >> "$GITHUB_OUTPUT"
-            echo "Skipped: VERCEL_TOKEN, VERCEL_ORG_ID and VERCEL_PROJECT_ID must all be set, so the production deployment did not run (see README, Deploying to Vercel)." >> "$GITHUB_STEP_SUMMARY"
-          fi
       - uses: actions/checkout@v4
-        if: steps.secrets.outputs.present == 'true'
       - uses: actions/setup-node@v4
-        if: steps.secrets.outputs.present == 'true'
         with:
           node-version: 24
           cache: npm
-      - name: Install dependencies
-        if: steps.secrets.outputs.present == 'true'
-        run: npm ci
-      - name: Pull Vercel settings
-        if: steps.secrets.outputs.present == 'true'
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: npx --yes vercel@65.9.0 pull --yes --environment=production
-      - name: Build
-        if: steps.secrets.outputs.present == 'true'
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: npx --yes vercel@65.9.0 build --prod
-      - name: Deploy
-        id: deploy
-        if: steps.secrets.outputs.present == 'true'
-        env:
-          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-        run: |
-          url=$(npx --yes vercel@65.9.0 deploy --prebuilt --prod)
-          echo "url=$url" >> "$GITHUB_OUTPUT"
-          echo "Production deployment: $url" >> "$GITHUB_STEP_SUMMARY"
+      - run: npm ci
+      - uses: actions/configure-pages@v5
+      # The script sets VITE_USE_MOCKS=true (the app has no backend) and
+      # BASE_PATH=/duolingo-ui-clone/ (project site sub path), and writes
+      # dist/404.html (SPA deep link fallback: Pages has no rewrites).
+      - name: Build for GitHub Pages
+        run: npm run build:pages
+      # Without it Pages runs Jekyll, which drops files and folders starting with an underscore.
+      - name: Disable Jekyll
+        run: touch dist/.nojekyll
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    name: deploy
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    # A running deployment is never cancelled halfway by a newer one.
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
