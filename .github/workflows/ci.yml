@@ -139,8 +139,4 @@ jobs:
           # Merged changes were reviewed on the pull request, so builds on main
           # become the accepted baseline. Pull requests are never auto accepted.
           autoAcceptChanges: main
-          # Some stories assert the browser window size or media emulation, which only the
-          # Vitest browser runner provides (the check job runs all stories there and gates
-          # the deploy). Chromatic renders them in its own browser, so those assertions
-          # report errors there. Chromatic is used for visual review, not for interaction tests.
-          allowConsoleErrors: true
+          # Other options (allowConsoleErrors) live in chromatic.config.json, which the action reads.
