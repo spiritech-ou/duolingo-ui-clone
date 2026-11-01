@@ -154,6 +154,78 @@ describe('end screens', () => {
       expect(onQuit).not.toHaveBeenCalled();
     });
 
+    it('out of hearts: Enter with the heading focused runs Practice once and not Quit', async () => {
+      const onPractice = vi.fn();
+      const onQuit = vi.fn();
+      const user = userEvent.setup();
+      render(<OutOfHeartsScreen onPractice={onPractice} onQuit={onQuit} />);
+      expect(screen.getByRole('heading', { name: "You're out of hearts" })).toHaveFocus();
+      await user.keyboard('{Enter}');
+      expect(onPractice).toHaveBeenCalledTimes(1);
+      expect(onQuit).not.toHaveBeenCalled();
+    });
+
+    it('out of hearts: Enter with Quit lesson focused runs only Quit', async () => {
+      const onPractice = vi.fn();
+      const onQuit = vi.fn();
+      const user = userEvent.setup();
+      render(<OutOfHeartsScreen onPractice={onPractice} onQuit={onQuit} />);
+      await user.tab();
+      await user.tab();
+      expect(screen.getByRole('button', { name: 'Quit lesson' })).toHaveFocus();
+      await user.keyboard('{Enter}');
+      expect(onQuit).toHaveBeenCalledTimes(1);
+      expect(onPractice).not.toHaveBeenCalled();
+    });
+
+    it('out of hearts: Enter with Practice focused runs Practice once', async () => {
+      const onPractice = vi.fn();
+      const onQuit = vi.fn();
+      const user = userEvent.setup();
+      render(<OutOfHeartsScreen onPractice={onPractice} onQuit={onQuit} />);
+      await user.tab();
+      expect(screen.getByRole('button', { name: 'Practice to earn a heart' })).toHaveFocus();
+      await user.keyboard('{Enter}');
+      expect(onPractice).toHaveBeenCalledTimes(1);
+      expect(onQuit).not.toHaveBeenCalled();
+    });
+
+    it('out of hearts: a held (repeating) Enter does nothing', () => {
+      const onPractice = vi.fn();
+      const onQuit = vi.fn();
+      render(<OutOfHeartsScreen onPractice={onPractice} onQuit={onQuit} />);
+      fireEvent.keyDown(document.body, { key: 'Enter', repeat: true });
+      fireEvent.keyDown(screen.getByRole('heading', { name: "You're out of hearts" }), {
+        key: 'Enter',
+        repeat: true,
+      });
+      expect(onPractice).not.toHaveBeenCalled();
+      expect(onQuit).not.toHaveBeenCalled();
+    });
+
+    it('out of hearts: Practice is the primary button, first in order, and Quit the secondary', () => {
+      render(<OutOfHeartsScreen onPractice={vi.fn()} onQuit={vi.fn()} />);
+      const [first, second] = screen.getAllByRole('button');
+      expect(first).toHaveAccessibleName('Practice to earn a heart');
+      expect(first?.className).toMatch(/primary/);
+      expect(first?.className).not.toMatch(/secondary/);
+      expect(second).toHaveAccessibleName('Quit lesson');
+      expect(second?.className).toMatch(/secondary/);
+    });
+
+    it('the Enter that pressed Continue into out of hearts does not also run Practice', async () => {
+      for (let i = 0; i < 4; i += 1) useProfileStore.getState().loseHeart(USER.id);
+      const { router, user } = setupRun('lesson', 3);
+      await click(user, 'Skip');
+      fireEvent.keyDown(document.body, { key: 'Enter' });
+      expect(await screen.findByRole('heading', { name: "You're out of hearts" })).toBeInTheDocument();
+      expect(router.state.location.pathname).toBe('/run');
+      fireEvent.keyDown(document.body, { key: 'Enter', repeat: true });
+      expect(router.state.location.pathname).toBe('/run');
+      fireEvent.keyDown(document.body, { key: 'Enter' });
+      expect(router.state.location.pathname).toBe('/practice');
+    });
+
     it('a held Enter that finished the last exercise does not press Continue on the end screen', async () => {
       const { router, user } = setupRun('lesson');
       await user.keyboard('2');
