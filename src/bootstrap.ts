@@ -1,6 +1,14 @@
+import { assetUrl } from '@/lib/baseUrl';
+
+/** The start options the shell passes: a subset of msw's `StartOptions`. */
+export interface MockWorkerStartOptions {
+  onUnhandledFrame: 'bypass';
+  serviceWorker: { url: string; options: { scope: string } };
+}
+
 /** The slice of msw's `SetupWorker` the shell uses. */
 export interface MockWorker {
-  start: (options: { onUnhandledFrame: 'bypass' }) => Promise<unknown>;
+  start: (options: MockWorkerStartOptions) => Promise<unknown>;
   stop: () => Promise<void> | void;
 }
 
@@ -22,7 +30,18 @@ export interface BootstrapDeps {
 
 export const REARM_TIMEOUT_MS = 5_000;
 
-const START_OPTIONS = { onUnhandledFrame: 'bypass' } as const;
+/**
+ * The options of the first start and of every re-arm. The worker script and its
+ * scope both sit under Vite's base URL (`/` normally, `/duolingo-ui-clone/` on
+ * GitHub Pages); the scope is the base with its trailing slash, never wider than
+ * the folder of the script. Read at call time, so the base is current.
+ */
+function startOptions(): MockWorkerStartOptions {
+  return {
+    onUnhandledFrame: 'bypass',
+    serviceWorker: { url: assetUrl('mockServiceWorker.js'), options: { scope: assetUrl('') } },
+  };
+}
 
 function setUpMocks(worker: MockWorker, deps: BootstrapDeps): void {
   const timeoutMs = deps.rearmTimeoutMs ?? REARM_TIMEOUT_MS;
@@ -37,7 +56,7 @@ function setUpMocks(worker: MockWorker, deps: BootstrapDeps): void {
     });
     const work = (async () => {
       await worker.stop();
-      await worker.start(START_OPTIONS);
+      await worker.start(startOptions());
     })();
     // A late rejection after the timeout won, or after success, must not go unhandled.
     work.catch(() => undefined);
@@ -72,7 +91,7 @@ export async function bootstrap(deps: BootstrapDeps): Promise<void> {
   if (deps.useMocks) {
     try {
       const worker = await deps.loadWorker();
-      await worker.start(START_OPTIONS);
+      await worker.start(startOptions());
       setUpMocks(worker, deps);
     } catch (cause) {
       console.error('The mock service worker failed to start; rendering without mocks.', cause);

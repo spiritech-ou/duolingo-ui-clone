@@ -43,24 +43,60 @@ function setup(useMocks = true, rearmTimeoutMs?: number): Harness {
   };
 }
 
+const ROOT_START_OPTIONS = {
+  onUnhandledFrame: 'bypass',
+  serviceWorker: { url: '/mockServiceWorker.js', options: { scope: '/' } },
+};
+
+const PAGES_START_OPTIONS = {
+  onUnhandledFrame: 'bypass',
+  serviceWorker: { url: '/duolingo-ui-clone/mockServiceWorker.js', options: { scope: '/duolingo-ui-clone/' } },
+};
+
 afterEach(() => {
   vi.restoreAllMocks();
   vi.useRealTimers();
+  vi.unstubAllEnvs();
 });
 
 describe('bootstrap', () => {
-  it('renders only after the worker start resolved, with onUnhandledFrame bypass', async () => {
+  it('renders only after the worker start resolved, with onUnhandledFrame bypass and the root worker url and scope', async () => {
     const h = setup();
     let finishStart: () => void = () => undefined;
     h.worker.start.mockReturnValueOnce(new Promise<void>((resolve) => (finishStart = resolve)));
     const done = bootstrap(h.deps);
     await Promise.resolve();
     await Promise.resolve();
-    expect(h.worker.start).toHaveBeenCalledWith({ onUnhandledFrame: 'bypass' });
+    expect(h.worker.start).toHaveBeenCalledWith(ROOT_START_OPTIONS);
     expect(h.render).not.toHaveBeenCalled();
     finishStart();
     await done;
     expect(h.render).toHaveBeenCalledTimes(1);
+  });
+
+  it('starts the worker under the Pages base: script url and scope both include /duolingo-ui-clone/', async () => {
+    vi.stubEnv('BASE_URL', '/duolingo-ui-clone/');
+    const h = setup();
+    await bootstrap(h.deps);
+    expect(h.worker.start).toHaveBeenCalledTimes(1);
+    expect(h.worker.start).toHaveBeenCalledWith(PAGES_START_OPTIONS);
+  });
+
+  it('re-arms with the same base-aware options as the first start', async () => {
+    vi.stubEnv('BASE_URL', '/duolingo-ui-clone/');
+    const h = setup();
+    await bootstrap(h.deps);
+    h.worker.start.mockClear();
+    h.registered.current?.();
+    await vi.waitFor(() => expect(h.worker.start).toHaveBeenCalledTimes(1));
+    expect(h.worker.start).toHaveBeenCalledWith(PAGES_START_OPTIONS);
+  });
+
+  it('uses the root url and scope for a relative base (Storybook build)', async () => {
+    vi.stubEnv('BASE_URL', './');
+    const h = setup();
+    await bootstrap(h.deps);
+    expect(h.worker.start).toHaveBeenCalledWith(ROOT_START_OPTIONS);
   });
 
   it('logs once and still renders when the worker fails to start', async () => {
@@ -116,7 +152,7 @@ describe('bootstrap', () => {
     expect(h.worker.start).not.toHaveBeenCalled();
     finishStop();
     await vi.waitFor(() => expect(h.worker.start).toHaveBeenCalledTimes(1));
-    expect(h.worker.start).toHaveBeenCalledWith({ onUnhandledFrame: 'bypass' });
+    expect(h.worker.start).toHaveBeenCalledWith(ROOT_START_OPTIONS);
     // A finished re-arm allows the next one.
     h.registered.current?.();
     await vi.waitFor(() => expect(h.worker.stop).toHaveBeenCalledTimes(2));
