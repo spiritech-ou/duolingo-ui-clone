@@ -237,10 +237,16 @@ export function ExerciseSession({
     onQuit();
   };
 
-  // Back arrived while the first-mistake modal is open: only one dialog at a time, so ignore it.
+  // Back arrived while the first-mistake modal is open: it closes the modal exactly like KEEP GOING
+  // and is consumed (the held navigation is dropped), so the next Back opens the exit dialog.
   useEffect(() => {
-    if (isBlocked && openDialog === 'firstMistake') blocker.reset();
-  }, [isBlocked, openDialog, blocker]);
+    if (isBlocked && openDialog === 'firstMistake') {
+      blocker.reset();
+      // The router's blocker is the external system whose change this effect answers.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      dismissFirstMistake();
+    }
+  }, [isBlocked, openDialog, blocker, dismissFirstMistake]);
 
   // A lesson that starts with no hearts is out of hearts at once.
   // Only turn 0 counts: later transitions call the callbacks from `dispatch`, and the flag keeps

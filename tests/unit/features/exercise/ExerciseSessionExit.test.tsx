@@ -214,17 +214,14 @@ describe('ExerciseSession exit dialog and the first-mistake modal', () => {
     expect(screen.getByRole('button', { name: 'Continue' })).toHaveFocus();
   });
 
-  it('Back while the first-mistake modal is open does not stack a dialog and does not leave', async () => {
+  it('Back while the first-mistake modal is open closes it, does not stack a dialog and does not leave', async () => {
     const { user, router } = start();
     await mistake(user);
     await pressBack();
 
-    expect(screen.getAllByRole('dialog')).toHaveLength(1);
-    expect(dialog('Each mistake costs 1 heart!')).toBeInTheDocument();
-    expect(router.state.location.pathname).toBe('/lesson');
-
-    await user.keyboard('{Escape}');
     noDialog();
+    expect(router.state.location.pathname).toBe('/lesson');
+    expect(screen.getByRole('button', { name: 'Continue' })).toHaveFocus();
   });
 
   it('the close button works on a feedback panel and returns focus to itself', async () => {

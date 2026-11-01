@@ -138,6 +138,58 @@ describe('Back around the exercise run', () => {
   });
 });
 
+describe('Back while a dialog is open', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    useSessionStore.getState().reset();
+    useProfileStore.getState().reset();
+    useSessionStore.getState().setSession({ token: 't', user: USER });
+  });
+
+  async function openFirstMistake() {
+    const view = renderRun('lesson', 3);
+    await view.user.click(screen.getByRole('radio', { name: /vale0/ }));
+    await press(view.user, 'Check');
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+    return view;
+  }
+
+  it('Back closes the first-mistake modal like KEEP GOING and is consumed', async () => {
+    const { router } = await openFirstMistake();
+    expect(useProfileStore.getState().profiles[USER.id]?.hasSeenHeartsIntro).toBeFalsy();
+
+    await pressBack(router);
+
+    noDialog();
+    expect(router.state.location.pathname).toBe('/run');
+    expect(useProfileStore.getState().profiles[USER.id]?.hasSeenHeartsIntro).toBe(true);
+    expect(screen.getByRole('heading', { name: /word0/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Continue' })).toHaveFocus();
+  });
+
+  it('a second Back opens the exit dialog', async () => {
+    const { router } = await openFirstMistake();
+    await pressBack(router);
+    noDialog();
+
+    await pressBack(router);
+    expect(screen.getByRole('dialog', { name: 'Quit lesson?' })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/run');
+  });
+
+  it('Back with the exit dialog open leaves it open and does not stack a second one', async () => {
+    useProfileStore.getState().markHeartsIntroSeen(USER.id);
+    const { router } = renderRun('lesson', 2);
+    await pressBack(router);
+    expect(screen.getAllByRole('dialog')).toHaveLength(1);
+
+    await pressBack(router);
+    expect(screen.getAllByRole('dialog')).toHaveLength(1);
+    expect(screen.getByRole('dialog', { name: 'Quit lesson?' })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/run');
+  });
+});
+
 describe('the Back blocker never blocks the navigation that ends a session', () => {
   beforeEach(() => {
     localStorage.clear();
