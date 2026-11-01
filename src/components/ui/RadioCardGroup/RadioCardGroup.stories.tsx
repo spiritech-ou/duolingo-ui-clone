@@ -314,6 +314,9 @@ export const LevelRowsPhone: Story = {
   globals: { viewport: { value: 'phone', isRotated: false } },
   args: { options: fiveLevelOptions, value: 'detail' },
   play: async ({ canvas }) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     await expect(window.innerWidth).toBe(390);
     const m = measureCards(canvas);
     // The column is the screen minus 16px gutters (358px); rows fill it.
@@ -375,6 +378,9 @@ export const StartCardsPhone: Story = {
   globals: { viewport: { value: 'phone', isRotated: false } },
   args: { size: 'lg', label: 'Where should we start?', options: startIconOptions, value: 'find' },
   play: async ({ canvas }) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     await expect(window.innerWidth).toBe(390);
     const m = measureCards(canvas);
     await expect(m.group.getBoundingClientRect().width).toBeLessThanOrEqual(358.5);

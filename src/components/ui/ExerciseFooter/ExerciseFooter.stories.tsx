@@ -237,6 +237,9 @@ export const SelectedWide: Story = {
 export const IdleNarrow: Story = {
   globals: narrow,
   play: async (context) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     await measureActionsNarrow(context);
   },
 };
@@ -245,6 +248,9 @@ export const SelectedNarrow: Story = {
   globals: narrow,
   args: { status: 'selected' },
   play: async (context) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     await measureActionsNarrow(context);
   },
 };
@@ -280,6 +286,9 @@ export const CorrectNarrow: Story = {
   globals: narrow,
   args: { status: 'correct', word: 'tee' },
   play: async (context) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     await measurePanelNarrow(context);
     await expectNoFlame(context);
   },
@@ -289,6 +298,9 @@ export const WrongNarrow: Story = {
   globals: narrow,
   args: { status: 'wrong', word: 'tee' },
   play: async (context) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     await measurePanelNarrow(context);
     await expectFlame(context);
   },
@@ -298,6 +310,9 @@ export const SkippedNarrow: Story = {
   globals: narrow,
   args: { status: 'skipped', word: 'tee' },
   play: async (context) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     await measurePanelNarrow(context);
     await expectFlame(context);
   },

@@ -250,6 +250,9 @@ export const RecommendedSameSize: Story = {
   globals: { viewport: { value: 'phone', isRotated: false } },
   args: { status: 'recommended', label: 'Lesson 4, Food, recommended, start' },
   play: async ({ canvas }) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     const node = canvas.getByRole('button', { name: 'Lesson 4, Food, recommended, start' });
     await expect(layoutSize(node)).toEqual({ width: 64, height: 64 });
   },

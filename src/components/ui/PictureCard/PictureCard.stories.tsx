@@ -151,6 +151,9 @@ export const DesktopSize: Story = {
     ),
   ],
   play: async ({ canvasElement }) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     const radio = within(canvasElement).getByRole('radio');
     const card = radio.closest('label');
     if (!card) throw new Error('expected a card');
@@ -210,6 +213,9 @@ export const FloorWindow: Story = {
   globals: { viewport: { value: 'floor', isRotated: false } },
   decorators: column('16rem'),
   play: async ({ canvasElement }) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     await expect(window.innerHeight).toBe(600);
     const card = cardOf(canvasElement);
     const rect = card.getBoundingClientRect();
@@ -230,6 +236,9 @@ export const TallWindow: Story = {
   globals: { viewport: { value: 'tall', isRotated: false } },
   decorators: column('16rem'),
   play: async ({ canvasElement }) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     await expect(window.innerHeight).toBe(1080);
     const rect = cardOf(canvasElement).getBoundingClientRect();
     await expect(Math.round(rect.width)).toBe(256);
@@ -243,6 +252,9 @@ export const PhoneRowFixed: Story = {
   globals: { viewport: { value: 'phone', isRotated: false } },
   decorators: column('22.375rem'),
   play: async ({ canvasElement }) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     await expect(window.innerWidth).toBe(390);
     const rect = cardOf(canvasElement).getBoundingClientRect();
     await expect(Math.round(rect.width)).toBe(358);

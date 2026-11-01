@@ -172,6 +172,9 @@ export const Wide: Story = {
     ),
   ],
   play: async ({ canvasElement }) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     const [first, second, third] = cardsOf(canvasElement);
     if (!first || !second || !third) throw new Error('expected three cards');
     for (const card of [first, second, third]) {

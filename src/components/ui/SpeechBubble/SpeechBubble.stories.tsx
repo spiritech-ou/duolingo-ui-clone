@@ -249,6 +249,9 @@ export const SizesTablet: Story = {
   globals: { viewport: { value: 'tablet', isRotated: false } },
   args: { role: 'heading' },
   play: async ({ canvas, canvasElement }) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     await expect(window.innerWidth).toBe(768);
     const m = measure(canvasElement, canvas.getByRole('heading', { level: 1 }));
     // Tablet: mascot 96px, bubble still at least 400px, side by side.
@@ -280,6 +283,9 @@ export const SizesPhone: Story = {
   globals: { viewport: { value: 'phone', isRotated: false } },
   args: { role: 'heading', message: STEP_TWO_PROMPT },
   play: async ({ canvas, canvasElement }) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     await expectStacked(canvasElement, canvas.getByRole('heading', { level: 1 }));
   },
 };
@@ -288,6 +294,9 @@ export const SizesPhoneLevelReactions: Story = {
   ...SizesPhone,
   args: { message: 'Nice, you already have a head start!' },
   play: async ({ canvas, canvasElement }) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     // The longest onboarding level reaction, in the status role.
     await expectStacked(canvasElement, canvas.getByRole('status'));
   },

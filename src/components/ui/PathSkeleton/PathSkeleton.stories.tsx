@@ -142,6 +142,9 @@ export const MatchesUnitPhone: Story = {
   globals: { viewport: { value: 'phone', isRotated: false } },
   render: () => <SkeletonAndUnit />,
   play: async ({ canvas }) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     await expect(window.innerWidth).toBe(390);
     await expectSkeletonMatchesUnit(canvas, { node: 64, pitch: 88, banner: 72 });
   },

@@ -130,6 +130,9 @@ export const FirstMistakeModalNarrow: Story = {
   globals: narrow,
   args: firstMistakeArgs,
   play: async () => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     const dialog = screen().getByRole('dialog', { name: 'Each mistake costs 1 heart!' });
     const button = screen().getByRole('button', { name: 'KEEP GOING' });
     await waitFor(() => expect(button).toBeVisible());
@@ -151,6 +154,9 @@ export const FirstMistakeModalNarrow: Story = {
 export const ExitDialogNarrow: Story = {
   globals: narrow,
   play: async () => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     const dialog = screen().getByRole('dialog', { name: 'Quit lesson?' });
     const keep = screen().getByRole('button', { name: 'KEEP LEARNING' }).getBoundingClientRect();
     const quit = screen().getByRole('button', { name: 'QUIT' }).getBoundingClientRect();

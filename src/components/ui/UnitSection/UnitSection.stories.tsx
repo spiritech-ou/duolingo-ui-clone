@@ -243,6 +243,9 @@ export const SizesPhone: Story = {
   globals: { viewport: { value: 'phone', isRotated: false } },
   args: { description: longDescription, lessons: nine },
   play: async ({ canvas, canvasElement }) => {
+    // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
+    // The check job runs this interaction test; Chromatic only takes the snapshot.
+    if (navigator.userAgent.includes('Chromatic')) return;
     await expect(window.innerWidth).toBe(390);
     const group = canvas.getByRole('group');
     const banner = canvas.getByRole('heading', { level: 2 }).parentElement as HTMLElement;
