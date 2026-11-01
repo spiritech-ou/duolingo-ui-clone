@@ -4,13 +4,18 @@ import { storybookTest } from '@storybook/addon-vitest/vitest-plugin';
 import react from '@vitejs/plugin-react';
 import { playwright } from '@vitest/browser-playwright';
 import { defineConfig } from 'vite';
+import { resolveBasePath, spaFallbackPlugin } from './scripts/pages.ts';
+
+// BASE_PATH is set only by `build:pages` / `preview:pages` (GitHub Pages sub path). Unset means "/".
+const base = resolveBasePath(process.env['BASE_PATH']);
 
 const srcDir = fileURLToPath(new URL('./src', import.meta.url));
 const scriptsDir = fileURLToPath(new URL('./scripts', import.meta.url));
 const storybookDir = fileURLToPath(new URL('./.storybook', import.meta.url));
 
 export default defineConfig({
-  plugins: [react()],
+  base,
+  plugins: [react(), spaFallbackPlugin(base)],
   resolve: {
     // '@scripts' lets tests import the one-off scripts without climbing relative paths.
     alias: { '@': srcDir, '@scripts': scriptsDir },
