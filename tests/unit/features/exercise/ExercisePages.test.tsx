@@ -95,6 +95,15 @@ describe('lesson route', () => {
     expect(screen.getByText('At /learn')).toBeInTheDocument();
   });
 
+  it('an unknown lesson is announced as an alert, not a status', async () => {
+    server.use(lessonNotFoundHandler);
+    renderAt('/lesson/nope');
+    const alert = await screen.findByRole('alert');
+    expect(alert).toHaveTextContent("We couldn't find this lesson");
+    expect(alert).toHaveAttribute('aria-live', 'assertive');
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+
   it('an empty lesson says so and focuses the heading', async () => {
     server.use(lessonEmptyHandler);
     renderAt(lessonPath);
@@ -103,10 +112,22 @@ describe('lesson route', () => {
     expect(screen.getByRole('button', { name: 'Back to path' })).toBeInTheDocument();
   });
 
+  it('an empty lesson stays a polite status, not an alert', async () => {
+    server.use(lessonEmptyHandler);
+    renderAt(lessonPath);
+    // The loading screen is a status too, so wait for the empty screen first.
+    await screen.findByRole('heading', { name: 'This lesson has no exercises yet' });
+    const status = screen.getByRole('status');
+    expect(status).toHaveTextContent('This lesson has no exercises yet');
+    expect(status).toHaveAttribute('aria-live', 'polite');
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
   it('a server failure offers Try again (focused) and Back to path, and retry recovers', async () => {
     server.use(lessonErrorHandler);
     const { user } = renderAt(lessonPath);
     expect(await screen.findByRole('heading', { name: "We couldn't load this lesson" })).toBeInTheDocument();
+    expect(screen.getByRole('alert')).toHaveTextContent("We couldn't load this lesson");
     expect(screen.getByText(OTHER_FAILURE_MESSAGE)).toBeInTheDocument();
     await waitFor(() => expect(screen.getByRole('button', { name: 'Try again' })).toHaveFocus());
     expect(screen.getByRole('button', { name: 'Back to path' })).toBeInTheDocument();
