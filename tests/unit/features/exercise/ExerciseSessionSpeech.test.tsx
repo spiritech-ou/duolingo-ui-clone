@@ -150,6 +150,65 @@ describe('ExerciseSession speech and sound notices', () => {
       expect(synth.spoken.map((s) => s.text)).toEqual(['tee', 'kohv', 'tee']);
     });
 
+    it('replays the word once when the selected card is clicked again, changing nothing else', async () => {
+      const synth = makeSynth();
+      const { user } = setup(synth);
+      await settle();
+      await user.click(card('kohv'));
+      const check = screen.getByRole('button', { name: 'Check' });
+      expect(synth.spoken.map((s) => s.text)).toEqual(['kohv']);
+
+      await user.click(card('kohv'));
+      expect(synth.spoken.map((s) => s.text)).toEqual(['kohv', 'kohv']);
+      expect(card('kohv')).toBeChecked();
+      expect(card('leib')).not.toBeChecked();
+      expect(check).toBeEnabled();
+      expect(card('kohv')).toHaveFocus();
+      expect(screen.getByRole('img', { name: '5 hearts left' })).toBeInTheDocument();
+    });
+
+    it('stops the previous word on each of three clicks (1, 2, 1 again)', async () => {
+      const synth = makeSynth();
+      const { user } = setup(synth);
+      await settle();
+      const before = synth.cancels;
+      await user.click(card('kohv'));
+      await user.click(card('leib'));
+      await user.click(card('kohv'));
+      expect(synth.spoken.map((s) => s.text)).toEqual(['kohv', 'leib', 'kohv']);
+      expect(synth.cancels - before).toBeGreaterThanOrEqual(3);
+      expect(card('kohv')).toBeChecked();
+    });
+
+    it('replays on the number key and on a click of the same card', async () => {
+      const synth = makeSynth();
+      const { user } = setup(synth);
+      await settle();
+      await user.keyboard('1');
+      await user.click(card('kohv'));
+      await user.keyboard('1');
+      expect(synth.spoken.map((s) => s.text)).toEqual(['kohv', 'kohv', 'kohv']);
+      expect(card('kohv')).toBeChecked();
+    });
+
+    it('replays the clip when the selected card is clicked again', async () => {
+      const { user, audio } = setup(makeSynth({ voices: [ENGLISH] }), { clips: CLIPS });
+      await settle();
+      await user.click(card('kohv'));
+      await user.click(card('kohv'));
+      expect(audio.created.map((c) => c.plays)).toEqual([1, 1]);
+    });
+
+    it('does not speak on a re-click of the selected card in a feedback phase', async () => {
+      const synth = makeSynth();
+      const { user } = setup(synth);
+      await settle();
+      await user.click(card('kohv'));
+      await user.click(screen.getByRole('button', { name: 'Check' }));
+      await user.click(card('kohv'));
+      expect(synth.spoken).toHaveLength(1);
+    });
+
     it('cancels speech when the exercise changes', async () => {
       const synth = makeSynth();
       const { user } = setup(synth);

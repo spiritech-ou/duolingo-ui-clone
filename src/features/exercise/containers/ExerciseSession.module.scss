@@ -35,9 +35,25 @@
     // less the top bar, so a short window still shows the cards without much scrolling.
     padding-top: clamp(var(--space-4), 25vh - 6rem, 15rem);
   }
+
+  // Below the card height floor (PictureCard's 200px) the window is too short for the whole row:
+  // `main` scrolls and its bottom padding becomes the footer height (190px) instead of 24px, so
+  // the last card can be scrolled clear of the footer. The layout content already pads 24px, so
+  // this adds the 166px (10.375rem) difference. The heights are where `footerTop - 24 - cardsTop`
+  // falls under 200px: 100vh - 513 < 200 at md (H under 713px), 75vh - 321 < 200 at lg (H under
+  // about 694.67px), see the PictureCard.module.scss comment.
+  @media (48rem <= width < 64rem) and (height < 713px) {
+    padding-bottom: 10.375rem;
+  }
+
+  @media (width >= 64rem) and (height < 694.67px) {
+    padding-bottom: 10.375rem;
+  }
 }
 
-// The gap between the question and the cards: about 120px on desktop, tighter on mobile.
+// The gap between the question and the cards, counted from the heading's bottom: the stack's
+// 16px gap plus this margin. Spec totals: 32px mobile, 80px md, and from lg
+// clamp(48px, 25vh - 132px, 120px), which the card height in PictureCard assumes.
 .cards {
   margin-top: var(--space-4);
 
@@ -46,6 +62,6 @@
   }
 
   @include bp(lg) {
-    margin-top: 6.5rem;
+    margin-top: clamp(var(--space-6), 25vh - 9.25rem, 6.5rem);
   }
 }
