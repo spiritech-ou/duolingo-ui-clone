@@ -99,13 +99,14 @@ Layout sections were added to every screen spec after the fact. Values come from
 
 ## Layout corrections from the visual pass
 
-The visual pass (`docs/verification/pw-shot-report.md`, M1, M6, N1) found three places where the written Layout of `exercise-session.md` was wrong and the built screen was right. The human decided the spec follows the built screen; no code changes. Nothing is left to approve.
+The visual pass (`docs/verification/pw-shot-report.md`, M1, M6, N1, M5) found four places where the written Layout (of `exercise-session.md`, and of `onboarding.md` for M5) was wrong or incomplete and the built screen was right. The human decided the spec follows the built screen; no code changes. Nothing is left to approve.
 
 | ID | Status | Decision |
 |---|---|---|
 | OQ-49 | Approved (human decision after the visual pass; M6) | At a 390px window the modal and dialogs are 358px wide (the width minus 32px), not "about 326px"; the earlier figure was an arithmetic slip. The exit dialog measures 358x293 and the first-mistake modal 358 wide. |
 | OQ-50 | Approved (human decision after the visual pass; M1) | The first-mistake modal is about 400px high at 390 wide (measured 399), not "about 520px", which was derived and never measured. On mobile it uses 24px inner padding and gaps instead of the 40px of the desktop dialog, keeps the 96px red flame, and wraps its text to more lines; it fits without scrolling in a 390x844 window. The rule is kept that it scrolls inside the window when the window is shorter (for example a phone in landscape). |
 | OQ-51 | Approved (human decision after the visual pass; N1) | The end screens share the 480px column and the 160px mascot but not their content: only Lesson over has the three stats (XP, Accuracy, Time); Practice complete shows its "+1 heart" counter line and Out of hearts its message and two stacked buttons. The earlier line "the three stats in a row of equal cells" for all three screens contradicted the States table and is removed. |
+| OQ-52 | Approved (human decision after the visual pass; M5) | On desktop (1280 and wider) the onboarding mascot and bubble row hangs left of the 640px column by up to 330px but never closer to the window's left edge than the 32px side gutter (`--space-6`): `hang = min(330px, (window width - 640px) / 2 - 32px)`, as built in `src/features/onboarding/containers/_layout.scss` (mixin `row`). The earlier line "starts about 330px left of the column's left edge" held only for the reference capture, which is wider than the app's smallest desktop window: at 1280 the hang is 288px and the mascot starts at x32, not x-10. The full 330px hang applies from a 1364px window (640 + 2 x (330 + 32)). Tablet and mobile are unchanged (no hang). `onboarding.md`, Layout, states the rule with the numbers. |
 
 ## Still pending for the human
 
