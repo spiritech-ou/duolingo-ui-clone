@@ -17,6 +17,7 @@ import { server } from '@/mocks/server';
 
 afterEach(() => {
   vi.restoreAllMocks();
+  vi.unstubAllEnvs();
 });
 
 describe('loadAudioClips', () => {
@@ -35,6 +36,42 @@ describe('loadAudioClips', () => {
     );
     await loadAudioClips();
     expect(urls).toEqual(['/audio/manifest.json']);
+  });
+
+  it('requests the manifest under the Pages base path', async () => {
+    vi.stubEnv('BASE_URL', '/duolingo-ui-clone/');
+    resetAudioClipsCache();
+    const urls: string[] = [];
+    server.use(
+      http.get('*/audio/manifest.json', ({ request }) => {
+        urls.push(new URL(request.url).pathname);
+        return HttpResponse.json(audioManifestFixture);
+      }),
+    );
+    expect(await loadAudioClips()).toEqual(audioManifestFixture.clips);
+    expect(urls).toEqual(['/duolingo-ui-clone/audio/manifest.json']);
+  });
+
+  it('follows a base change once the cache is reset', async () => {
+    const urls: string[] = [];
+    server.use(
+      http.get('*/audio/manifest.json', ({ request }) => {
+        urls.push(new URL(request.url).pathname);
+        return HttpResponse.json(audioManifestFixture);
+      }),
+    );
+    await loadAudioClips();
+    vi.stubEnv('BASE_URL', '/duolingo-ui-clone/');
+    resetAudioClipsCache();
+    await loadAudioClips();
+    expect(urls).toEqual(['/audio/manifest.json', '/duolingo-ui-clone/audio/manifest.json']);
+  });
+
+  it('resolves to no clips, without throwing, when the manifest is missing under the Pages base', async () => {
+    vi.stubEnv('BASE_URL', '/duolingo-ui-clone/');
+    resetAudioClipsCache();
+    server.use(audioManifestMissingHandler);
+    expect(await loadAudioClips()).toBe(NO_AUDIO_CLIPS);
   });
 
   it('resolves to no clips when the file is missing', async () => {
@@ -147,7 +184,19 @@ describe('loadAudioClips once per page session', () => {
 });
 
 describe('audioClipUrl', () => {
-  it('serves a clip under /audio/', () => {
-    expect(audioClipUrl({ itemId: 'a', file: 'a.mp3', needsReview: true })).toBe('/audio/a.mp3');
+  const clip = { itemId: 'a', file: 'a.mp3', needsReview: true };
+
+  it('serves a clip under /audio/ at the root base', () => {
+    expect(audioClipUrl(clip)).toBe('/audio/a.mp3');
+  });
+
+  it('serves a clip under the Pages base path', () => {
+    vi.stubEnv('BASE_URL', '/duolingo-ui-clone/');
+    expect(audioClipUrl(clip)).toBe('/duolingo-ui-clone/audio/a.mp3');
+  });
+
+  it('serves a clip at the root with a relative base', () => {
+    vi.stubEnv('BASE_URL', './');
+    expect(audioClipUrl(clip)).toBe('/audio/a.mp3');
   });
 });

@@ -1,8 +1,17 @@
 import { request } from '@/api/client';
 import { audioManifestSchema, type AudioClip } from '@/api/schemas/audio';
+import { assetUrl } from '@/lib/baseUrl';
 
-/** Where the manifest is served: a static asset, not under `/api`. */
+/**
+ * Where the manifest is served relative to the deployment base: a static asset, not under `/api`.
+ * The request URL is `audioManifestUrl()`, which applies the base at call time.
+ */
 export const AUDIO_MANIFEST_PATH = '/audio/manifest.json';
+
+/** Absolute URL of the manifest under the Vite base (`/duolingo-ui-clone/audio/manifest.json` on Pages). */
+function audioManifestUrl(): string {
+  return assetUrl(AUDIO_MANIFEST_PATH);
+}
 
 /** Clips keyed by Estonian word (NFC). Empty when there are none. */
 export type AudioClips = Readonly<Record<string, AudioClip>>;
@@ -11,7 +20,7 @@ export const NO_AUDIO_CLIPS: AudioClips = Object.freeze({});
 
 /** URL of a clip file named by a manifest entry. */
 export function audioClipUrl(clip: AudioClip): string {
-  return `/audio/${clip.file}`;
+  return assetUrl(`/audio/${clip.file}`);
 }
 
 /** The page session's manifest: a loaded result, or the request in flight. Failures are never kept. */
@@ -26,7 +35,7 @@ export function resetAudioClipsCache(): void {
 
 /** One shared request, not tied to any caller's signal; resolves to null on any failure. */
 function fetchManifest(): Promise<AudioClips | null> {
-  const pending: Promise<AudioClips | null> = request(AUDIO_MANIFEST_PATH, {
+  const pending: Promise<AudioClips | null> = request(audioManifestUrl(), {
     schema: audioManifestSchema,
     baseUrl: '',
   }).then(
@@ -47,7 +56,7 @@ function fetchManifest(): Promise<AudioClips | null> {
 }
 
 /**
- * `GET /audio/manifest.json`, read once per page session: concurrent callers share the request
+ * `GET <base>/audio/manifest.json`, read once per page session: concurrent callers share the request
  * in flight and a success is kept in memory; a failure is not kept, so the next call tries
  * again. Never throws and never reports an error: a missing file, a non-JSON body, an invalid
  * manifest, a network failure or an abort all resolve to no clips (the app then simply plays no
