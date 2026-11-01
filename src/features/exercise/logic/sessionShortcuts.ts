@@ -3,6 +3,8 @@ import type { SessionPhase } from './sessionTypes';
 /** The parts of a `KeyboardEvent` the resolver reads (a real event satisfies it). */
 export interface ShortcutKeyEvent {
   readonly key: string;
+  /** The physical key (`KeyboardEvent.code`), layout independent: `Digit1` is `&` on AZERTY. */
+  readonly code: string;
   readonly repeat: boolean;
   readonly isComposing: boolean;
   readonly ctrlKey: boolean;
@@ -32,7 +34,12 @@ export type ShortcutAction =
 
 const NONE: ShortcutAction = { type: 'none' };
 
-const NUMBER_KEYS = ['1', '2', '3'] as const;
+/** Physical keys per card position: the digit row and the numpad. */
+const NUMBER_CODES = [
+  ['Digit1', 'Numpad1'],
+  ['Digit2', 'Numpad2'],
+  ['Digit3', 'Numpad3'],
+] as const;
 
 function isFeedbackOrEnd(phase: SessionPhase): boolean {
   return (
@@ -47,7 +54,7 @@ function isFeedbackOrEnd(phase: SessionPhase): boolean {
 
 /**
  * Maps a key press to a session action (OQ-30). Pure.
- * - Keys 1 to 3 select that card in Idle and Option selected (the selected card's key keeps it).
+ * - Physical keys 1 to 3 (digit row or numpad, by `event.code`, so AZERTY needs no Shift) select that card in Idle and Option selected (the selected card's key keeps it).
  * - Enter checks when CHECK is enabled, and continues from a feedback panel or an end screen.
  * - Everything is ignored while a dialog is open, with Ctrl/Meta/Alt/Shift held, while composing
  *   text and on auto-repeat. A focused native button keeps Enter for its own click.
@@ -64,7 +71,7 @@ export function resolveShortcut(input: ShortcutInput): ShortcutAction {
     return isFeedbackOrEnd(phase) ? { type: 'continue' } : NONE;
   }
 
-  const index = NUMBER_KEYS.findIndex((key) => key === event.key);
+  const index = NUMBER_CODES.findIndex((codes) => codes.some((code) => code === event.code));
   if (index === -1 || (phase !== 'idle' && phase !== 'selected')) return NONE;
   const optionId = input.optionIds[index];
   return optionId === undefined ? NONE : { type: 'select', optionId };

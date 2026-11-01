@@ -70,6 +70,24 @@ describe('ExerciseSession keyboard shortcuts', () => {
     expect(card('oige0')).not.toBeChecked();
   });
 
+  it('selects by physical key: AZERTY digit row without Shift, numpad, QWERTY', async () => {
+    setup();
+    // AZERTY: the unshifted digit row gives & é ".
+    fireEvent.keyDown(document.body, { key: '&', code: 'Digit1' });
+    expect(card('vale0')).toBeChecked();
+    fireEvent.keyDown(document.body, { key: 'é', code: 'Digit2' });
+    expect(card('oige0')).toBeChecked();
+    fireEvent.keyDown(document.body, { key: '"', code: 'Digit3' });
+    expect(card('muu0')).toBeChecked();
+    fireEvent.keyDown(document.body, { key: '1', code: 'Numpad1' });
+    expect(card('vale0')).toBeChecked();
+    fireEvent.keyDown(document.body, { key: '2', code: 'Digit2' });
+    expect(card('oige0')).toBeChecked();
+    // A "1" that is not on a digit or numpad key does nothing.
+    fireEvent.keyDown(document.body, { key: '1', code: 'KeyA' });
+    expect(card('oige0')).toBeChecked();
+  });
+
   it('the selected card number keeps it selected', async () => {
     const { user } = setup();
     await user.keyboard('1');

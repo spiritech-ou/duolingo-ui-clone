@@ -5,6 +5,8 @@ import type { SessionPhase } from '@/features/exercise/logic/sessionTypes';
 
 const key = (k: string, extra: Partial<ShortcutKeyEvent> = {}): ShortcutKeyEvent => ({
   key: k,
+  // A QWERTY digit row by default: key "1" comes from the physical key Digit1.
+  code: /^[0-9]$/.test(k) ? `Digit${k}` : k === 'Enter' ? 'Enter' : '',
   repeat: false,
   isComposing: false,
   ctrlKey: false,
@@ -45,6 +47,23 @@ describe('resolveShortcut number keys', () => {
       type: 'select',
       optionId,
     });
+  });
+
+  it.each([
+    ['&', 'Digit1', 'a'],
+    ['é', 'Digit2', 'b'],
+    ['"', 'Digit3', 'c'],
+    ['1', 'Numpad1', 'a'],
+    ['2', 'Numpad2', 'b'],
+    ['3', 'Numpad3', 'c'],
+  ])('key %s on physical %s selects card %s without Shift (AZERTY, numpad)', (k, code, optionId) => {
+    expect(resolve(k, { event: { code } })).toEqual({ type: 'select', optionId });
+  });
+
+  it('matches the physical key, not the character', () => {
+    expect(resolve('1', { event: { code: 'KeyA' } })).toEqual(NONE);
+    expect(resolve('1', { event: { code: '' } })).toEqual(NONE);
+    expect(resolve('&', { event: { code: 'Digit4' } })).toEqual(NONE);
   });
 
   it('the selected card number keeps it selected (same select action)', () => {
