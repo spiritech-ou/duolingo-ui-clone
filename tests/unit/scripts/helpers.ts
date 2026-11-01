@@ -1,8 +1,8 @@
 import type { AudioDeps, FileSystem, FetchLike, HttpRequest, HttpResponse } from '@scripts/audio/types';
 
 export const SENTINEL = 'sk_SENTINEL_KEY_9f3a7c21';
-export const HOME = '/project';
-export const KEY_PATH = `${HOME}/.elevenlabs.env`;
+/** The environment the scripts read the key from (the npm script loads .env into process.env). */
+export const KEY_ENV = { ELEVENLABS_API_KEY: SENTINEL };
 export const OUT = '/repo/public/audio';
 
 export interface FakeFs extends FileSystem {
@@ -87,7 +87,7 @@ export interface HarnessOptions {
 
 export function makeHarness(
   respond: (call: Call, index: number) => HttpResponse | Promise<HttpResponse>,
-  files: Record<string, string | Uint8Array> = { [KEY_PATH]: `ELEVENLABS_API_KEY=${SENTINEL}\n` },
+  files: Record<string, string | Uint8Array> = {},
   harnessOptions: HarnessOptions = {},
 ): Harness {
   const fs = makeFs(files);

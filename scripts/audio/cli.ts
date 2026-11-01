@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 import { readApiKey } from './apiKey.ts';
+import type { KeyEnvironment } from './apiKey.ts';
 import { verifyModel } from './elevenlabs.ts';
 import { AudioGenerationError } from './errors.ts';
 import { clipFileName, generateAudio } from './generate.ts';
@@ -9,7 +10,7 @@ import type { AudioDeps, AudioItem, AudioModel } from './types.ts';
 export const USAGE = `Usage: npm run audio:generate -- --voice <voiceId> [options]
 
 One-off generation of the Estonian word clips into public/audio. The key is read
-from ELEVENLABS_API_KEY in ~/.elevenlabs.env. Not part of npm run check or the build.
+from ELEVENLABS_API_KEY in .env (see .env.example). Not part of npm run check or the build.
 
 Options:
   --voice <voiceId>          ElevenLabs voice id (required, except with --verify-only)
@@ -100,8 +101,8 @@ export function parseCliArgs(argv: readonly string[]): ParseResult {
 export interface CliContext {
   readonly items: readonly AudioItem[];
   readonly outDir: string;
-  /** Resolved by the caller at run time; only read when the key is needed. */
-  readonly rootDir: string;
+  /** The environment holding ELEVENLABS_API_KEY, only read when the key is needed. */
+  readonly env: KeyEnvironment;
   readonly deps: AudioDeps;
 }
 
@@ -122,7 +123,7 @@ export async function runCli(argv: readonly string[], context: CliContext): Prom
 
   try {
     if (options.verifyOnly) {
-      const apiKey = await readApiKey(deps.fs, context.rootDir);
+      const apiKey = readApiKey(context.env);
       const verified = await verifyModel(deps, apiKey, options.model);
       deps.log(`Model ${verified.model} can do text-to-speech and lists Estonian (language id "${verified.languageCode}"). Nothing was synthesized.`);
       return 0;
@@ -157,7 +158,7 @@ export async function runCli(argv: readonly string[], context: CliContext): Prom
       model: options.model,
       voiceId,
       outDir: context.outDir,
-      rootDir: context.rootDir,
+      env: context.env,
       force: options.force,
       sendLanguageCode: options.sendLanguageCode,
       ...(options.limit === undefined ? {} : { limit: options.limit }),

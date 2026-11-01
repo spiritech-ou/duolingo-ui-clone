@@ -1,5 +1,6 @@
 import { join } from 'node:path';
 import { readApiKey } from './apiKey.ts';
+import type { KeyEnvironment } from './apiKey.ts';
 import { isPlainLanguageCode, synthesize, verifyModel } from './elevenlabs.ts';
 import type { RetryPolicy } from './elevenlabs.ts';
 import { AudioGenerationError, redact } from './errors.ts';
@@ -14,8 +15,8 @@ export interface GenerateOptions {
   readonly voiceId: string;
   /** Output folder, `public/audio` in the repository. */
   readonly outDir: string;
-  /** The project root, where `.elevenlabs.env` lives, resolved by the caller at run time. */
-  readonly rootDir: string;
+  /** The environment holding ELEVENLABS_API_KEY, passed by the caller at run time. */
+  readonly env: KeyEnvironment;
   /** Regenerate clips that already exist. */
   readonly force?: boolean;
   readonly retry?: RetryPolicy;
@@ -77,7 +78,7 @@ async function writeManifest(options: GenerateOptions): Promise<Manifest> {
 
 export async function generateAudio(options: GenerateOptions): Promise<GenerateResult> {
   const { deps } = options;
-  const apiKey = await readApiKey(deps.fs, options.rootDir);
+  const apiKey = readApiKey(options.env);
   // From here on every message is redacted, whatever produced it.
   const safeDeps: AudioDeps = { ...deps, log: (message) => deps.log(redact(message, apiKey)) };
   const verified = await verifyModel(safeDeps, apiKey, options.model, options.timeoutMs);

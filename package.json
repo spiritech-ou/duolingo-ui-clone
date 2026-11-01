@@ -18,7 +18,7 @@
     "build-storybook": "storybook build",
     "test:storybook": "vitest run --project storybook",
     "e2e": "playwright test",
-    "audio:generate": "node scripts/generate-audio.ts",
+    "audio:generate": "node --env-file-if-exists=.env scripts/generate-audio.ts",
     "check": "npm run typecheck && npm run lint && npm run lint:styles && npm run test && npm run test:storybook"
   },
   "dependencies": {

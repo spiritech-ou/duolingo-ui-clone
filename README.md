@@ -90,7 +90,7 @@ The word clips are MP3 files in `public/audio/` (one per vocabulary word, about 
 
 Regenerating them (only needed if the vocabulary changes) uses the ElevenLabs API:
 
-1. Copy `.elevenlabs.env.example` to `.elevenlabs.env` in the repository root (git ignored) and set `ELEVENLABS_API_KEY=` to your key.
+1. Copy `.env.example` to `.env` (git ignored) and set `ELEVENLABS_API_KEY=` to your key. The variable is not prefixed with `VITE_`, so it never reaches the browser bundle.
 2. Run `npm run audio:generate -- --voice <voiceId>`. The clips used so far were made with the ElevenLabs voice Alice (`Xb7hH8MSUJpSbSDYk0k2`) and the `eleven_v3` model. Add `--verify-only` to check the key and the model without generating anything.
 
-The key is read only from `.elevenlabs.env` in the repository root, nowhere else.
+The npm script loads `.env` (`node --env-file-if-exists=.env`) and the generator reads `ELEVENLABS_API_KEY` from the environment, so you can also export it in your shell or CI. It is never read from anywhere else and never committed.

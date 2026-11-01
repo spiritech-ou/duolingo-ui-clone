@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { generateAudio } from '@scripts/audio/generate';
 import type { GenerateOptions } from '@scripts/audio/generate';
 import type { Manifest } from '@scripts/audio/types';
-import { GOOD_MODELS, HOME, KEY_PATH, OUT, SENTINEL, makeHarness, makeResponse } from './helpers';
+import { GOOD_MODELS, KEY_ENV, OUT, SENTINEL, makeHarness, makeResponse } from './helpers';
 import type { Call, Harness } from './helpers';
 
 const ITEMS = [
@@ -11,15 +11,13 @@ const ITEMS = [
   { id: 'v-sokolaad', estonian: 'š'.normalize('NFD') + 'okolaad' },
 ];
 
-const KEY_FILE = { [KEY_PATH]: `ELEVENLABS_API_KEY="${SENTINEL}"\n` };
-
 function respond(call: Call): ReturnType<typeof makeResponse> {
   if (call.url.endsWith('/v1/models')) return makeResponse({ json: GOOD_MODELS });
   return makeResponse({ bytes: new TextEncoder().encode(`audio:${call.init.body ?? ''}`) });
 }
 
 function options(h: Harness, extra: Partial<GenerateOptions> = {}): GenerateOptions {
-  return { items: ITEMS, model: 'eleven_v3', voiceId: 'voice-1', outDir: OUT, rootDir: HOME, deps: h.deps, ...extra };
+  return { items: ITEMS, model: 'eleven_v3', voiceId: 'voice-1', outDir: OUT, env: KEY_ENV, deps: h.deps, ...extra };
 }
 
 function manifestOf(h: Harness): Manifest {
@@ -30,7 +28,6 @@ function manifestOf(h: Harness): Manifest {
 function everythingWritten(h: Harness): string {
   const parts: string[] = [...h.logs];
   for (const [path, data] of h.fs.files) {
-    if (path === KEY_PATH) continue;
     parts.push(path, typeof data === 'string' ? data : new TextDecoder().decode(data));
   }
   return parts.join('\n');
@@ -38,7 +35,7 @@ function everythingWritten(h: Harness): string {
 
 describe('generateAudio', () => {
   it('writes one clip per word with the exact NFC text and a manifest ordered like the dataset', async () => {
-    const h = makeHarness(respond, KEY_FILE);
+    const h = makeHarness(respond, {});
     const result = await generateAudio(options(h));
     expect(result).toMatchObject({ generated: 3, skipped: 0 });
 
@@ -60,20 +57,20 @@ describe('generateAudio', () => {
       h.calls.filter((c) => c.url.includes('/text-to-speech/')).map((c) => JSON.parse(c.init.body ?? '{}'));
 
     it('is sent by default when the models endpoint reports a two-letter code', async () => {
-      const h = makeHarness(respond, KEY_FILE);
+      const h = makeHarness(respond, {});
       await generateAudio(options(h));
       expect(bodies(h).every((b) => b['language_code'] === 'et')).toBe(true);
     });
 
     it('can be omitted by the caller', async () => {
-      const h = makeHarness(respond, KEY_FILE);
+      const h = makeHarness(respond, {});
       await generateAudio(options(h, { sendLanguageCode: false }));
       expect(bodies(h).every((b) => !('language_code' in b))).toBe(true);
     });
 
     it('is omitted when the reported id is not a plain two-letter code', async () => {
       const models = [{ model_id: 'eleven_v3', can_do_text_to_speech: true, languages: [{ language_id: 'est', name: 'Estonian' }] }];
-      const h = makeHarness((call) => (call.url.endsWith('/v1/models') ? makeResponse({ json: models }) : respond(call)), KEY_FILE);
+      const h = makeHarness((call) => (call.url.endsWith('/v1/models') ? makeResponse({ json: models }) : respond(call)), {});
       await generateAudio(options(h));
       expect(bodies(h)).toHaveLength(3);
       expect(bodies(h).every((b) => !('language_code' in b))).toBe(true);
@@ -81,7 +78,7 @@ describe('generateAudio', () => {
   });
 
   it('writes each clip and the manifest through a temp name, then renames', async () => {
-    const h = makeHarness(respond, KEY_FILE);
+    const h = makeHarness(respond, {});
     await generateAudio(options(h));
     expect(h.fs.writes).toEqual([
       `${OUT}/v-tee.mp3.part`,
@@ -93,7 +90,7 @@ describe('generateAudio', () => {
   });
 
   it('leaves no truncated clip under the final name when interrupted, so a rerun regenerates it', async () => {
-    const h = makeHarness(respond, KEY_FILE);
+    const h = makeHarness(respond, {});
     h.fs.failRename = true;
     await expect(generateAudio(options(h))).rejects.toThrow();
     expect(h.fs.files.has(`${OUT}/v-tee.mp3`)).toBe(false);
@@ -105,7 +102,7 @@ describe('generateAudio', () => {
   });
 
   it('turns a stalled request into a key-free error (here during the model check, so nothing is written)', async () => {
-    const h = makeHarness(() => new Promise(() => {}), KEY_FILE, { fireTimers: true });
+    const h = makeHarness(() => new Promise(() => {}), {}, { fireTimers: true });
     const error = await generateAudio(options(h, { timeoutMs: 500 })).catch((e: unknown) => e);
     expect(String(error)).toMatch(/timed out after 500 ms/);
     expect(String(error)).not.toContain(SENTINEL);
@@ -114,7 +111,7 @@ describe('generateAudio', () => {
   });
 
   it('skips clips that exist, unless forced', async () => {
-    const existing = { ...KEY_FILE, [`${OUT}/v-tee.mp3`]: new Uint8Array([5]) };
+    const existing = { [`${OUT}/v-tee.mp3`]: new Uint8Array([5]) };
     const h = makeHarness(respond, existing);
     const result = await generateAudio(options(h));
     expect(result).toMatchObject({ generated: 2, skipped: 1 });
@@ -135,22 +132,22 @@ describe('generateAudio', () => {
         return makeResponse({ status: 429, headers: { 'retry-after': '1' } });
       }
       return respond(call);
-    }, KEY_FILE);
+    }, {});
     const result = await generateAudio(options(h));
     expect(result.generated).toBe(3);
     expect(h.sleeps).toEqual([1000]);
   });
 
   it('stops before any synthesis when the model check fails', async () => {
-    const h = makeHarness(() => makeResponse({ json: [] }), KEY_FILE);
+    const h = makeHarness(() => makeResponse({ json: [] }), {});
     await expect(generateAudio(options(h))).rejects.toThrow(/not offered/);
     expect(h.calls).toHaveLength(1);
     expect(h.fs.files.has(`${OUT}/manifest.json`)).toBe(false);
   });
 
-  it('fails clearly without calling the network when the key file is missing', async () => {
+  it('fails clearly without calling the network when the key is missing', async () => {
     const h = makeHarness(respond, {});
-    await expect(generateAudio(options(h))).rejects.toThrow(/Key file not found/);
+    await expect(generateAudio(options(h, { env: {} }))).rejects.toThrow(/ELEVENLABS_API_KEY is not set/);
     expect(h.calls).toHaveLength(0);
   });
 
@@ -158,7 +155,7 @@ describe('generateAudio', () => {
     const h = makeHarness((call) => {
       if (call.init.body?.includes('šokolaad')) return makeResponse({ status: 500, text: `boom ${SENTINEL}` });
       return respond(call);
-    }, KEY_FILE);
+    }, {});
     const error = await generateAudio(options(h)).catch((e: unknown) => e);
     expect(error).toBeInstanceOf(Error);
     expect(Object.keys(manifestOf(h).clips)).toEqual(['tee', 'õun']);
@@ -166,7 +163,7 @@ describe('generateAudio', () => {
 
   it('never lets the key reach a log, the manifest, a clip, a path or an error', async () => {
     // Success path.
-    const ok = makeHarness(respond, KEY_FILE);
+    const ok = makeHarness(respond, {});
     await generateAudio(options(ok));
     expect(everythingWritten(ok)).not.toContain(SENTINEL);
 
@@ -181,7 +178,7 @@ describe('generateAudio', () => {
       () => makeResponse({ status: 403, text: SENTINEL }),
     ];
     for (const failure of failures) {
-      const h = makeHarness(failure, KEY_FILE);
+      const h = makeHarness(failure, {});
       const error = await generateAudio(options(h)).catch((e: unknown) => e);
       expect(error).toBeInstanceOf(Error);
       expect(JSON.stringify(error, Object.getOwnPropertyNames(error))).not.toContain(SENTINEL);

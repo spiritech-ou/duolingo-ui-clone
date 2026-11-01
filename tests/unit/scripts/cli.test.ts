@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { parseCliArgs, runCli } from '@scripts/audio/cli';
-import { GOOD_MODELS, HOME, KEY_PATH, OUT, SENTINEL, makeHarness, makeResponse } from './helpers';
+import { GOOD_MODELS, KEY_ENV, OUT, SENTINEL, makeHarness, makeResponse } from './helpers';
 import type { Call, Harness } from './helpers';
 
 const ITEMS = [
@@ -15,7 +15,7 @@ function respond(call: Call): ReturnType<typeof makeResponse> {
 }
 
 function run(h: Harness, argv: string[]): Promise<number> {
-  return runCli(argv, { items: ITEMS, outDir: OUT, rootDir: HOME, deps: h.deps });
+  return runCli(argv, { items: ITEMS, outDir: OUT, env: KEY_ENV, deps: h.deps });
 }
 
 describe('parseCliArgs', () => {
@@ -66,18 +66,14 @@ describe('parseCliArgs', () => {
 });
 
 describe('runCli', () => {
-  it('dry run lists words and files, makes no call and never reads the key file', async () => {
+  it('dry run lists words and files, makes no call and never reads the key', async () => {
     const h = makeHarness(respond, {});
-    let keyFileRead = false;
-    const readText = h.deps.fs.readText;
-    h.deps.fs.readText = (path) => {
-      if (path === KEY_PATH) keyFileRead = true;
-      return readText(path);
-    };
-    const code = await run(h, ['--voice', 'v1', '--dry-run']);
+    let keyRead = false;
+    const env = new Proxy({}, { get: () => ((keyRead = true), SENTINEL) });
+    const code = await runCli(['--voice', 'v1', '--dry-run'], { items: ITEMS, outDir: OUT, env, deps: h.deps });
     expect(code).toBe(0);
     expect(h.calls).toHaveLength(0);
-    expect(keyFileRead).toBe(false);
+    expect(keyRead).toBe(false);
     expect(h.fs.writes).toHaveLength(0);
     expect(h.logs.join('\n')).toContain(`Would write õun -> ${OUT}/v-oun.mp3`);
     expect(h.logs.join('\n')).toContain('3 clip(s) would be written');
@@ -113,9 +109,9 @@ describe('runCli', () => {
     expect(h.logs.join('\n')).not.toContain(SENTINEL);
   });
 
-  it('verify-only fails without calling anything when the key file is missing', async () => {
-    const h = makeHarness(respond, {});
-    expect(await run(h, ['--verify-only'])).toBe(1);
+  it('verify-only fails without calling anything when the key is missing', async () => {
+    const h = makeHarness(respond);
+    expect(await runCli(['--verify-only'], { items: ITEMS, outDir: OUT, env: {}, deps: h.deps })).toBe(1);
     expect(h.calls).toHaveLength(0);
   });
 
