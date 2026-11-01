@@ -4,6 +4,8 @@ storybook-static
 test-results
 playwright-report
 .env*
+# ElevenLabs key read by scripts/audio/apiKey.ts (npm run audio:generate); template: .elevenlabs.env.example
+.elevenlabs.env
 !.env.example
 mcp/.env
 .playwright-mcp/

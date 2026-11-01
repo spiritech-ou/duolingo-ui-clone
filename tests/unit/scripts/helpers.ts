@@ -1,7 +1,7 @@
 import type { AudioDeps, FileSystem, FetchLike, HttpRequest, HttpResponse } from '@scripts/audio/types';
 
 export const SENTINEL = 'sk_SENTINEL_KEY_9f3a7c21';
-export const HOME = '/home/tester';
+export const HOME = '/project';
 export const KEY_PATH = `${HOME}/.elevenlabs.env`;
 export const OUT = '/repo/public/audio';
 

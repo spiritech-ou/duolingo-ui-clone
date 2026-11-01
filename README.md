@@ -83,3 +83,14 @@ How review works:
 | `CHROMATIC_PROJECT_TOKEN` | Repository secret (Settings, Secrets and variables, Actions) | The only secret. Chromatic project token for the `chromatic` job; without it the job skips with a notice. |
 
 No deployment secret exists: Pages deploys with the workflow token, using the `pages: write` and `id-token: write` permissions of the Pages deploy job only. No repository variables are used.
+
+## Estonian audio
+
+The word clips are MP3 files in `public/audio/` (one per vocabulary word, about 2.4 MB in total) with a `manifest.json` that maps each Estonian word to its file. They are committed, so a fresh clone plays them without any key. The app plays a clip when the device has no Estonian voice. Every clip is flagged `needsReview` until an Estonian speaker has checked it.
+
+Regenerating them (only needed if the vocabulary changes) uses the ElevenLabs API:
+
+1. Copy `.elevenlabs.env.example` to `.elevenlabs.env` in the repository root (git ignored) and set `ELEVENLABS_API_KEY=` to your key.
+2. Run `npm run audio:generate -- --voice <voiceId>`. The clips used so far were made with the ElevenLabs voice Alice (`Xb7hH8MSUJpSbSDYk0k2`) and the `eleven_v3` model. Add `--verify-only` to check the key and the model without generating anything.
+
+The key is read only from `.elevenlabs.env` in the repository root, nowhere else.

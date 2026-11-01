@@ -24,9 +24,9 @@ export function parseApiKey(content: string): string | null {
   return null;
 }
 
-/** Reads the key from `<home>/.elevenlabs.env`. The home directory is resolved by the caller at run time. */
-export async function readApiKey(fs: FileSystem, homeDir: string): Promise<string> {
-  const path = join(homeDir, KEY_FILE_NAME);
+/** Reads the key from `<project root>/.elevenlabs.env` (git ignored, see `.elevenlabs.env.example`). */
+export async function readApiKey(fs: FileSystem, rootDir: string): Promise<string> {
+  const path = join(rootDir, KEY_FILE_NAME);
   const content = await fs.readText(path);
   if (content === null) {
     throw new AudioGenerationError(`Key file not found: ${path}. Create it with a line ${KEY_ENTRY_NAME}=<your key>.`);

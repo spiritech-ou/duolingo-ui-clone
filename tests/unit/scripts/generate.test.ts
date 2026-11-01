@@ -19,7 +19,7 @@ function respond(call: Call): ReturnType<typeof makeResponse> {
 }
 
 function options(h: Harness, extra: Partial<GenerateOptions> = {}): GenerateOptions {
-  return { items: ITEMS, model: 'eleven_v3', voiceId: 'voice-1', outDir: OUT, homeDir: HOME, deps: h.deps, ...extra };
+  return { items: ITEMS, model: 'eleven_v3', voiceId: 'voice-1', outDir: OUT, rootDir: HOME, deps: h.deps, ...extra };
 }
 
 function manifestOf(h: Harness): Manifest {

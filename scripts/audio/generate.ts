@@ -14,8 +14,8 @@ export interface GenerateOptions {
   readonly voiceId: string;
   /** Output folder, `public/audio` in the repository. */
   readonly outDir: string;
-  /** The user's home directory, resolved by the caller at run time. */
-  readonly homeDir: string;
+  /** The project root, where `.elevenlabs.env` lives, resolved by the caller at run time. */
+  readonly rootDir: string;
   /** Regenerate clips that already exist. */
   readonly force?: boolean;
   readonly retry?: RetryPolicy;
@@ -77,7 +77,7 @@ async function writeManifest(options: GenerateOptions): Promise<Manifest> {
 
 export async function generateAudio(options: GenerateOptions): Promise<GenerateResult> {
   const { deps } = options;
-  const apiKey = await readApiKey(deps.fs, options.homeDir);
+  const apiKey = await readApiKey(deps.fs, options.rootDir);
   // From here on every message is redacted, whatever produced it.
   const safeDeps: AudioDeps = { ...deps, log: (message) => deps.log(redact(message, apiKey)) };
   const verified = await verifyModel(safeDeps, apiKey, options.model, options.timeoutMs);

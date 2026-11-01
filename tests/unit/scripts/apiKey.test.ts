@@ -31,7 +31,7 @@ describe('parseApiKey', () => {
 });
 
 describe('readApiKey', () => {
-  it('reads the file under the injected home directory', async () => {
+  it('reads the file under the injected project root', async () => {
     await expect(readApiKey(makeFs({ [KEY_PATH]: `ELEVENLABS_API_KEY=${SENTINEL}` }), HOME)).resolves.toBe(SENTINEL);
   });
 

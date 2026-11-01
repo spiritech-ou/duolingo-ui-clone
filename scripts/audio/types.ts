@@ -1,6 +1,6 @@
 // Shared types for the one-off Estonian audio generation. Everything with a side
 // effect (network, file system, clock, logging) is injected so tests never touch
-// the network or the real home directory.
+// the network or the real project folder.
 
 export type AudioModel = 'eleven_v3' | 'eleven_v4';
 

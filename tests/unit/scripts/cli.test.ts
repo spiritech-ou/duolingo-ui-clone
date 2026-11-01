@@ -15,7 +15,7 @@ function respond(call: Call): ReturnType<typeof makeResponse> {
 }
 
 function run(h: Harness, argv: string[]): Promise<number> {
-  return runCli(argv, { items: ITEMS, outDir: OUT, homeDir: HOME, deps: h.deps });
+  return runCli(argv, { items: ITEMS, outDir: OUT, rootDir: HOME, deps: h.deps });
 }
 
 describe('parseCliArgs', () => {

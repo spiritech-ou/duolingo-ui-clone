@@ -101,7 +101,7 @@ export interface CliContext {
   readonly items: readonly AudioItem[];
   readonly outDir: string;
   /** Resolved by the caller at run time; only read when the key is needed. */
-  readonly homeDir: string;
+  readonly rootDir: string;
   readonly deps: AudioDeps;
 }
 
@@ -122,7 +122,7 @@ export async function runCli(argv: readonly string[], context: CliContext): Prom
 
   try {
     if (options.verifyOnly) {
-      const apiKey = await readApiKey(deps.fs, context.homeDir);
+      const apiKey = await readApiKey(deps.fs, context.rootDir);
       const verified = await verifyModel(deps, apiKey, options.model);
       deps.log(`Model ${verified.model} can do text-to-speech and lists Estonian (language id "${verified.languageCode}"). Nothing was synthesized.`);
       return 0;
@@ -157,7 +157,7 @@ export async function runCli(argv: readonly string[], context: CliContext): Prom
       model: options.model,
       voiceId,
       outDir: context.outDir,
-      homeDir: context.homeDir,
+      rootDir: context.rootDir,
       force: options.force,
       sendLanguageCode: options.sendLanguageCode,
       ...(options.limit === undefined ? {} : { limit: options.limit }),
