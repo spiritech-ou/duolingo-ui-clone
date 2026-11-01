@@ -188,4 +188,110 @@ Mismatches (details above; none edits `src`):
 - **M8 Same card again.** Clicking an already selected card plays nothing (the radio `change` does not fire); the key does replay. Line 106 says the number key is "same as click, including the audio", and the task asks that a repeat selection plays again.
 - **M9 Silent first 2.2 s.** Rule k (line 98) reads "before the manifest has loaded and before a voice is known"; the code waits for the 2 s voice timeout even though the manifest is loaded after about 200 ms and 180 non-Estonian voices are listed, so selections in the first 2.2 s are silent. The Sound check row (line 72) says "selecting a card does not speak yet", so the behaviour matches that row; the two lines disagree.
 
-Notes: the manifest is requested twice per screen mount in the dev server (React strict mode double effect, assumed; not checked in a production build). Once, right after resizing from 1280 to 390 and leaving the lesson, the app showed "We couldn't load this lesson" with console errors "Invalid response body from GET /course ... <!doctype" (the mock layer answered with the Vite HTML page); a reload fixed it and it did not come back, so it is not an audio finding and is unverified.
+Notes (audio pass): the manifest is requested twice per screen mount in the dev server (React strict mode double effect, assumed; not checked in a production build). Once, right after resizing from 1280 to 390 and leaving the lesson, the app showed "We couldn't load this lesson" with console errors "Invalid response body from GET /course ... <!doctype" (the mock layer answered with the Vite HTML page); a reload fixed it and it did not come back, so it is not an audio finding and is unverified.
+
+## Plan 04: final re-verification
+
+Branch `claude/language-learning-prototype`, tasks 1 to 13 committed. Dev server `npm run dev:mocks -- --port 5412 --strictPort` (mocks on), headless Chromium through the Playwright MCP, 1280x720 and 390x844, light and dark. Clips are served (manifest answers, 120 files), so no "Sound unavailable" icon and no "No Estonian voice" notice appear anywhere below. Themes: the real header toggle on `/learn` (header exists there); `data-theme` set directly on every full-screen route (onboarding, lesson, practice have no header, OQ-34). States came from the `mockScenario` key (`ok`, `error`, `timeout`, `notfound`) and edits of the `profiles` entry in `localStorage` (`hearts`, `hasSeenHeartsIntro`), made inside the browser session; no repository file was added. Widths are `getBoundingClientRect` values (`left,top widthxheight`); `scrollWidth` equalled the viewport width (no horizontal scroll) in every cell measured.
+
+Limits: a real AZERTY keyboard cannot be emulated, so the number-key check used synthetic `KeyboardEvent`s. In this environment a `timeout` scenario does not stay in Loading: after a few seconds the app shows the load error again (client timeout), so loading shots were taken straight after pressing "Try again".
+
+### Onboarding (`onboarding.md` Layout, Desktop and Mobile paragraphs)
+
+| State | Width | Measured | Spec | Result | Screenshots |
+|---|---|---|---|---|---|
+| level, nothing chosen | 1280 | mascot 110x110 at x32 y134; bubble 408x68 at x158; row from x32 to the column's right edge x960 = 928 wide; rows 640x80 at x320, 24px gaps; CONTINUE 216x60 at x1040; footer 1280 wide | mascot x32, row 928, CONTINUE 216x60 | pass | `pw-shot-onboarding-level-empty-1280-{light,dark}.png` |
+| level, chosen | 1280 | rows unchanged, one radio checked, CONTINUE 216x60 enabled | same | pass | `pw-shot-onboarding-level-chosen-1280-{light,dark}.png` |
+| level, nothing chosen | 390 | mascot 80x80 at x16 y24; bubble 358x88 at x16 y120 (16px below the mascot), full column width, tail points up (seen in the screenshot); rows 358x64 (last 84, two lines); CONTINUE 358x56 at y772; scrollWidth 390 | mascot about 80 above full-width bubble, CONTINUE 56 | pass | `pw-shot-onboarding-level-empty-390-{light,dark}.png` |
+| level, chosen | 390 | one radio checked, rows 358x64, CONTINUE 358x56 | same | pass | `pw-shot-onboarding-level-chosen-390-{light,dark}.png` |
+| start choice, nothing chosen | 1280 | mascot 110 at x32; bubble 435x68; cards 640x175 at x320/y284 and y483 (gap 24); Back 76x41 at x24; CONTINUE 216x60 at x1040 | cards 640x175, CONTINUE 216x60 | pass | `pw-shot-onboarding-start-empty-1280-{light,dark}.png` |
+| start choice, chosen | 1280 | one input checked, same sizes | same | pass | `pw-shot-onboarding-start-chosen-1280-{light,dark}.png` |
+| start choice, nothing chosen | 390 | mascot 80x80 at x16 y24; bubble 358x88 below; cards 358x118; Back 76x41 at x16 above CONTINUE 358x56 | stacked mascot, CONTINUE 56 | pass | `pw-shot-onboarding-start-empty-390-{light,dark}.png` |
+| start choice, chosen | 390 | one checked, same sizes | same | pass | `pw-shot-onboarding-start-chosen-390-{light,dark}.png` |
+
+Note: the level draft is saved in the profile, so a revisit of the level step shows the earlier choice checked; the "nothing chosen" 390 shots were taken after clearing `onboarding.level` in the stored profile.
+
+### Lesson not found, load errors and loading (`data-loading-states.md` Layout)
+
+| State | Width | Measured | Spec | Result | Screenshots |
+|---|---|---|---|---|---|
+| lesson not found (`notfound`) | 1280 | text container `role="alert"` (the div holding heading and message, 295x29 text row at x493 y320); column 480 at x400; mascot img 136 (box 120) at y174; "Back to path" 240x52 at x520 y373 and it holds focus (`document.activeElement`) | role alert, 480, 240, focus on Back to path | pass | `pw-shot-lesson-notfound-1280-{light,dark}.png` |
+| lesson not found | 390 | `role="alert"`; mascot img 108 (box 96) at y126; "Back to path" 358x52 at x16 y301, focused; scrollWidth 390 | alert, 358, focus, layout unchanged | pass | `pw-shot-lesson-notfound-390-{light,dark}.png` |
+| lesson load error (`error`) | 1280 | `role="alert"` 412x69; mascot 136 (box 120) at y174; Try again and Back to path 240x52 at x520, stacked 12 apart; focus on Try again | 480, 240, focus | pass | `pw-shot-exercise-error-1280-{light,dark}.png` |
+| lesson load error | 390 | `role="alert"` 358x93; mascot img 108 at y126; buttons 358x52 stacked 12 apart; Try again focused | 358, 96 box | pass | `pw-shot-exercise-error-390-{light,dark}.png` |
+| lesson loading after Try again (scenario `timeout`) | 1280 and 390 | `document.activeElement` is the `role="status"` region "Getting your lesson ready" (`tabindex=-1`); Close 44x44 at x24 y24 (390) | focus on the loading status region (task 8) | pass | `pw-shot-exercise-loading-{1280,390}-{light,dark}.png` |
+| practice load error, Try again, loading | 1280 | after Try again `activeElement` is the `role="status"` region "Getting your practice ready" | same (task 8) | pass | none new (state identical to the lesson one) |
+| `/learn` load error, Try again, skeleton | 1280 | after Try again `activeElement` is the `role="status"` region "Loading your lessons" (visually hidden, 1x1 at x319 y178); skeleton 640 wide at x320 | same (task 8) | pass | `pw-shot-learn-error-1280-{light,dark}.png`, `pw-shot-learn-skeleton-1280-{light,dark}.png` |
+| `/learn` load error and skeleton | 390 | error text 358, skeleton 358x552 at x16 y179, `role="status"` focused after Try again, scrollWidth 390 | 358, same focus | pass | `pw-shot-learn-error-390-{light,dark}.png`, `pw-shot-learn-skeleton-390-{light,dark}.png` |
+
+### First-mistake modal, exit dialog and Back (`exercise-session.md` Layout, Mobile paragraph; task 11)
+
+| State | Width | Measured | Spec | Result | Screenshots |
+|---|---|---|---|---|---|
+| first-mistake modal | 390 | dialog 358x399 at x16 y223 (`scrollHeight` 399 = `clientHeight`, no inner scroller), flame image 108 (box 96) at y245, KEEP GOING 310x66 | width 358, about 400 high, no scroll at 390x844 | pass | `pw-shot-exercise-wrong-modal-390-{light,dark}.png` |
+| first-mistake modal | 1280 | dialog 585x494 at x348 y113, KEEP GOING 505x66, flame image 108, two red flames in the DOM (modal plus panel behind) | 585, about 497 | pass | `pw-shot-exercise-wrong-modal-1280-{light,dark}.png` |
+| exit dialog | 390 | "Quit lesson?" 358x293 at y276, Keep learning and Quit 310x66 stacked 12 apart, no image | 358, no flame | pass | `pw-shot-dialog-exit-390-{light,dark}.png` |
+| exit dialog | 1280 | 585x388 at x348 y166, buttons 505x66, no image | 585 | pass | `pw-shot-dialog-exit-1280-{light,dark}.png` |
+| browser Back with the modal open (390, lesson reached from `/learn`, history idx 1) | 390 | first `history.back()`: modal gone, URL stays `/lesson/u1-l1`, wrong panel visible; second `history.back()`: "Quit lesson?" dialog open, URL unchanged; Keep learning closes it | task 11 | pass | none (the dialog shot above) |
+
+Back caveat (not a mismatch of the task): when the lesson page was opened by a fresh `goto` (history idx 0, no earlier in-app entry) the first Back left the app for the previous document; the guard only applies to in-app history.
+
+### Exercise screens with sound available (`exercise-session.md` Layout)
+
+Top bar and speaker: no speaker icon and no notice at any width (`[aria-label*="ound"]` count 0); the top bar holds Close 44x44, the progress bar and the hearts counter only. Lesson `u1-l1` first exercise (tee), then bread (wrong), then skip.
+
+| State | Width | Measured | Spec | Result | Screenshots |
+|---|---|---|---|---|---|
+| idle | 1280x720 | top bar 1232 at x24 (window minus 48), progress 1078x22, question area 790 at x245; tag "NEW WORD" y176, heading y210, cards 255x333 at x245/512/780 y359 (gaps 12); footer 1280x190 at y530; SKIP 197x64, CHECK 198x64 (outer edges x34 and x1247) | tag at about 330 (line 145), cards 256x334, footer 190 | cards pass; question start **M7 still open** (see below) | `pw-shot-exercise-idle-1280-{light,dark}.png` |
+| idle | 390x844 | top bar 358 at x16, progress 236x22, Close 44x44; tag y108, heading y142, cards 358x88 at y203/303/403 (gaps 12), last card ends y491; footer 390x120 at y724; SKIP and CHECK 173x64, gap 12 | 358, cards 88, buttons half width | pass | `pw-shot-exercise-idle-390-{light,dark}.png` |
+| option selected | 1280 / 390 | one input checked, CHECK enabled, sizes unchanged | as idle | pass | `pw-shot-exercise-selected-{1280,390}-{light,dark}.png` |
+| correct | 1280 | panel 1280x185 at y535, CONTINUE 200x64 at x1053, no red flame | 185, 200 | pass | `pw-shot-exercise-correct-1280-{light,dark}.png` |
+| correct | 390 | panel 390x200 at y644, CONTINUE 358x64, no red flame, counter "5 hearts left" | 200, full width | pass | `pw-shot-exercise-correct-390-{light,dark}.png` |
+| wrong, modal | see the modal table above | | | pass | `pw-shot-exercise-wrong-modal-{1280,390}-{light,dark}.png` |
+| wrong, modal dismissed | 1280 / 390 | panel 1280x185 / 390x200, red flame wrapper 36x36 in the panel row (img), CONTINUE 200x64 / 358x64, counter "4 hearts left" | 185 / 200, 32px flame | pass | `pw-shot-exercise-wrong-{1280,390}-{light,dark}.png` |
+| skipped | 1280 / 390 | no modal, panel 1280x185 / 390x200, flame 36x36 img (32px wrapper), CONTINUE 200x64 / 358x64, counter one lower | same | pass | `pw-shot-exercise-skipped-{1280,390}-{light,dark}.png` |
+
+Are the cards cut by the footer at 1280x720? Yes. The footer starts at y530; the cards run to y692 and their word labels sit at y636 to 660, so the card labels (and the lower part of every card) are hidden under the footer when the screen opens. The screen does not scroll as a document (`scrollHeight` 720 = viewport); `main` is the scroller (`overflow-y: auto`, `scrollHeight` 648 against `clientHeight` 462), so the labels can be reached by scrolling inside `main`, but the idle, selected and 1280 states shown in the screenshots have the labels covered. At 390x844 the cards end at y491, well above the footer (y724): not cut. This matches the review remark about `pw-shot-exercise-sound-selected-1280-dark.png`.
+
+Number keys (task 10), synthetic events on the exercise "bread": `{ key: '&', code: 'Digit1' }` selected card 1; `{ key: '2', code: 'Digit2' }` card 2; `{ key: '3', code: 'Numpad3' }` card 3; `{ key: '1', code: 'Numpad1' }` card 1 again. All four selected the expected card. Pass (a real AZERTY keyboard cannot be emulated; the layout-independent `code` is what was exercised).
+
+### End screens (`exercise-session.md` line 151)
+
+| State | Width | Measured | Spec | Result | Screenshots |
+|---|---|---|---|---|---|
+| practice complete, 3 hearts | 1280 and 390 | text "Practice complete!", "+1 heart", counter 4 (was 3); CONTINUE 240x52 at x520 (1280) / 358x52 at x16 (390); mascot 170 img (box 160) | counter one higher, "+1 heart" shown | pass | `pw-shot-exercise-practicecomplete-{1280,390}-{light,dark}.png` |
+| practice complete, 5 hearts | 1280 | no "+1 heart" text, counter "5 hearts left" 37x24 at x621 (centre 639.5), CONTINUE 240x52 at y387 directly below, no gap | counter 5 only, centred, no empty gap | pass | `pw-shot-practice-complete-5hearts-1280-{light,dark}.png` |
+| practice complete, 5 hearts | 390 | no "+1 heart", counter 37x24 at x176 (centre 194.5 of 390), CONTINUE 358x52 | same | pass | `pw-shot-practice-complete-5hearts-390-{light,dark}.png` |
+| out of hearts (0 hearts) | 1280 | column 480, mascot red 181 img at x541 y93, "Practice to earn a heart" 240x76 (wraps to two lines) and "Quit lesson" 240x52, stacked 12 apart, no stats; the heading holds focus on arrival | 480, 160 mascot, two stacked buttons | pass | `pw-shot-exercise-outofhearts-1280-{light,dark}.png` |
+| out of hearts | 390 | mascot 181 img at x96, buttons 358x52 at x16, stacked 12 apart | full width | pass | `pw-shot-exercise-outofhearts-390-{light,dark}.png` |
+| Enter on out of hearts (task 5) | 390 | Enter with focus on the page: URL became `/practice` and a practice exercise showed; on a fresh visit Tab, Tab moved focus to "Quit lesson" and Enter went to `/learn` | Enter runs the focused action, default "Practice to earn a heart" | pass | none |
+
+### M1 to M6 and N1: status
+
+| Item | Plan 03 finding | Measured now | Status |
+|---|---|---|---|
+| M1 first-mistake modal height at 390 | 399, spec about 520 | 358x399, no inner scroll at 390x844; spec line 157 now says about 400 (358 wide, fits without scrolling) | **resolved** (spec corrected) |
+| M2 lesson not-found role | `role="status"` | `role="alert"` on the text container at both widths, focus on "Back to path", layout unchanged (480 / 240x52 and 358 / 358x52) | **resolved** |
+| M3 onboarding mobile mascot row | side by side, 96px | mascot 80x80 above a 358x88 bubble, tail up, both steps | **resolved** |
+| M4 onboarding CONTINUE height | 66 | 216x60 at 1280 and 358x56 at 390, both steps | **resolved** |
+| M5 desktop mascot row | clamped to x32, spec said hang 330 | x32 at 1280 as the updated spec's rule (hang = min(330, (1280-640)/2-32 = 288)); row 928 wide, wider than the 640 column; the 1364+ and 1920 values were not re-measured | **resolved** at 1280 |
+| M6 spec arithmetic "about 326" | spec number wrong | spec line 157 now says 358 (390 minus 32); modal and dialog measure 358 | **resolved** |
+| N1 end-screen stats | spec said three stats in a row for all end screens | spec line 151 now limits the three stats to Lesson over; Practice complete shows its counter line and Out of hearts message and buttons, which is what is rendered; Lesson over was not re-measured in this pass | **resolved** (spec aligned with the app) |
+
+### Still open (carried from task 13; no `src` change made here)
+
+- **M7 Question area start at 1280x720.** Measured: question area box y92, tag y176, heading y210, cards (radiogroup) y359. `exercise-session.md` line 145: "it starts about 330px below the top of the viewport". The 330 comes from the 2000px capture (tag at y357 there); the number is not in CSS pixels. Spec fix: say which element and which unit. Related effect: the cards are covered by the footer at 720px height (see above).
+- **M8 Same card again.** Re-clicking the already selected card plays no clip (the radio `change` does not fire), while the number key replays. `exercise-session.md` line 106: the number key is "same as click, including the audio". Not re-tested in this pass.
+- **M9 Silent first 2.2 s.** Selections in the first about 2.2 s after the screen opens play no clip; `exercise-session.md` rule k (line 98) reads "before the manifest has loaded and before a voice is known", while the Sound check row (line 72) says selecting does not speak yet. The two lines disagree. Not re-tested in this pass.
+- **Lesson not found: `role="alert"` is on the text container only** (heading and message), not on the whole column that also holds the mascot and button. This matches the load error and the spec says "container"; listed in case the spec means the whole column.
+- **Timeout scenario**: the app leaves Loading by itself after a few seconds and shows the load error (client timeout); if the spec wants an unbounded loading state for `timeout`, that differs (not a layout item).
+
+No other mismatch was found in the screens re-measured.
+
+### Stale files still remaining
+
+Not re-taken in this pass (earlier plans' files; the files of this report supersede those of the same screen and state): `pw-shot-exercise-empty-*`, `pw-shot-lesson-firstmistake-*`, `pw-shot-lesson-loaderror-*`, `pw-shot-lesson-outofhearts-1280-*`, `pw-shot-dialog-firstmistake-*`, `pw-shot-footer-*`, `pw-shot-picturechoice-*`, `pw-shot-radiocards-*`, `pw-shot-speechbubble-*`, `pw-shot-unit-*`, `pw-shot-skeleton-unit-*`, `pw-shot-focusedlayout-*`, `pw-shot-exercisetopbar-*`, `pw-shot-practice-complete-5hearts-1280-current.png`, and the task 13 `pw-shot-exercise-sound-*` files (kept, not overwritten; they show the same sound-available screens). The `pw-shot-exercise-lessonover-*`, `pw-shot-learn-ready/empty/finished/placementnote-*`, login and not-found files were not touched by plan 04 and were not re-run. `pw-shot-lesson-notfound-*` and `pw-shot-exercise-error-{1280,390}-dark.png` and the 5 hearts 390/1280 shots may show as unchanged in git because the layout is identical to the plan 03 files.
+
+### Verdict
+
+Plan 04's visible fixes hold at 1280x720 and 390x844 in both themes: the onboarding mascot row, mobile stacking and CONTINUE sizes follow the updated spec, the not-found screen announces itself as an alert and focuses "Back to path", the first-mistake modal is 358x399 with no scroll, the load-error, loading and skeleton states move focus to the loading status region on `/learn`, lesson and practice, Practice complete shows or omits "+1 heart" correctly for fewer than 5 and 5 hearts, Out of hearts responds to Enter as specified, number keys work by physical key, and Back closes the modal before opening the exit dialog; M1 to M6 and N1 are resolved. What remains is not a regression of plan 04: M7 (the 330 figure in the spec is not in CSS pixels, and at 1280x720 the cards are hidden behind the footer until `main` is scrolled), M8 (replay on re-click) and M9 (silent first 2.2 s), all carried from task 13 and recorded with their spec lines for a following plan.
