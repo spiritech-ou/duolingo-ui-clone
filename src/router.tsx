@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/Button';
 import { Mascot } from '@/components/ui/Mascot';
 import { RouteGuard } from '@/features/auth';
+import { routerBasename } from '@/lib/baseUrl';
 import { useThemeStore } from '@/store/useThemeStore';
 import styles from './router.module.scss';
 
@@ -128,6 +129,18 @@ const bareGroup: RouteObject[] = [
 ];
 
 // The guard is a pathless parent of both groups, so it wraps every route including /login.
-export const router = createBrowserRouter([
+const routes: RouteObject[] = [
   { element: <RouteGuard />, children: [headerGroup, ...bareGroup] },
-]);
+];
+
+/**
+ * Builds the browser router for a deployment `basename` (`/` at the root,
+ * `/duolingo-ui-clone` on GitHub Pages). Route paths, links and redirects stay
+ * base-free: React Router strips the basename from the location and adds it back
+ * when navigating, so the guard's redirects keep it too.
+ */
+export function createAppRouter(basename: string) {
+  return createBrowserRouter(routes, { basename });
+}
+
+export const router = createAppRouter(routerBasename());
