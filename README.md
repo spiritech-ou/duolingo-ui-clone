@@ -1,6 +1,8 @@
 # duolingo-ui-clone
 
-Live app (GitHub Pages, mock data): https://spiritech-ou.github.io/duolingo-ui-clone/
+- Live app (GitHub Pages, mock data): https://spiritech-ou.github.io/duolingo-ui-clone/
+- Live Storybook (hosted by Chromatic, latest build of `main`): https://main--6ae65ce2595832ebd45ff702.chromatic.com/ . It asks for a Chromatic login until the project's access setting is changed to allow viewing without one.
+- Chromatic project (builds and visual review): https://www.chromatic.com/builds?appId=6ae65ce2595832ebd45ff702
 
 ## Continuous integration
 
