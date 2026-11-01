@@ -14,20 +14,59 @@ export function audioClipUrl(clip: AudioClip): string {
   return `/audio/${clip.file}`;
 }
 
+/** The page session's manifest: a loaded result, or the request in flight. Failures are never kept. */
+let cached: AudioClips | null = null;
+let inFlight: Promise<AudioClips | null> | null = null;
+
+/** Forgets the cached manifest and any request in flight. For tests. */
+export function resetAudioClipsCache(): void {
+  cached = null;
+  inFlight = null;
+}
+
+/** One shared request, not tied to any caller's signal; resolves to null on any failure. */
+function fetchManifest(): Promise<AudioClips | null> {
+  const pending: Promise<AudioClips | null> = request(AUDIO_MANIFEST_PATH, {
+    schema: audioManifestSchema,
+    baseUrl: '',
+  }).then(
+    (manifest) => {
+      if (inFlight === pending) {
+        cached = manifest.clips;
+        inFlight = null;
+      }
+      return manifest.clips;
+    },
+    () => {
+      if (inFlight === pending) inFlight = null;
+      return null;
+    },
+  );
+  inFlight = pending;
+  return pending;
+}
+
 /**
- * `GET /audio/manifest.json`. Never throws and never reports an error: a missing file, a
- * non-JSON body, an invalid manifest, a network failure or an abort all resolve to no clips
- * (the app then simply plays no recording).
+ * `GET /audio/manifest.json`, read once per page session: concurrent callers share the request
+ * in flight and a success is kept in memory; a failure is not kept, so the next call tries
+ * again. Never throws and never reports an error: a missing file, a non-JSON body, an invalid
+ * manifest, a network failure or an abort all resolve to no clips (the app then simply plays no
+ * recording). Aborting one caller only ends that caller's wait, never the shared request.
  */
-export async function loadAudioClips(signal?: AbortSignal): Promise<AudioClips> {
-  try {
-    const manifest = await request(AUDIO_MANIFEST_PATH, {
-      schema: audioManifestSchema,
-      baseUrl: '',
-      ...(signal ? { signal } : {}),
+export function loadAudioClips(signal?: AbortSignal): Promise<AudioClips> {
+  if (cached !== null) return Promise.resolve(cached);
+  if (signal?.aborted) return Promise.resolve(NO_AUDIO_CLIPS);
+  const shared = inFlight ?? fetchManifest();
+  const result = shared.then((clips) => clips ?? NO_AUDIO_CLIPS);
+  if (!signal) return result;
+  return new Promise<AudioClips>((resolve) => {
+    const onAbort = () => {
+      resolve(NO_AUDIO_CLIPS);
+    };
+    signal.addEventListener('abort', onAbort, { once: true });
+    void result.then((clips) => {
+      signal.removeEventListener('abort', onAbort);
+      resolve(clips);
     });
-    return manifest.clips;
-  } catch {
-    return NO_AUDIO_CLIPS;
-  }
+  });
 }

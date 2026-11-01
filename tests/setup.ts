@@ -1,6 +1,7 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
 import { afterAll, afterEach, beforeAll, beforeEach } from 'vitest';
+import { resetAudioClipsCache } from '@/api/endpoints/audio';
 import { server } from '@/mocks/server';
 
 // jsdom does not implement scrolling. Every test starts with a no-op (a test that asserts on scrolling
@@ -22,6 +23,8 @@ afterEach(() => {
   else Reflect.deleteProperty(Element.prototype, 'scrollIntoView');
   cleanup();
   server.resetHandlers();
+  // The manifest is cached for the page session; every test starts from a fresh page.
+  resetAudioClipsCache();
 });
 
 afterAll(() => {

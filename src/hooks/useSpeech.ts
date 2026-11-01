@@ -153,7 +153,6 @@ export function useSpeech({
   const [timeoutMs] = useState(clipCheckTimeoutMs);
 
   const voiceRef = useRef<SpeechVoiceInfo | null>(null);
-  const settledRef = useRef(false);
   const clipsRef = useRef<AudioClips>(NO_AUDIO_CLIPS);
   const loadClipsRef = useRef(loadClips);
   const createAudioRef = useRef(createAudio);
@@ -196,7 +195,6 @@ export function useSpeech({
     refresh();
     const unsubscribe = adapter.onVoicesChanged(refresh);
     const timer = setTimeout(() => {
-      settledRef.current = true;
       setSettled(true);
     }, VOICE_CHECK_TIMEOUT_MS);
     return () => {
@@ -280,10 +278,10 @@ export function useSpeech({
       activeRef.current += 1;
       stopClip();
       if (supported) adapter.cancel();
-      // Voice first: while the voice check is still running no clip is played; the clip is
-      // used only once it is known that no voice exists (unsupported, or settled without one).
-      const voiceKnownAbsent = !supported || settledRef.current;
-      if (!voiceKnownAbsent) return 'nothing';
+      // Voice first: a known voice was handled above (and a voice that fails does not hand
+      // over to the clip). With no voice known right now, the clip plays as soon as the
+      // manifest has loaded (`clipsRef` is empty until then, so nothing plays and nothing is
+      // fetched later). The 2 s voice timeout only decides the status and the notice.
       const key = text.normalize('NFC');
       const clip = Object.prototype.hasOwnProperty.call(clipsRef.current, key)
         ? clipsRef.current[key]

@@ -400,19 +400,88 @@ describe('useSpeech clips', () => {
     expect(created).toHaveLength(0);
   });
 
-  it('plays nothing before the voice check settles, even with a clip (voice first)', async () => {
+  it('plays the clip at once when the manifest has loaded and no voice is known, before the 2 s check ends', async () => {
     const synth = createFakeSynth({ voices: [english] });
     const { created, createAudio } = createFakeAudioFactory();
     const { result } = renderHook(() =>
       useSpeech({ adapter: synth, loadClips: loadStub, createAudio }),
     );
     await flush();
+    expect(result.current.voiceStatus).toBe('checking');
+    let outcome = '';
+    act(() => {
+      outcome = result.current.speak('tee');
+    });
+    expect(outcome).toBe('started');
+    expect(lastAudio(created).url).toBe('/audio/tea.mp3');
+    expect(synth.requests).toHaveLength(0);
+  });
+
+  it('plays nothing before the manifest has loaded, and fetches nothing later', async () => {
+    const synth = createFakeSynth({ voices: [english] });
+    const { created, createAudio } = createFakeAudioFactory();
+    const loadClips = vi.fn(() => new Promise<AudioClips>(() => {}));
+    const { result } = renderHook(() => useSpeech({ adapter: synth, loadClips, createAudio }));
     let outcome = '';
     act(() => {
       outcome = result.current.speak('tee');
     });
     expect(outcome).toBe('nothing');
     expect(created).toHaveLength(0);
+    expect(loadClips).toHaveBeenCalledTimes(1);
+  });
+
+  it('a voice present at selection wins over a loaded clip', async () => {
+    const synth = createFakeSynth({ voices: [estonian] });
+    const { created, createAudio } = createFakeAudioFactory();
+    const { result } = renderHook(() =>
+      useSpeech({ adapter: synth, loadClips: loadStub, createAudio }),
+    );
+    await flush();
+    act(() => {
+      result.current.speak('tee');
+    });
+    expect(synth.requests).toHaveLength(1);
+    expect(created).toHaveLength(0);
+  });
+
+  it('a voice appearing before the 2 s check ends takes over from the next selection', async () => {
+    const synth = createFakeSynth({ voices: [english] });
+    const { created, createAudio } = createFakeAudioFactory();
+    const { result } = renderHook(() =>
+      useSpeech({ adapter: synth, loadClips: loadStub, createAudio }),
+    );
+    await flush();
+    act(() => {
+      result.current.speak('tee');
+    });
+    expect(created).toHaveLength(1);
+    act(() => {
+      synth.setVoices([english, estonian]);
+      synth.fireVoicesChanged();
+    });
+    act(() => {
+      result.current.speak('kohv');
+    });
+    expect(synth.requests.map((request) => request.text)).toEqual(['kohv']);
+    expect(created).toHaveLength(1);
+  });
+
+  it('the no-voice status and notice reason still arrive exactly at 2 s', async () => {
+    const synth = createFakeSynth({ voices: [english] });
+    const loadClips = () => Promise.resolve(NO_AUDIO_CLIPS);
+    const { result } = renderHook(() => useSpeech({ adapter: synth, loadClips }));
+    await flush();
+    act(() => {
+      vi.advanceTimersByTime(1999);
+    });
+    expect(result.current.soundStatus).toBe('checking');
+    act(() => {
+      vi.advanceTimersByTime(1);
+    });
+    expect(result.current.voiceStatus).toBe('no-voice');
+    expect(result.current.soundStatus).toBe('none');
+    expect(result.current.soundUnavailableReason).toBe('no-voice');
   });
 
   it('plays the clip in a browser without speech synthesis', async () => {

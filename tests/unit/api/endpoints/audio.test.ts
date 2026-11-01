@@ -1,6 +1,11 @@
-import { http, HttpResponse } from 'msw';
+import { delay, http, HttpResponse } from 'msw';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { audioClipUrl, loadAudioClips, NO_AUDIO_CLIPS } from '@/api/endpoints/audio';
+import {
+  audioClipUrl,
+  loadAudioClips,
+  NO_AUDIO_CLIPS,
+  resetAudioClipsCache,
+} from '@/api/endpoints/audio';
 import { audioManifestFixture } from '@/mocks/data/audio';
 import {
   audioManifestHandler,
@@ -59,6 +64,85 @@ describe('loadAudioClips', () => {
     const pending = loadAudioClips(controller.signal);
     controller.abort();
     expect(await pending).toEqual({});
+    // The shared request is not cancelled by one caller; let it finish so it cannot leak into the next test.
+    await loadAudioClips();
+  });
+});
+
+describe('loadAudioClips once per page session', () => {
+  function countingHandler(counter: { n: number }) {
+    return http.get('*/audio/manifest.json', async () => {
+      counter.n += 1;
+      await delay(20);
+      return HttpResponse.json(audioManifestFixture);
+    });
+  }
+
+  it('makes one request for two concurrent calls', async () => {
+    const counter = { n: 0 };
+    server.use(countingHandler(counter));
+    const [a, b] = await Promise.all([loadAudioClips(), loadAudioClips()]);
+    expect(counter.n).toBe(1);
+    expect(a).toEqual(audioManifestFixture.clips);
+    expect(b).toBe(a);
+  });
+
+  it('reuses a success without another request', async () => {
+    const counter = { n: 0 };
+    server.use(countingHandler(counter));
+    await loadAudioClips();
+    expect(await loadAudioClips()).toEqual(audioManifestFixture.clips);
+    expect(counter.n).toBe(1);
+  });
+
+  it('does not keep a failure: the next call tries again', async () => {
+    server.use(audioManifestMissingHandler);
+    expect(await loadAudioClips()).toEqual({});
+    const counter = { n: 0 };
+    server.use(countingHandler(counter));
+    expect(await loadAudioClips()).toEqual(audioManifestFixture.clips);
+    expect(counter.n).toBe(1);
+  });
+
+  it('aborting the first caller does not break the second', async () => {
+    const counter = { n: 0 };
+    server.use(countingHandler(counter));
+    const first = new AbortController();
+    const firstResult = loadAudioClips(first.signal);
+    const secondResult = loadAudioClips(new AbortController().signal);
+    first.abort();
+    expect(await firstResult).toEqual({});
+    expect(await secondResult).toEqual(audioManifestFixture.clips);
+    expect(counter.n).toBe(1);
+  });
+
+  it('a caller already aborted starts no request', async () => {
+    const counter = { n: 0 };
+    server.use(countingHandler(counter));
+    const controller = new AbortController();
+    controller.abort();
+    expect(await loadAudioClips(controller.signal)).toEqual({});
+    expect(counter.n).toBe(0);
+  });
+
+  it('the first caller aborted before the request ends still leaves the result for a later call', async () => {
+    const counter = { n: 0 };
+    server.use(countingHandler(counter));
+    const first = new AbortController();
+    const firstResult = loadAudioClips(first.signal);
+    first.abort();
+    await firstResult;
+    expect(await loadAudioClips()).toEqual(audioManifestFixture.clips);
+    expect(counter.n).toBe(1);
+  });
+
+  it('resetAudioClipsCache forgets a cached success', async () => {
+    const counter = { n: 0 };
+    server.use(countingHandler(counter));
+    await loadAudioClips();
+    resetAudioClipsCache();
+    await loadAudioClips();
+    expect(counter.n).toBe(2);
   });
 });
 

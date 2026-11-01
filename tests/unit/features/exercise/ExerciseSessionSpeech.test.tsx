@@ -1,5 +1,6 @@
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { http, HttpResponse } from 'msw';
 import { createMemoryRouter, RouterProvider } from 'react-router';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Exercise } from '@/api/schemas/lesson';
@@ -7,6 +8,7 @@ import { ExerciseSession } from '@/features/exercise';
 import type { AudioClips } from '@/api/endpoints/audio';
 import type { ClipAudio, CreateClipAudio, SpeechAdapter } from '@/hooks/useSpeech';
 import { selectProfile, useProfileStore } from '@/store/useProfileStore';
+import { server } from '@/mocks/server';
 import { useSessionStore } from '@/store/useSessionStore';
 import { ENGLISH, ESTONIAN, makeSynth } from './fakeSynth';
 
@@ -372,6 +374,53 @@ describe('ExerciseSession speech and sound notices', () => {
       // CHECK never plays a clip.
       await user.click(screen.getByRole('button', { name: 'Check' }));
       expect(audio.created).toHaveLength(1);
+    });
+
+    it('plays the clip on a selection right after load, before the 2 s voice check ends', async () => {
+      const synth = makeSynth({ voices: [ENGLISH] });
+      const { user, audio } = setup(synth, { clips: CLIPS });
+      await act(() => vi.advanceTimersByTimeAsync(300));
+      await user.click(card('kohv'));
+      expect(audio.created.map((c) => [c.url, c.plays])).toEqual([['/audio/kohv.mp3', 1]]);
+      expect(synth.spoken).toHaveLength(0);
+      noSoundShown();
+    });
+
+    it('requests the manifest once for a whole lesson, from opening to the end screen', async () => {
+      let requests = 0;
+      server.use(
+        http.get('*/audio/manifest.json', () => {
+          requests += 1;
+          return HttpResponse.json({ clips: CLIPS });
+        }),
+      );
+      const user = userEvent.setup({ advanceTimers: (ms) => vi.advanceTimersByTimeAsync(ms) });
+      const router = createMemoryRouter([
+        {
+          path: '/',
+          element: (
+            <ExerciseSession
+              mode="lesson"
+              exercises={EXERCISES}
+              speechAdapter={makeSynth({ voices: [ENGLISH] })}
+              createAudio={makeAudio().createAudio}
+              onLessonComplete={vi.fn()}
+              onOutOfHearts={vi.fn()}
+              onQuit={vi.fn()}
+            />
+          ),
+        },
+      ]);
+      render(<RouterProvider router={router} />);
+      await settle();
+      await user.click(card('tee'));
+      await user.click(screen.getByRole('button', { name: 'Check' }));
+      await user.click(screen.getByRole('button', { name: 'Continue' }));
+      await user.click(card('piim'));
+      await user.click(screen.getByRole('button', { name: 'Check' }));
+      await user.click(screen.getByRole('button', { name: 'Continue' }));
+      await act(() => vi.advanceTimersByTimeAsync(100));
+      expect(requests).toBe(1);
     });
 
     it('clip only: a stored dismissal is irrelevant while a clip exists', async () => {
