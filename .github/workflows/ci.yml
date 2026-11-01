@@ -128,15 +128,14 @@ jobs:
           cache: npm
       - run: npm ci
         if: steps.token.outputs.present == 'true'
-      - uses: chromaui/action@v11
+      # The CLI is called directly because the action has no input for --allow-console-errors, which
+      # these Storybook stories need: some assert the window size or media emulation that only the
+      # Vitest browser runner provides (the check job runs every story there and gates this job), so
+      # they report errors in Chromatic's own browser. Chromatic is used for visual review only.
+      # exit-zero-on-changes keeps the job green; the Chromatic status check on the pull request
+      # carries the review state. Merged changes on main become the accepted baseline.
+      - name: Publish to Chromatic
         if: steps.token.outputs.present == 'true'
-        with:
-          projectToken: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
-          buildScriptName: build-storybook
-          # The job stays green; the Chromatic status check on the pull request
-          # carries the review state until a reviewer accepts the changes.
-          exitZeroOnChanges: true
-          # Merged changes were reviewed on the pull request, so builds on main
-          # become the accepted baseline. Pull requests are never auto accepted.
-          autoAcceptChanges: main
-          # Other options (allowConsoleErrors) live in chromatic.config.json, which the action reads.
+        env:
+          CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
+        run: npx --yes chromatic@18.13.6 --build-script-name build-storybook --exit-zero-on-changes --auto-accept-changes main --allow-console-errors
