@@ -349,7 +349,10 @@ export const StackedDialogs: Story = {
   play: async ({ args, mount, canvasElement }) => {
     // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
     // The check job runs this interaction test; Chromatic only takes the snapshot.
-    if (navigator.userAgent.includes('Chromatic')) return;
+    if (navigator.userAgent.includes('Chromatic')) {
+      await mount();
+      return;
+    }
     const closeOuter = fn();
     const closeInner = fn();
     const stack = (outerOpen: boolean, innerOpen: boolean) => (
@@ -400,7 +403,10 @@ export const FocusRestoredOnClose: Story = {
   play: async ({ args, mount, canvasElement }) => {
     // Chromatic renders in its own browser: no Vitest runner, no window resize, no real focus.
     // The check job runs this interaction test; Chromatic only takes the snapshot.
-    if (navigator.userAgent.includes('Chromatic')) return;
+    if (navigator.userAgent.includes('Chromatic')) {
+      await mount();
+      return;
+    }
     // A trigger outside React, so re-mounting the story cannot replace it.
     const trigger = document.createElement('button');
     trigger.textContent = 'Open';
