@@ -12,7 +12,7 @@ Workflow: `.github/workflows/ci.yml`. It runs on every push to `main` and on pul
 | --- | --- | --- |
 | `check` | push and pull request | `npm ci`, installs Playwright Chromium, then `typecheck`, `lint`, `lint:styles`, `test`, `test:storybook`, `build`. Uploads `test-results` on failure. |
 | `deploy` | push to `main`, after `check` passes | Calls `.github/workflows/deploy.yml`, which publishes the app to GitHub Pages (mock data, no backend), see below. Pull requests do not deploy. |
-| `chromatic` | after `check` passes; pull requests from this repository and pushes to `main` | Visual review with Chromatic, and it publishes the Storybook. It also writes the Chromatic build URL and the hosted Storybook URL to the job summary when the Chromatic CLI reports them (otherwise the summary says they were not reported and points to the step log). Advisory: the job cannot turn the run red (`continue-on-error`). Skipped with a notice in the job summary when the `CHROMATIC_PROJECT_TOKEN` secret is missing. |
+| `chromatic` | after `check` passes; pull requests from this repository and pushes to `main` | Visual review with Chromatic, and it publishes the Storybook. It also writes the Chromatic build URL and the hosted Storybook URL to the job summary when the Chromatic CLI reports them (otherwise the summary says they were not reported and points to the step log). Skipped with a notice in the job summary when the `CHROMATIC_PROJECT_TOKEN` secret is missing. |
 
 The Playwright E2E journeys (`npm run e2e`) are not part of CI yet.
 
@@ -72,7 +72,7 @@ Storybook is hosted by Chromatic, not on GitHub Pages. The Chromatic build URL a
 How review works:
 
 - The accepted baseline lives on `main`. A pull request with visual changes shows a pending Chromatic check; open the build link from the check, accept or deny each change, and the check turns green.
-- The Actions job itself stays green (`--exit-zero-on-changes`, plus `continue-on-error` because Chromatic can report component errors for stories that need the Vitest browser runner; the `check` job already runs every story there); the Chromatic status check carries the review state. Mark that check as required in the branch protection rules if you want merges blocked until the changes are accepted.
+- The Actions job itself stays green (`--exit-zero-on-changes`; stories whose interaction tests need the Vitest browser runner skip them in Chromatic with a user agent guard, so Chromatic reports no component errors); the Chromatic status check carries the review state. Mark that check as required in the branch protection rules if you want merges blocked until the changes are accepted.
 - Builds on `main` are auto accepted (`--auto-accept-changes main`) because the changes were reviewed on the pull request. Pull request builds are never auto accepted.
 - Snapshots are billed per story. TurboSnap (`--only-changed`) is off; every build snapshots every story.
 
