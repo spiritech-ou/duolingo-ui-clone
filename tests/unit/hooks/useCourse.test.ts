@@ -1,6 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { delay, http, HttpResponse } from 'msw';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Course } from '@/api/schemas/course';
 import { useCourse } from '@/hooks/useCourse';
 import { generateCourse } from '@/mocks/data/generators';
@@ -80,6 +80,30 @@ describe('useCourse', () => {
     server.use(respondWith(freshCourse));
     act(() => result.current.retry());
     expect(result.current.state).toEqual({ status: 'loading' });
+    await waitFor(() =>
+      expect(result.current.state).toEqual({ status: 'success', data: freshCourse }),
+    );
+  });
+
+  it('ends in error for an HTML response and reaches success when retry gets JSON', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    server.use(
+      http.get(
+        '*/api/course',
+        () =>
+          new HttpResponse('<!doctype html><html></html>', {
+            headers: { 'Content-Type': 'text/html' },
+          }),
+      ),
+    );
+    const { result } = renderHook(() => useCourse());
+    await waitFor(() => expect(result.current.state.status).toBe('error'));
+    expect(result.current.state).toMatchObject({
+      error: { kind: 'invalid-payload', code: 'non_json_response' },
+    });
+
+    server.use(respondWith(freshCourse));
+    act(() => result.current.retry());
     await waitFor(() =>
       expect(result.current.state).toEqual({ status: 'success', data: freshCourse }),
     );

@@ -1,7 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { delay, http, HttpResponse } from 'msw';
 import { z } from 'zod';
-import { ApiError, REQUEST_TIMEOUT_MS, isApiError, request } from '@/api/client';
+import {
+  ApiError,
+  REQUEST_TIMEOUT_MS,
+  isApiError,
+  onNonJsonResponse,
+  request,
+} from '@/api/client';
 import { server } from '@/mocks/server';
 
 const schema = z.object({ name: z.string() });
@@ -92,12 +98,97 @@ describe('request', () => {
     expect(log).toHaveBeenCalledTimes(1);
   });
 
-  it('reports a non-JSON 2xx body as invalid-payload', async () => {
-    const log = vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    server.use(http.get(url, () => new HttpResponse('<html>', { status: 200 })));
-    const error = await failureOf(request('/thing', { schema }));
-    expect(error.kind).toBe('invalid-payload');
-    expect(log).toHaveBeenCalled();
+  describe('non-JSON 2xx response', () => {
+    const html = () =>
+      new HttpResponse('<!doctype html><html></html>', {
+        status: 200,
+        headers: { 'Content-Type': 'text/html' },
+      });
+
+    afterEach(() => onNonJsonResponse(null));
+
+    it('is an invalid-payload ApiError with code non_json_response, warned once', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      const err = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      server.use(http.get(url, html));
+      const error = await failureOf(request('/thing', { schema }));
+      expect(error).toMatchObject({
+        kind: 'invalid-payload',
+        code: 'non_json_response',
+        status: 200,
+      });
+      expect(error.message).toMatch(/page/);
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(err).not.toHaveBeenCalled();
+    });
+
+    it('also catches an HTML body served with a JSON content type', async () => {
+      vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      server.use(
+        http.get(
+          url,
+          () =>
+            new HttpResponse('<html></html>', { headers: { 'Content-Type': 'application/json' } }),
+        ),
+      );
+      const error = await failureOf(request('/thing', { schema }));
+      expect(error.code).toBe('non_json_response');
+    });
+
+    it('still reports a JSON body failing the schema as the shape error', async () => {
+      vi.spyOn(console, 'error').mockImplementation(() => undefined);
+      server.use(http.get(url, () => HttpResponse.json({ name: 42 })));
+      const error = await failureOf(request('/thing', { schema }));
+      expect(error.kind).toBe('invalid-payload');
+      expect(error.code).toBeUndefined();
+      expect(error.message).toMatch(/expected shape/);
+    });
+
+    it('calls the registered callback once per HTML response', async () => {
+      vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      const callback = vi.fn();
+      onNonJsonResponse(callback);
+      server.use(http.get(url, html));
+      await failureOf(request('/thing', { schema }));
+      expect(callback).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not call the callback for a normal response or an HTTP error', async () => {
+      const callback = vi.fn();
+      onNonJsonResponse(callback);
+      server.use(http.get(url, () => HttpResponse.json({ name: 'ok' })));
+      await request('/thing', { schema });
+      server.use(
+        http.get(url, () => HttpResponse.json({ code: 'x', message: 'y' }, { status: 500 })),
+      );
+      await failureOf(request('/thing', { schema }));
+      expect(callback).not.toHaveBeenCalled();
+    });
+
+    it('keeps the thrown error when the callback throws or rejects', async () => {
+      vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      server.use(http.get(url, html));
+      onNonJsonResponse(() => {
+        throw new Error('boom');
+      });
+      expect((await failureOf(request('/thing', { schema }))).code).toBe('non_json_response');
+      onNonJsonResponse(() => Promise.reject(new Error('boom')));
+      expect((await failureOf(request('/thing', { schema }))).code).toBe('non_json_response');
+    });
+
+    it('does not retry by itself', async () => {
+      vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+      let calls = 0;
+      server.use(
+        http.get(url, () => {
+          calls += 1;
+          return html();
+        }),
+      );
+      onNonJsonResponse(() => undefined);
+      await failureOf(request('/thing', { schema }));
+      expect(calls).toBe(1);
+    });
   });
 
   it('reports a connection failure as network', async () => {
