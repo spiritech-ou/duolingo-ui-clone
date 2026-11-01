@@ -129,3 +129,63 @@ Mismatches: none. Notes: the card sits after the last unit (the spec gives no ga
 - Not-found message line: the page not-found screen has heading and link only (no message paragraph).
 - Stale files left in `docs/verification/` from earlier tasks (not part of this pass, not re-verified): `pw-shot-exercise-empty-*`, `pw-shot-lesson-firstmistake-*`, `pw-shot-lesson-loaderror-*`, `pw-shot-lesson-outofhearts-1280-*`, `pw-shot-dialog-firstmistake-*`, `pw-shot-footer-*`, `pw-shot-picturechoice-*`, `pw-shot-radiocards-*`, `pw-shot-speechbubble-*`, `pw-shot-unit-*`, `pw-shot-skeleton-unit-*`, `pw-shot-focusedlayout-*`, `pw-shot-exercisetopbar-*`, `pw-shot-learn-finished-390-light.png`. The files of this report supersede the ones with the same screen and state.
 - `npm run e2e` could not run in this environment: `playwright.config.ts` fixes the port at 5273 with `reuseExistingServer: false` and `npm run dev:mocks` hard-codes `--port 5273 --strictPort`; port 5273 is held by a foreign process, so Playwright stops with "http://localhost:5273 is already used". Not changed (config belongs to another role and the port rule is the team's).
+
+## Plan 04: audio fallback in the browser (`exercise-session.md` Audio states, Audio rules a to n; `vocabulary-dataset.md` manifest)
+
+Method: `npm run dev:mocks -- --port 5391 --strictPort` (the script's own `--port 5273` is overridden by the later flag), headless Chromium through the Playwright MCP, lesson `u1-l1` at 1280x720 and 390x844, reduced motion emulated so the pulsing start node can be clicked. Audio observed with a wrapper on `HTMLMediaElement.prototype.play` and `pause` (injected with `browser_evaluate`, re-injected after each reload). The browser reports 180 voices and none is Estonian, so the clip path is what plays. Manifest failures were produced with an init script wrapping `window.fetch` for `/audio/manifest.json` (Playwright `page.route` does not work here: the MSW service worker answers the page and its own network requests bypass `page.route`). The init script lived in the browser session only; nothing was added to the repository. Every one of the 120 words in the 24 lessons has a manifest entry, and all 120 `/audio/<file>` answer `HEAD` 200 with an audio content type.
+
+### Check 1: manifest served, no icon, no notice, layout
+
+| Item | Expected | Observed | Result |
+|---|---|---|---|
+| "Sound unavailable" icon, 1280 and 390 | absent (spec lines 76, 91, 199) | absent, in the DOM and the accessibility tree, also after 2.8 s | pass |
+| "No Estonian voice on this device" notice | absent | absent | pass |
+| Cards 1280 | about 256x334, 12px gaps (line 146) | 255x333 at x245/512/780, gaps 12 | pass |
+| Cards 390 | stacked 358x88, 12px gaps (line 157) | 358x88 at y203/303/403, x16, no horizontal scroll (scrollWidth 390) | pass |
+| Question area start 1280x720 | "about 330px below the top" (line 145) | question area box starts at y92, tag "NEW WORD" y176, heading y210, cards (radiogroup) y359 | **mismatch M7** (see below) |
+| Question area start 390x844 | no figure in the spec | tag y108, heading y142, cards y203 | not judged |
+
+### Check 2: selecting a card plays that word's clip
+
+| Item | Expected | Observed | Result |
+|---|---|---|---|
+| Click on a card, 2.5 s or more after the screen opened | exactly one `play()`, URL `/audio/<itemId>.mp3` | one `play()` per selection: tee -> `/audio/tea.mp3`, piim -> `/audio/milk.mp3`, leib -> `/audio/bread.mp3`; each new `Audio` element, no `<audio>` in the DOM | pass |
+| Every card of 10 exercises (30 selections, second full run) | URL equals `/audio/` + the manifest `file` of the card's exact Estonian text | 30 of 30 equal, 16 distinct files; includes jäätis, šokolaad, õun | pass |
+| Diacritics õ ä ö ü š ž | same | õun -> apple.mp3, jäätis -> ice-cream.mp3, šokolaad -> chocolate.mp3 observed live; manifest has 20 non-ASCII keys (öö, küülik, žiraff, ...) and a full lookup of all 120 words found no missing entry. ö, ü, ž played live only through the lookup, not clicked (lesson u1-l1 has no such words); first run: 21 of 21 equal except the miss below | pass for õ ä š; ö ü ž by manifest lookup only |
+| Select another card while one plays | first stops, second plays | tee at ct 0.22 s, dur 0.96 s: `pause` logged on tea.mp3 (paused true, not ended), then `play` milk.mp3 | pass |
+| Number key (`Digit2`, `Digit3`) | same as click | `Digit3` -> tea.mp3, `Digit2` on the already selected card -> milk.mp3 played again | pass |
+| Select the same card again by click | plays again (task; line 106 "same as click, including the audio") | selected card clicked again with the MCP click and with `label.click()`: no `play()` at all | **mismatch M8** |
+| Nothing on exercise load | none | no `play()` on load of 3 lessons, on the next exercise, or after lesson start | pass |
+| Nothing on CHECK, feedback panel, SKIP, end screen | none | CHECK (Incorrect panel), SKIP panel, next exercise, "Lesson complete!" and "Perfect lesson!" screens: empty play log (only a `pause` of a clip still playing when CHECK or the next exercise came, which is the stop in rule j) | pass |
+| Selection in the first 2.2 s after the lesson screen opens | per rule k, plays nothing only "before the manifest has loaded and before a voice is known" | manifest loaded in about 200 ms, yet 5 of 5 selections made 0.6 to 2.1 s after the node click played nothing; selections at 2.5 s and 3.5 s played. `useSpeech.ts` lines 283 to 286 skip the clip until the 2 s voice check settles | **mismatch M9** (consistent with the Sound check row, line 72) |
+| One miss in the first full run | none expected | one of 51 selections (tee, first card of the re-queued "tea" exercise) played nothing; the second run (30 selections) had none. Not reproduced, cause not found (card already selected is the same symptom as M8, not confirmed) | unverified |
+
+### Check 3: leaving stops a playing clip
+
+| Item | Expected | Observed | Result |
+|---|---|---|---|
+| Close button with a clip playing | exit dialog; line 97 stops on leaving | dialog opens, clip keeps playing (ct 0.02 to 0.17, not paused): the dialog is not leaving | pass (as spec) |
+| KEEP LEARNING / QUIT | QUIT stops the clip | select, Close, QUIT within 120 ms: `pause` on fish.mp3 at ct 0.05 of 1.12, route `/learn`, still paused 1.5 s later | pass |
+| Browser Back while playing | not run (Back opens the same dialog, covered by task 12) | n/a | not run |
+
+### Check 4: failure paths (all reached, through a `fetch` wrapper and a renamed manifest)
+
+| Item | Expected | Observed | Result |
+|---|---|---|---|
+| Manifest request rejected (network error) | icon "Sound unavailable" and notice, never an error screen | icon, notice with "Got it", exercise screen, no `role="alert"` | pass |
+| Manifest 404, HTML body with 200, wrong shape (`clips` a string), empty `clips`, request that never answers (3 s bound) | same | all five: icon and notice shown, no error screen | pass |
+| Selecting a card with the manifest rejected | nothing plays, no message | no `play()`, no "Couldn't play this word.", card selected | pass |
+| Clip file missing (manifest entries renamed to `gone-<file>`) | "Couldn't play this word." about 4 s | `play()` on `/audio/gone-tea.mp3`, message visible at 0.5 s, still visible at 3.55 s, gone at 4.06 s (samples every 0.5 s); icon and notice not shown | pass |
+| Message cleared on the next selection | cleared | not isolated: the next selection also fails and shows the message again | not reached |
+| Not reached: a clip that fails with a `play()` rejection other than a missing file, and a failing Estonian voice (no fallback to the clip, rule l) | n/a | headless Chromium has no Estonian voice and no rejection source other than the file error; faking `speechSynthesis` would test a fake | not reached |
+| Not reached: speech unsupported text ("This browser can't speak words aloud") | n/a | the browser has `speechSynthesis`; removing it needs an init script before app code, not done | not reached |
+
+Screenshots (1280x720 and 390x844, light and dark, no icon, no notice): `pw-shot-exercise-sound-{idle,selected}-{1280,390}-{light,dark}.png`.
+
+Mismatches (details above; none edits `src`):
+
+- **M7 Question area start.** 1280x720: question area y92, tag y176, heading y210, cards y359. `exercise-session.md` line 145: "it starts about 330px below the top of the viewport". The cards start 29px below 330; the tag and heading start 154px and 120px above it. The 330 comes from the 2000px capture (tag at y357), so the spec number is not in CSS pixels; the planner should state which element and which unit.
+- **M8 Same card again.** Clicking an already selected card plays nothing (the radio `change` does not fire); the key does replay. Line 106 says the number key is "same as click, including the audio", and the task asks that a repeat selection plays again.
+- **M9 Silent first 2.2 s.** Rule k (line 98) reads "before the manifest has loaded and before a voice is known"; the code waits for the 2 s voice timeout even though the manifest is loaded after about 200 ms and 180 non-Estonian voices are listed, so selections in the first 2.2 s are silent. The Sound check row (line 72) says "selecting a card does not speak yet", so the behaviour matches that row; the two lines disagree.
+
+Notes: the manifest is requested twice per screen mount in the dev server (React strict mode double effect, assumed; not checked in a production build). Once, right after resizing from 1280 to 390 and leaving the lesson, the app showed "We couldn't load this lesson" with console errors "Invalid response body from GET /course ... <!doctype" (the mock layer answered with the Vite HTML page); a reload fixed it and it did not come back, so it is not an audio finding and is unverified.
