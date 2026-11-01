@@ -49,7 +49,7 @@ Note: the app header content row is 640 wide at 1280 on `/login` (spec says "the
 | empty (`empty`) | 1280 | state column 480 (x400), mascot 120, offset 96, role="status", blue flame | 480, blue flame | pass | `pw-shot-learn-empty-1280-{light,dark}.png` |
 | empty | 390 | column 358 inside 390, mascot 96, offset 48, blue flame | 358 | pass | `pw-shot-learn-empty-390-{light,dark}.png` |
 
-Not covered here: the "finished" card and the placement note (not in the task's state list; `pw-shot-learn-finished-390-light.png` from an earlier task is stale and was not re-verified).
+Not covered here: the "finished" card and the placement note (not in the task's state list). Verified later, see "Plan 04: learning path finished card and placement note" below.
 
 ## Exercise (`exercise-session.md` Layout: top bar about 1320 clamped to window minus 48, question and cards 790, cards about 256x334 with 12px gaps, bar 190, feedback 185; mobile 358, stacked cards 88 high, feedback 200)
 
@@ -99,6 +99,19 @@ In headless Chromium there is no Estonian voice and the Estonian audio clips do 
 | route error | 390 | not re-measured live; screenshot shows the message wrapping inside the 358 column, no overflow | 358 | not re-measured; screenshot only | `pw-shot-routeerror-390-{light,dark}.png` (reused) |
 
 Reuse justification: `src/router.tsx` and `router.module.scss` have no commit since task 7 (15:41); the only later change touching shared pieces is task 19's red-flame mascot, which these screens do not render (the header brand mark is the blue flame). The route error could not be triggered live without editing `src` or aborting the lazy chunk request (no network-abort tool is allowed here), so its widths were not re-measured; the existing screenshots were opened and match the spec layout.
+
+## Plan 04: learning path finished card and placement note (`learning-path.md` Layout: "Placement note and finished card: fill the column width; the note sits above the first unit with 16px below it"; column 640, mobile 358)
+
+Reached live (dev server with mocks, own port, Playwright MCP): the profile of ada@example.com was reset to onboarding not completed, then "How much Estonian do you know?" the fourth option ("I can talk about various topics"), "Find my level", CONTINUE gave `/learn` with "We recommend starting at Unit 4 based on your answer." and "Got it". "Got it" removed the note; after a reload it did not return (`placementNoteDismissed` true, no "Got it" button). The finished card was reached by seeding `completedLessonIds` with all 24 lesson ids from `/api/course` in the `profiles` localStorage entry. Light and dark were switched with the header toggle.
+
+| State | Width | Measured (light and dark identical) | Spec | Result | Screenshot |
+|---|---|---|---|---|---|
+| placement note | 1280 | note 640x69 at x320, nav starts 16px below the note, no horizontal scroll, text and "Got it" (86x41) as spec | column 640, 16px below | pass | `pw-shot-learn-placementnote-1280-{light,dark}.png` |
+| placement note | 390 | note 358x70 at x16 (text wraps to two lines, "Got it" 86x41), nav 358 wide 16px below, scrollWidth equals 390 | column 358, 16px below | pass | `pw-shot-learn-placementnote-390-{light,dark}.png` |
+| finished card | 1280 | card 640x273 at x320 (region, h2 "You finished the Estonian course!", p "Replay any lesson to keep your words fresh."), 24px below the last unit, no horizontal scroll; flame image 128 attribute (136 rendered by the celebrating animation) with stops `#2f8dcc` and `#254a85` (blue) | fills the 640 column, blue flame | pass | `pw-shot-learn-finished-1280-{light,dark}.png` |
+| finished card | 390 | card 358x326 at x16, 24px below the last unit, no horizontal scroll, same blue flame | fills the 358 column | pass | `pw-shot-learn-finished-390-{light,dark}.png` (the stale `-390-light` file was re-taken) |
+
+Mismatches: none. Notes: the card sits after the last unit (the spec gives no gap there; 24px measured). The page opens scrolled to the recommended unit (the note is off screen above), so the note screenshots were taken after `scrollTo(0, 0)`. The note and the card have no tabs of their own; the note is `role="status"`. Typed copy matched the spec exactly in all four states.
 
 ## Mismatches, with the spec line
 
