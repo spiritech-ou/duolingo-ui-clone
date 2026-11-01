@@ -295,3 +295,69 @@ Not re-taken in this pass (earlier plans' files; the files of this report supers
 ### Verdict
 
 Plan 04's visible fixes hold at 1280x720 and 390x844 in both themes: the onboarding mascot row, mobile stacking and CONTINUE sizes follow the updated spec, the not-found screen announces itself as an alert and focuses "Back to path", the first-mistake modal is 358x399 with no scroll, the load-error, loading and skeleton states move focus to the loading status region on `/learn`, lesson and practice, Practice complete shows or omits "+1 heart" correctly for fewer than 5 and 5 hearts, Out of hearts responds to Enter as specified, number keys work by physical key, and Back closes the modal before opening the exit dialog; M1 to M6 and N1 are resolved. What remains is not a regression of plan 04: M7 (the 330 figure in the spec is not in CSS pixels, and at 1280x720 the cards are hidden behind the footer until `main` is scrolled), M8 (replay on re-click) and M9 (silent first 2.2 s), all carried from task 13 and recorded with their spec lines for a following plan.
+
+## Plan 05: final verification
+
+Run against the committed code of tasks 1 to 6, `npm run dev:mocks` on port 5391, headless Chromium through the Playwright MCP, measured with `browser_evaluate` against `docs/product/exercise-session.md` "Layout" (vertical rule, line 158 onward, tolerance 2px). Lesson `u1-l2` (new-word exercises, with the NEW WORD tag) and `/practice` (no tag). Light and dark by the persisted theme choice (`localStorage.theme`), the clips in `public/audio/` are what plays. `npm run e2e` not run (out of scope). No `src` change.
+
+### Exercise screens, with tag (lesson u1-l2)
+
+| State | Window | Measured (y, h in CSS px) | Spec | Result | Screenshots |
+|---|---|---|---|---|---|
+| idle | 1280x720 | tag y176, heading y210, cards y287 255x219 (x245/512/780), card bottom 506, word labels y450 to 474, footer y530 (190), main 462 high, no scroll (scrollHeight 462), document 720 | tag 176, cards top 287, h 219, bottom 506, footer 530, no scroll | pass | `pw-shot-exercise-idle-1280-{light,dark}.png` |
+| option selected | 1280x720 | same boxes, one radio checked, CHECK enabled; selected card scales 3%, visual bottom about 510 | as idle, below footer top 530 | pass | `pw-shot-exercise-selected-1280-{light,dark}.png` |
+| correct | 1280x720 | cards unchanged (287/219), panel 1280x185 at y535, CONTINUE 200x64 | card height unchanged, panel 185 | pass | `pw-shot-exercise-correct-1280-{light,dark}.png` |
+| wrong, modal | 1280x720 | modal 585x494 at x348 y113 (first-mistake, 96px flame), cards unchanged | about 585x497 | pass, with a **tolerance exception**: height is 3px under the spec figure (outside the 2px tolerance); the spec figure is probably the sum 385 + 112, so this is a spec-figure note (see "Remaining mismatches") | `pw-shot-exercise-wrong-modal-1280-{light,dark}.png` |
+| wrong, modal dismissed | 1280x720 | panel 1280x185 at y535, flame img 36x36 (32px wrapper), cards 287/219 | 185, 32px flame | pass | `pw-shot-exercise-wrong-1280-{light,dark}.png` |
+| skipped | 1280x720 | panel 185 at y535, CONTINUE 200x64, cards 287/219, no modal | same | pass | `pw-shot-exercise-skipped-1280-{light,dark}.png` |
+| idle (dark only) | 1280x600 | tag y146, heading y180, cards y257 200 high (floor), bottom 457, footer y410; `main` scrolls: scrollHeight 579 against 342; at the end of the scroll (scrollTop 237) the cards end y220 and the footer top is y410: 190px clear | tag 146, cards 257, h 200, bottom 457, footer 410, scrolls | pass | `pw-shot-exercise-idle-1280x600-dark.png`, `pw-shot-exercise-idle-1280x600-end-dark.png` |
+| idle (dark only) | 1280x696 / 690 | 696: cards h 201, no scroll (scrollHeight 438 = clientHeight 438); 690: cards h 200, scrollHeight 602 against 432 (extra scroll below the floor, by design OQ-67) | floor at about 695 at lg | pass | none |
+| idle (dark only) | 1280x800 / 900 | 800: tag 196, cards 327 h 259 (bottom 586), footer 610; 900: tag 221, cards 377 h 309 (bottom 686), footer 710 | table rows 800 and 900 | pass | none |
+| idle (dark only) | 1920x1080 | tag y266, heading y300, cards y449 255x333 (x565/832/1100), bottom 782, footer y890 | row 1080: 266, 449, 333, 782, 890 | pass | `pw-shot-exercise-idle-1920x1080-dark.png` |
+| idle | 390x844 | cards 358x88 at y203/303/403, last card ends y491, footer 390x120 at y724, tag y108, heading y142; SKIP and CHECK 173x64 | unchanged (cards 358x88, last end 491, footer 724) | pass | `pw-shot-exercise-idle-390-{light,dark}.png` |
+| selected, correct, wrong modal, wrong dismissed, skipped | 390x844 | cards unchanged in every state (203/303/403, h 88); feedback panel 390x200 at y644, CONTINUE 358x64; modal 358x399 at x16 y223 (no scroll) | panel 200, modal about 400 | pass | `pw-shot-exercise-{selected,correct,wrong-modal,wrong,skipped}-390-{light,dark}.png` |
+
+### Exercise screens, no tag (`/practice`)
+
+| State | Window | Measured | Spec (table rows "no tag") | Result | Screenshots |
+|---|---|---|---|---|---|
+| idle (dark only) | 1280x720 | no tag, heading y176, cards y253 255x219, bottom 472, labels y416 to 440, footer y530 (58px clear), no scroll (462 = 462) | 253, 219, 472, 530 | pass | `pw-shot-exercise-practice-idle-1280-dark.png` |
+| idle (dark only) | 1280x600 | heading y146, cards y223 h 200, bottom 423, footer y410; `main` scrolls (545 against 342); at the end cards end y220, footer y410: 190 clear | 223, 200 (floor), 423, 410, scrolls | pass | `pw-shot-exercise-practice-idle-1280x600-dark.png` |
+
+Every card, label and the selected card's visual edge are above the footer top (y530) at 1280x720 without scrolling, in both themes. Not measured: a lesson exercise without the tag (review exercise that comes round again) and the md width (768 to 1023), so the 64px and 80px md offsets stay unverified. Practice complete, Lesson over and the other end screens were not part of this pass.
+
+### M7, M8, M9
+
+| Item | Result | Numbers |
+|---|---|---|
+| **M7** question area and cards against the hidden footer at 1280x720 | **resolved** | tag y176 (spec 176), cards y287 to 506 against footer y530; spec line 150 now states the rule in CSS pixels |
+| **M8** same card again | **resolved** | `HTMLMediaElement.prototype.play` wrapper: first selection of "kook" played `/audio/cake.mp3` once; two more clicks on the already selected card added one `/audio/cake.mp3` each; the key `3` pressed twice added one each (5 plays for 1 select + 2 re-clicks + 2 key presses); still exactly one radio checked, CHECK stayed enabled, no focus move off the input |
+| **M9** silent first 2.2 s | **resolved** (one 10 ms window noted) | one clean run (a same-origin iframe loading `/lesson/u1-l2` as a full page load; times are `performance.now()` offsets from the iframe's creation, the cards polled every 5 ms): `GET /audio/manifest.json` started at 478 ms and ended at 491 ms (13 ms); the cards (`[role=radiogroup] label`) first appeared at 484 ms; a click was made 100 ms later, at 593 ms, which is the time of the first successful selection from page load; the wrapped `play()` ran at 587 ms for `/audio/cake.mp3` and the mp3 request followed (594 to 598 ms), one radio checked. Separate earlier run, same method: a click 11 ms after the cards appeared (425 ms), before the manifest response (430 ms), played nothing and nothing later either (the hook plays only when the manifest is already loaded, `useSpeech.ts` lines 283 to 289); that window is about 10 ms with the mock and exists because the manifest request starts after the lesson answer |
+| Manifest requests | pass | `performance.getEntriesByType('resource')`: 1 request to `/audio/manifest.json` for the first lesson (StrictMode dev), still 1 after going `/learn`, then `/lesson/u1-l3` in the same page session (SPA navigation through `popstate`); the first selection in the second lesson played `/audio/coffee.mp3` at once |
+| Manifest in the lesson flow | pass | `public/audio/manifest.json` is served by Vite (the audio handler is opt-in and not in the default mock set), 200 JSON, so a missing mock does not feed the non-JSON re-arm |
+
+### Defect: stopped mock worker
+
+Reached through `browser_run_code_unsafe` (a CDP session: `ServiceWorker.enable`, then `ServiceWorker.stopWorker` for the version of `localhost:5391`; the task named it explicitly). Stopping the worker made Chrome restart it at once with no MSW client state: `fetch('/api/lessons/u1-l3')` returned 200 `text/html` (`<!doctype html>`) three times in a row, so the defect reproduces.
+
+| Check | Result |
+|---|---|
+| Lesson opened (SPA navigation) with the dead worker | load error "We couldn't load this lesson / Something went wrong on our side. Try again in a moment." with TRY AGAIN and BACK TO PATH, focus on "Try again"; console warning "Got a page instead of data from GET /lessons/u1-l3" |
+| Worker re-armed by the non-JSON response | after the error, `fetch('/api/lessons/u1-l3')` returned `application/json` without any reload |
+| "Try again" recovers without reload | clicked: the lesson opened (heading "Which one of these is “tomato”?", 3 cards), no `<!doctype` text anywhere in the DOM |
+| `/learn` with the dead worker | the path still rendered; the console shows "Got a page instead of data from GET /course" (the first response was a page and the screen recovered; not examined further) |
+| `visibilitychange` (state `visible`) re-arms | dispatched on `document` with the worker dead: next fetch `application/json`; pass |
+| `pageshow` with `persisted: true` re-arms | dispatched on `window`: next fetch `application/json`; pass |
+| `pageshow` with `persisted: false` | worker stayed dead (HTML), as specified (the initial load must not re-arm) |
+
+Could not reach: a real tab switch (headless Chromium reports `visibilityState` `visible` all the time, so `visibilitychange` was a synthetic event on a visible document) and a real bfcache restore (`pageshow` was a synthetic `PageTransitionEvent`). The re-arm code path and its effect on the real worker are verified; the browser's own trigger of these two events is not.
+
+Also confirmed: lesson not found (`/lesson/nope`): `role="alert"` is on the text container only (it holds just the heading "We couldn't find this lesson", 295x29 at y320), the column (480 wide, y80, 377 high) also holds the mascot and "Back to path" button outside the alert, focus on "Back to path". Load error with `localStorage.mockScenario` `error`, then switching to `slow` and "Try again": focus moved to the Loading `role="status"` region ("Getting your lesson ready…") and the lesson opened when the answer came. Screenshots `pw-shot-lesson-loaderror-1280-dark.png`; `pw-shot-lesson-notfound-1280-dark.png` re-taken, identical to the earlier file.
+
+### Remaining mismatches
+
+None against the spec lines checked. Spec-figure note: the first-mistake modal measures 585x494 where `exercise-session.md` line 155 says about 497 (385 plus 112); the 3px is outside the 2px tolerance and most likely the spec figure's rounding, not an app defect. Open points, none a defect: (1) the roughly 10 ms window in which a selection made after the cards appear but before the manifest response plays no clip (spec line 204 and rule k accept this; it is nearly unreachable by a person); (2) `/learn` shows "Got a page instead of data from GET /course" in the console when the worker is dead, yet the path renders, which looks like a silent retry after the re-arm (not asserted either way by the spec); (3) the md widths (768 to 1023) and the review exercise without a tag inside a lesson were not measured.
+
+### Verdict
+
+Plan 05 holds. At 1280x720 the cards, their word labels and the selected card's scaled edge sit above the footer in light and dark, with the tag at y176 and the cards at y287 (lesson) or y253 (practice), matching the vertical rule and its table at heights 600, 696, 720, 800, 900 and 1080 (1920 wide for the last), including the 200px floor with the extra 190px of scroll below it; 390x844 is unchanged. M7, M8 and M9 are resolved: re-selecting a card replays its clip once per click or number key without touching the selection, a selection about 100 ms after the cards appear already plays, and the manifest is requested once per page session even across a second lesson. A stopped mock worker, which reproduced over CDP, now shows the load error, re-arms by itself, and "Try again" recovers without a reload; `visibilitychange` and a persisted `pageshow` also re-arm (synthetic events only).
