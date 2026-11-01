@@ -1,3 +1,4 @@
+import type { ReactElement } from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, within } from 'storybook/test';
 import { PictureCard } from './PictureCard';
@@ -26,11 +27,43 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
+const FIT_VIEWPORTS = {
+  floor: { name: 'Short 1280x600', styles: { width: '1280px', height: '600px' }, type: 'desktop' },
+  short: { name: 'Short 1280x720', styles: { width: '1280px', height: '720px' }, type: 'desktop' },
+  tall: { name: 'Tall 1280x1080', styles: { width: '1280px', height: '1080px' }, type: 'desktop' },
+  phone: { name: 'Phone 390x844', styles: { width: '390px', height: '844px' }, type: 'mobile' },
+} as const;
+
 export const Idle: Story = {
   play: async ({ canvasElement, args }) => {
     const radio = within(canvasElement).getByRole('radio', { name: 'A cup of tea tee' });
     await expect(radio).not.toBeChecked();
     await userEvent.click(radio);
+    await expect(args.onSelect).toHaveBeenCalledWith('tee');
+  },
+};
+
+/** `onSelect` only fires from `change`, which a click on the checked radio does not produce. */
+export const ReselectChecked: Story = {
+  args: { status: 'selected' },
+  play: async ({ canvasElement, args }) => {
+    const radio = within(canvasElement).getByRole('radio');
+    await expect(radio).toBeChecked();
+    await userEvent.click(radio);
+    await expect(args.onSelect).toHaveBeenCalledTimes(1);
+    await expect(args.onSelect).toHaveBeenLastCalledWith('tee');
+    await expect(radio).toBeChecked();
+    await userEvent.click(radio);
+    await expect(args.onSelect).toHaveBeenCalledTimes(2);
+    await expect(radio).toBeChecked();
+  },
+};
+
+export const FirstClickOnce: Story = {
+  play: async ({ canvasElement, args }) => {
+    const radio = within(canvasElement).getByRole('radio');
+    await userEvent.click(radio);
+    await expect(args.onSelect).toHaveBeenCalledTimes(1);
     await expect(args.onSelect).toHaveBeenCalledWith('tee');
   },
 };
@@ -108,6 +141,8 @@ export const Locked: Story = {
 
 /** In a 256px column: 256 x 334, picture in the upper 60%, word bottom-left, hint bottom-right. */
 export const DesktopSize: Story = {
+  parameters: { viewport: { options: FIT_VIEWPORTS } },
+  globals: { viewport: { value: 'tall', isRotated: false } },
   decorators: [
     (Story) => (
       <div style={{ width: '16rem' }}>
@@ -130,6 +165,88 @@ export const DesktopSize: Story = {
     await expect(rect.right - hint.right).toBeGreaterThanOrEqual(30);
     await expect(word.top - picture.bottom).toBeGreaterThan(40);
     await expect(card.scrollWidth).toBeLessThanOrEqual(card.clientWidth);
+  },
+};
+
+const column = (width: string) => [
+  (Story: () => ReactElement) => (
+    <div style={{ width }}>
+      <Story />
+    </div>
+  ),
+];
+
+function cardOf(canvasElement: HTMLElement) {
+  const card = within(canvasElement).getByRole('radio').closest('label');
+  if (!card) throw new Error('expected a card');
+  return card;
+}
+
+/** At 1280x720 the room above the footer is 219px: the card shrinks, the label stays inside. */
+export const ShortWindow: Story = {
+  parameters: { viewport: { options: FIT_VIEWPORTS } },
+  globals: { viewport: { value: 'short', isRotated: false } },
+  decorators: column('16rem'),
+  play: async ({ canvasElement }) => {
+    await expect(window.innerHeight).toBe(720);
+    const card = cardOf(canvasElement);
+    const rect = card.getBoundingClientRect();
+    await expect(Math.round(rect.width)).toBe(256);
+    await expect(Math.abs(rect.height - 219)).toBeLessThanOrEqual(2);
+    const word = within(card).getByText('tee').getBoundingClientRect();
+    const hint = within(card).getByText('1').getBoundingClientRect();
+    await expect(word.bottom).toBeLessThanOrEqual(rect.bottom);
+    await expect(word.top).toBeGreaterThanOrEqual(rect.top);
+    await expect(hint.bottom).toBeLessThanOrEqual(rect.bottom);
+    const picture = within(card).getByRole('img').getBoundingClientRect();
+    await expect(picture.bottom).toBeLessThanOrEqual(word.top);
+    await expect(card.scrollHeight).toBeLessThanOrEqual(card.clientHeight);
+  },
+};
+
+/** At 1280x600 the room is under the floor: the card stays 200px high, label inside. */
+export const FloorWindow: Story = {
+  parameters: { viewport: { options: FIT_VIEWPORTS } },
+  globals: { viewport: { value: 'floor', isRotated: false } },
+  decorators: column('16rem'),
+  play: async ({ canvasElement }) => {
+    await expect(window.innerHeight).toBe(600);
+    const card = cardOf(canvasElement);
+    const rect = card.getBoundingClientRect();
+    await expect(Math.round(rect.width)).toBe(256);
+    await expect(Math.abs(rect.height - 200)).toBeLessThanOrEqual(2);
+    const word = within(card).getByText('tee').getBoundingClientRect();
+    const hint = within(card).getByText('1').getBoundingClientRect();
+    await expect(word.bottom).toBeLessThanOrEqual(rect.bottom);
+    await expect(hint.bottom).toBeLessThanOrEqual(rect.bottom);
+    const picture = within(card).getByRole('img').getBoundingClientRect();
+    await expect(picture.bottom).toBeLessThanOrEqual(word.top);
+  },
+};
+
+/** From a window about 950px high up the card keeps the tall-window size, 256 x 334. */
+export const TallWindow: Story = {
+  parameters: { viewport: { options: FIT_VIEWPORTS } },
+  globals: { viewport: { value: 'tall', isRotated: false } },
+  decorators: column('16rem'),
+  play: async ({ canvasElement }) => {
+    await expect(window.innerHeight).toBe(1080);
+    const rect = cardOf(canvasElement).getBoundingClientRect();
+    await expect(Math.round(rect.width)).toBe(256);
+    await expect(Math.abs(rect.height - 334)).toBeLessThan(2);
+  },
+};
+
+/** Stacked on a phone, the row stays 358 x 88 whatever the window height. */
+export const PhoneRowFixed: Story = {
+  parameters: { viewport: { options: FIT_VIEWPORTS } },
+  globals: { viewport: { value: 'phone', isRotated: false } },
+  decorators: column('22.375rem'),
+  play: async ({ canvasElement }) => {
+    await expect(window.innerWidth).toBe(390);
+    const rect = cardOf(canvasElement).getBoundingClientRect();
+    await expect(Math.round(rect.width)).toBe(358);
+    await expect(Math.round(rect.height)).toBe(88);
   },
 };
 

@@ -1,5 +1,5 @@
 import { useId } from 'react';
-import type { ChangeEvent, ComponentPropsWithoutRef } from 'react';
+import type { ChangeEvent, ComponentPropsWithoutRef, MouseEvent } from 'react';
 import clsx from 'clsx';
 import { Icon } from '@/components/ui/Icon';
 import styles from './PictureCard.module.scss';
@@ -61,6 +61,15 @@ export function PictureCard({
     onSelect?.(event.currentTarget.value);
   };
 
+  // `change` does not fire when the checked radio is clicked again, so report that click here.
+  // A first selection is not reported here: `isChecked` is still false while its click runs
+  // (the `change` that follows reports it), and so are the arrow-key moves.
+  const handleClick = (event: MouseEvent<HTMLInputElement>) => {
+    rest.onClick?.(event);
+    if (isLocked || !isChecked) return;
+    onSelect?.(event.currentTarget.value);
+  };
+
   return (
     <label className={clsx(styles['root'], className)}>
       <span
@@ -81,6 +90,7 @@ export function PictureCard({
           aria-labelledby={`${pictureId} ${wordId}`}
           aria-describedby={describedBy}
           onChange={handleChange}
+          onClick={handleClick}
         />
         <span id={pictureId} className={styles['picture']} role="img" aria-label={picture.alt}>
           {picture.emoji}

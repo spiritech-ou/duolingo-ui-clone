@@ -68,6 +68,7 @@ export const ArrowKeys: Story = {
     await userEvent.tab();
     await expect(at(radios, 0)).toHaveFocus();
     await userEvent.keyboard('{ArrowDown}');
+    await expect(args.onSelect).toHaveBeenCalledTimes(1);
     await expect(args.onSelect).toHaveBeenLastCalledWith('kohv');
     await expect(at(radios, 1)).toHaveFocus();
   },
@@ -152,8 +153,17 @@ async function expectNoHorizontalOverflow(canvasElement: HTMLElement) {
   }
 }
 
-/** The question column of the reference: 790px wide, three cards of about 256 x 334, 12px apart. */
+/**
+ * The question column of the reference: 790px wide, three cards of about 256 x 334, 12px apart.
+ * In a tall window (the card keeps its tall size from a window about 950px high up).
+ */
 export const Wide: Story = {
+  parameters: {
+    viewport: {
+      options: { tall: { name: 'Tall 1280x1080', styles: { width: '1280px', height: '1080px' }, type: 'desktop' } },
+    },
+  },
+  globals: { viewport: { value: 'tall', isRotated: false } },
   decorators: [
     (Story) => (
       <div style={{ width: '49.375rem' }}>

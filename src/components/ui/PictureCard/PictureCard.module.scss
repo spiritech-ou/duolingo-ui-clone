@@ -21,6 +21,20 @@
   box-sizing: border-box;
   inline-size: 100%;
   aspect-ratio: 256 / 334;
+
+  // Short-window rule (docs/product/exercise-session.md, "Vertical rule at desktop and
+  // tablet"): the height is the tall-window size (width x 334/256, from aspect-ratio) capped
+  // by the room above the footer, never under the 200px floor; the width is kept. The cap is
+  // the spec's `footerTop - 24 - cardsTop` as a function of the window height H, with the
+  // exercise's header 68, main padding 24, footer 190, tag offset and gap formulas:
+  // - md (768 to 1023): offset 64 and gap 80 are fixed, so the room is H - 513px;
+  // - lg (1024 and up): offset clamp(16, 25vh - 96, 240) and gap clamp(48, 25vh - 132, 120)
+  //   make the room 50vh - 141px from H 720 up (exact there, 219 at 720, 259 at 800, 309 at
+  //   900, natural from 948) and 75vh - 321px below 720 (gap pinned at 48); the offset's
+  //   upper clamp and the gap's 120 cap only act where the natural height already wins.
+  // Mobile rows (container query below) have no cap.
+  // The rule starts at a 768 wide window; below it the mobile offsets apply and the card keeps
+  // its natural height.
   padding: 0;
   color: var(--color-text);
   cursor: pointer;
@@ -32,6 +46,15 @@
     border-color var(--duration-normal) var(--easing-standard),
     color var(--duration-normal) var(--easing-standard),
     transform var(--duration-normal) var(--easing-standard);
+
+  @include bp(md) {
+    min-block-size: 12.5rem;
+    max-block-size: max(12.5rem, calc(100vh - 32.0625rem));
+  }
+
+  @include bp(lg) {
+    max-block-size: max(12.5rem, min(calc(50vh - 8.8125rem), calc(75vh - 20.0625rem)));
+  }
 
   &:hover {
     background-color: var(--color-primary-soft);
@@ -47,6 +70,7 @@
     align-items: center;
     aspect-ratio: auto;
     min-block-size: 5.5rem;
+    max-block-size: none;
     padding: var(--space-3) var(--space-4);
   }
 
