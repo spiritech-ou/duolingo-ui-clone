@@ -49,12 +49,12 @@ $back-height: 2.5rem;
 // Fixed over the bottom strip: the strip is the footer's padding (space-4 plus the safe area).
 .back {
   position: fixed;
-  inset-block-end: calc(var(--space-4) + env(safe-area-inset-bottom, 0) + 4.125rem + var(--space-2));
+  inset-block-end: calc(var(--space-4) + env(safe-area-inset-bottom, 0) + #{layout.$continue-height} + var(--space-2));
   inset-inline-start: calc(env(safe-area-inset-left, 0) + var(--focused-side-padding));
   min-block-size: $back-height;
 
   @include bp(md) {
-    // Centred against the Continue button (about 66px with its border, Back about 41px).
-    inset-block-end: calc(var(--space-4) + env(safe-area-inset-bottom, 0) + 0.78rem);
+    // Centred against the Continue button (60px, Back about 41px).
+    inset-block-end: calc(var(--space-4) + env(safe-area-inset-bottom, 0) + 0.6rem);
   }
 }

@@ -31,13 +31,17 @@ $edge-gutter: var(--space-6);
   }
 }
 
+// Exact height (border-box): the Button's padding and line height would otherwise make it 66px.
+$continue-height: 3.5rem;
+$continue-height-md: 3.75rem;
+
 @mixin continue-button {
   width: 100%;
-  min-height: 3.5rem;
+  height: $continue-height;
 
   @include bp(md) {
     width: 13.5rem;
-    min-height: 3.75rem;
+    height: $continue-height-md;
   }
 
   &[aria-disabled='true'] {
