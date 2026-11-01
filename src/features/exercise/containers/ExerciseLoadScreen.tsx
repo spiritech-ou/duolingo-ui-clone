@@ -8,30 +8,50 @@ import { getLoadScreenCopy, type LoadScreenKind } from '../logic/loadStates';
 import type { SessionMode } from '../logic/sessionTypes';
 import styles from './StateScreen.module.scss';
 
+/** How "Try again" was activated: a click with a pointer, or Enter/Space on the focused button. */
+export type RetryInput = 'pointer' | 'keyboard';
+
 export interface ExerciseLoadScreenProps {
   kind: LoadScreenKind;
   mode: SessionMode;
   /** The failure behind an `error` screen, for its message. */
   error?: ApiError;
-  onRetry: () => void;
+  /** "Try again", with the input it was activated by. */
+  onRetry: (input: RetryInput) => void;
   /** Close button of the loading screen, and "Back to path". */
   onLeave: () => void;
+  /**
+   * Loading screen only: move focus to its status text on mount, with the input that caused the
+   * retry (the pointer case shows no focus ring). Set after "Try again" (the pressed button is gone,
+   * so focus would fall to the body); unset on the first load of a route.
+   */
+  focusStatus?: RetryInput;
 }
 
 /**
  * Loading, load-error, not-found and empty screens of a lesson or practice route.
  * Remount it (`key={kind}`) when the kind changes so the focus rules run for each screen.
  */
-export function ExerciseLoadScreen({ kind, mode, error, onRetry, onLeave }: ExerciseLoadScreenProps) {
+export function ExerciseLoadScreen({
+  kind,
+  mode,
+  error,
+  onRetry,
+  onLeave,
+  focusStatus,
+}: ExerciseLoadScreenProps) {
   const titleRef = useRef<HTMLHeadingElement>(null);
+  const statusRef = useRef<HTMLDivElement>(null);
   const firstActionRef = useRef<HTMLElement>(null);
   const copy = getLoadScreenCopy(kind, mode, error);
 
   useEffect(() => {
-    // Error and not found: the main action; empty: the heading; loading: nothing.
+    // Error and not found: the main action; empty: the heading; loading: the status text after a
+    // retry, nothing on the first load.
     if (kind === 'error' || kind === 'notFound') firstActionRef.current?.focus();
     else if (kind === 'empty') titleRef.current?.focus();
-  }, [kind]);
+    else if (focusStatus !== undefined) statusRef.current?.focus();
+  }, [kind, focusStatus]);
 
   const backButton = (
     <Button variant={kind === 'error' ? 'secondary' : 'primary'} onClick={onLeave}>
@@ -60,6 +80,8 @@ export function ExerciseLoadScreen({ kind, mode, error, onRetry, onLeave }: Exer
           title={copy.title}
           {...(copy.message ? { message: copy.message } : {})}
           titleRef={titleRef}
+          statusRef={statusRef}
+          hideStatusFocusRing={focusStatus === 'pointer'}
           firstActionRef={firstActionRef}
           {...(kind === 'loading'
             ? {}
@@ -67,7 +89,9 @@ export function ExerciseLoadScreen({ kind, mode, error, onRetry, onLeave }: Exer
                 actions:
                   kind === 'error' ? (
                     <>
-                      <Button onClick={onRetry}>Try again</Button>
+                      <Button onClick={(event) => onRetry(event.detail === 0 ? 'keyboard' : 'pointer')}>
+                        Try again
+                      </Button>
                       {backButton}
                     </>
                   ) : (

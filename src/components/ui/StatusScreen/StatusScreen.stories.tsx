@@ -21,11 +21,19 @@ export const Loading: Story = {
   args: {
     variant: 'loading',
     title: 'Getting your lesson ready…',
+    statusRef: fn(),
   },
-  play: async ({ canvas, canvasElement }) => {
+  play: async ({ canvas, canvasElement, args }) => {
     const status = canvas.getByRole('status');
     await expect(status).toHaveTextContent('Getting your lesson ready…');
     await expect(status).toHaveAttribute('aria-live', 'polite');
+    // Focusable by script without joining the tab order, and exposed through `statusRef`.
+    await expect(status).toHaveAttribute('tabindex', '-1');
+    await expect(args.statusRef).toHaveBeenCalledWith(status);
+    status.focus();
+    await expect(status).toHaveFocus();
+    await userEvent.tab();
+    await expect(status).not.toHaveFocus();
     await expect(canvasElement.firstElementChild).toHaveAttribute('aria-busy', 'true');
     const mascot = canvasElement.querySelector('img');
     await expect(mascot).toHaveAttribute('alt', '');

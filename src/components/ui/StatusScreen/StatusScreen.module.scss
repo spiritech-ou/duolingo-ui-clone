@@ -49,6 +49,19 @@
   gap: var(--space-4);
   align-items: center;
   max-width: 100%;
+
+  // Focusable in the loading variant only (tabIndex -1), by script, never by Tab. Keyboard use shows
+  // the shared ring (WCAG 2.4.7), like `.title`.
+  &:focus-visible {
+    @include focus-ring;
+  }
+}
+
+// Decision (task 8): after "Try again" pressed with the mouse the ring must not show, but browsers
+// still report :focus-visible on that script focus move. The container passes `hideStatusFocusRing`
+// then (click `detail > 0`); a keyboard retry (Enter or Space, `detail === 0`) keeps the ring.
+.textNoRing:focus-visible {
+  outline: none;
 }
 
 .title {

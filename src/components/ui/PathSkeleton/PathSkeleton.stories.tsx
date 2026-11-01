@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect } from 'storybook/test';
+import { expect, fn } from 'storybook/test';
 import type { within } from 'storybook/test';
 import { UnitSection } from '@/components/ui/UnitSection';
 import type { UnitLesson } from '@/components/ui/UnitSection';
@@ -174,6 +174,20 @@ export const WithReducedMotion: Story = {
     } finally {
       await session.send('Emulation.setEmulatedMedia', { features: [] });
     }
+  },
+};
+
+export const StatusIsFocusTarget: Story = {
+  args: { statusRef: fn() },
+  play: async ({ canvas, args }) => {
+    const status = canvas.getByRole('status');
+    // Focusable by script without joining the tab order, and exposed through `statusRef`.
+    await expect(status).toHaveAttribute('tabindex', '-1');
+    await expect(args.statusRef).toHaveBeenCalledWith(status);
+    status.focus();
+    await expect(status).toHaveFocus();
+    // Busy semantics stay on the container.
+    await expect(status.parentElement).toHaveAttribute('aria-busy', 'true');
   },
 };
 

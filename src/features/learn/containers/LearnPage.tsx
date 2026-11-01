@@ -51,18 +51,30 @@ export function LearnPage() {
 
   const titleRef = useRef<HTMLHeadingElement>(null);
   const firstActionRef = useRef<HTMLElement | null>(null);
+  const skeletonStatusRef = useRef<HTMLSpanElement>(null);
   const recommendedRef = useRef<HTMLButtonElement>(null);
   const navRef = useRef<HTMLElement>(null);
 
   const course = state.status === 'success' ? state.data : null;
   const view = getView(state.status, course);
 
-  // Focus rules (data-loading-states.md): error lands on "Try again", empty stays on the heading.
-  // The status screen is keyed by view, so its refs are set by the time this effect runs.
+  // True from "Try again" until that load settles: the skeleton's status text then takes focus (the
+  // pressed button is gone). The first load of the page leaves it false and moves no focus.
+  const [isRetrying, setIsRetrying] = useState(false);
+  if (isRetrying && view !== 'loading') setIsRetrying(false);
+  const handleRetry = () => {
+    setIsRetrying(true);
+    retry();
+  };
+
+  // Focus rules (data-loading-states.md): error lands on "Try again", empty stays on the heading,
+  // loading after a retry lands on the status text. The status screen is keyed by view, so its refs
+  // are set by the time this effect runs.
   useEffect(() => {
     if (view === 'error') firstActionRef.current?.focus();
     if (view === 'empty') titleRef.current?.focus();
-  }, [view]);
+    if (view === 'loading' && isRetrying) skeletonStatusRef.current?.focus();
+  }, [view, isRetrying]);
 
   const nodeStates = course ? getNodeStates(course, profile) : null;
   const firstNumbers = course ? getFirstLessonNumbers(course) : [];
@@ -132,7 +144,7 @@ export function LearnPage() {
   return (
     <div className={styles['page']}>
       <PathTopBar hearts={profile.hearts} onLogOut={handleLogOut} />
-      {view === 'loading' && <PathSkeleton />}
+      {view === 'loading' && <PathSkeleton statusRef={skeletonStatusRef} />}
       {view === 'error' && state.status === 'error' && (
         <div className={styles['state']}>
           <StatusScreen
@@ -143,7 +155,7 @@ export function LearnPage() {
             message={getLoadErrorMessage(state.error.kind)}
             titleRef={titleRef}
             firstActionRef={firstActionRef}
-            actions={<Button onClick={retry}>Try again</Button>}
+            actions={<Button onClick={handleRetry}>Try again</Button>}
           />
         </div>
       )}

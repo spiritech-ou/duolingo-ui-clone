@@ -30,6 +30,17 @@ export interface StatusScreenProps
   actions?: ReactNode;
   /** Receives the title heading (`tabIndex={-1}`), so a container can move focus to it. */
   titleRef?: Ref<HTMLHeadingElement>;
+  /**
+   * Receives the status text group (the `role="status"` or `role="alert"` element holding the title and
+   * message). In the loading variant it is programmatically focusable (`tabIndex={-1}`, not a tab stop),
+   * so a container can move focus to it, for example after "Try again".
+   */
+  statusRef?: Ref<HTMLDivElement>;
+  /**
+   * Draw no focus ring on the status text, even when the browser reports `:focus-visible`. For a focus
+   * move caused by a pointer click ("Try again" pressed with the mouse); keyboard use keeps the ring.
+   */
+  hideStatusFocusRing?: boolean;
   /** Receives the first focusable element inside `actions`, so a container can focus it. */
   firstActionRef?: Ref<HTMLElement>;
 }
@@ -55,6 +66,8 @@ export function StatusScreen({
   actions,
   mascotSize,
   titleRef,
+  statusRef,
+  hideStatusFocusRing = false,
   firstActionRef,
   className,
   ...rest
@@ -97,7 +110,9 @@ export function StatusScreen({
         <Mascot mood={mood} size={mascotSize ?? 120} isBobbing={isLoading} />
       </div>
       <div
-        className={styles['text']}
+        ref={statusRef}
+        tabIndex={isLoading ? -1 : undefined}
+        className={clsx(styles['text'], hideStatusFocusRing && styles['textNoRing'])}
         role={isError ? 'alert' : 'status'}
         aria-live={isError ? 'assertive' : 'polite'}
       >
