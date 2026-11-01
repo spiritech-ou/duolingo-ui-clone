@@ -115,4 +115,31 @@ jobs:
         if: steps.token.outputs.present == 'true'
         env:
           CHROMATIC_PROJECT_TOKEN: ${{ secrets.CHROMATIC_PROJECT_TOKEN }}
-        run: npx --yes chromatic@18.13.6 --build-script-name build-storybook --exit-zero-on-changes --auto-accept-changes main --allow-console-errors
+        run: npx --yes chromatic@18.13.6 --build-script-name build-storybook --exit-zero-on-changes --auto-accept-changes main --allow-console-errors --output-file chromatic-build.json
+      # The CLI has no step outputs (those belong to chromaui/action), so the build details come from
+      # the file written by --output-file. Runs even when the Publish step failed on component errors,
+      # because the build and its Storybook are published anyway. Only https URLs from the file are
+      # written; when the file or a key is missing the summary says so instead of guessing.
+      - name: Write Chromatic URLs to the job summary
+        if: ${{ !cancelled() && steps.token.outputs.present == 'true' }}
+        env:
+          OUTPUT_FILE: chromatic-build.json
+        run: |
+          build_url=""
+          storybook_url=""
+          if [ -f "$OUTPUT_FILE" ]; then
+            build_url="$(jq -r '(.buildUrl // .url // empty)' "$OUTPUT_FILE")"
+            storybook_url="$(jq -r '(.storybookUrl // empty)' "$OUTPUT_FILE")"
+          fi
+          {
+            echo "### Chromatic"
+            echo
+            case "$build_url" in
+              https://*) echo "- Build (review and accept changes): <$build_url>" ;;
+              *) echo "- Build: not reported by the Chromatic CLI (see the Publish to Chromatic step log)" ;;
+            esac
+            case "$storybook_url" in
+              https://*) echo "- Hosted Storybook: <$storybook_url>" ;;
+              *) echo "- Hosted Storybook: not reported by the Chromatic CLI (see the Publish to Chromatic step log)" ;;
+            esac
+          } >> "$GITHUB_STEP_SUMMARY"

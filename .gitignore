@@ -9,3 +9,5 @@ mcp/.env
 .playwright-mcp/
 .DS_Store
 *.log
+# Chromatic CLI scratch: build/Storybook URLs written by `chromatic --output-file` in the CI chromatic job (run from the repo root)
+/chromatic-build.json
